@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken"
 declare global {
     namespace Express{
         interface Request{
-            username?:string;
+            userId?:number;
         }
     }
 }
@@ -18,7 +18,7 @@ export const Middleware =async (req:Request,res:Response,next:NextFunction)=>{
         res.status(403).json({message:"unauthorized"})
         return
     }
-    req.username = (verfication as JwtPayload).username
+    req.userId = (verfication as JwtPayload).username
     next()
 
 }
