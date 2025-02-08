@@ -1,7 +1,7 @@
 import { Request,Response } from "express"
 import jwt from "jsonwebtoken"
 import {userverification} from '@repo/common/zod'
-import prisma from "@repo/db/client"
+import {prisma} from "@repo/db/client"
 import bcrypjs from "bcryptjs"
 interface User{
     email:string,
@@ -10,8 +10,9 @@ interface User{
 }
 
 interface roomID {
-    roomid : string
+    roomId : string
 }
+
 
 export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
     const {email,password,username} = req.body
@@ -30,7 +31,7 @@ export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
         username:username,
         email:email,
     }})
-
+    console.log(exists)
     if(exists){
         res.json({message:"user already exists"})
         return 
@@ -48,7 +49,7 @@ export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
         res.json({message:"something went wrong"})
     }
 
-    const token = jwt.sign({username:username,email:email},'asdasd',{expiresIn:"1h"})
+    const token = jwt.sign({username:username,email:email,userid:create.id},"asdasd",{expiresIn:"1h"})
      res.json({token:token})
      return
 
@@ -76,7 +77,7 @@ export const SignInHandler = async (req:Request<{},{},User>,res:Response) =>{
         res.json({message:"user doenst exist"})
     }
 
-    const passwordCheck =  bcrypjs.compare(password,exists!.password)
+    const passwordCheck =await  bcrypjs.compare(password,exists!.password)
 
     if(!passwordCheck){
         res.json({message:"password incorrect"})
@@ -85,14 +86,14 @@ export const SignInHandler = async (req:Request<{},{},User>,res:Response) =>{
 
     
 
-    const token = jwt.sign({username:username,email:email},'asdasd',{expiresIn:"1h"})
+    const token = jwt.sign({username:username,email:email,userid:exists?.id},"asdasd",{expiresIn:"1h"})
     res.json({token:token})
     return
 
 }
 
 export const CreateRoom = async (req:Request<{},{},roomID>,res:Response)=>{
-    const roomId = req.body.roomid
+    const roomId = req.body.roomId
     const userid = req.userId
     const exists = await prisma.room.findFirst({
         where:{
@@ -125,33 +126,45 @@ export const CreateRoom = async (req:Request<{},{},roomID>,res:Response)=>{
 
 
 export const GetChats = async (req:Request,res:Response) =>{
-    const roomId = req.query.roomId as string
+    const roomId = req.query.roomId
     const userId = req.userId
-    const userInTheRoom = await prisma.user.findFirst({
-        where:{
-            id:userId,
-            rooms: {
-                some: {
-                    RoomId: roomId
-                }
-            }
-        }
-    })
-
-    if(!userInTheRoom){
-        res.json({message:"You dont have an access to the chats of this room"})
-    }
+    
 
     const chats = await prisma.chats.findMany({
         take:50,
         where:{
-            roomId:userInTheRoom?.id
+            roomId:Number(roomId)
         },
         
     })
 
     res.json({message:chats})
     return
+
+
+}
+
+export const GetRoomDetails =async (req:Request,res:Response) =>{
+    const roomId = req.query.roomId
+    console.log(roomId)
+    try {
+        const roomDetails = await prisma.room.findFirst({
+            where:{
+                RoomId : roomId?.toString()
+            }
+        })
+
+        if(!roomDetails){
+            res.status(411).json({message:`room doenst exist with roomId ${roomId}`})
+        }
+
+        res.status(200).json({Details:roomDetails})
+        
+    } catch (error) {
+        console.log(error)
+        res.status(411).json({message:"internal server error"})
+
+    }
 
 
 }
