@@ -6,15 +6,33 @@ interface Shape {
     width :number,
     height:number
 }
-export const drawing =(ctxRef:RefObject<CanvasRenderingContext2D | null>,canvasRef:RefObject<HTMLCanvasElement | null>,shapes:RefObject<Shape[]>,InitialPoints:RefObject<{x: number,y: number}>,MovingPoinst:RefObject<{x: number,y: number}>)=>{
+type TypeOfShapes = {
+    type: "Rectangle" | "default"
+}
+
+
+export const reDrawing =(ctxRef:RefObject<CanvasRenderingContext2D | null>,canvasRef:RefObject<HTMLCanvasElement | null>,shapes:RefObject<Shape[]>)=>{
         if(ctxRef.current && canvasRef.current)
-        ctxRef.current?.clearRect(0,0,canvasRef.current?.width,canvasRef.current?.height)
-        shapes.current.map((element)=>{
+        shapes.current.forEach((element)=>{
         ctxRef.current?.strokeRect(element.x,element.y,element.width,element.height)
         })
-        const y = InitialPoints.current.y
-        const x = InitialPoints.current.x
-        const width = MovingPoinst.current.x - InitialPoints.current.x
-        const height = MovingPoinst.current.y - InitialPoints.current.y
-        ctxRef.current?.strokeRect(x,y,width,height)
+}
+
+
+export const Draw = (ctxRef:RefObject<CanvasRenderingContext2D | null>,canvasRef:RefObject<HTMLCanvasElement | null>,InitialPoints:RefObject<{x: number;y: number}>,MovingPoints:RefObject<{x: number;y: number}>,typeOfShape:RefObject<TypeOfShapes>)=>{
+   console.log(typeOfShape)
+   if(!typeOfShape) return 
+    if(ctxRef.current && canvasRef.current && typeOfShape.current){
+
+
+        switch(typeOfShape.current.type){
+            case "Rectangle": 
+                ctxRef.current.strokeRect(InitialPoints.current.x,InitialPoints.current.y,MovingPoints.current.x - InitialPoints.current.x,MovingPoints.current.y - InitialPoints.current.y)
+            default:
+                null
+        }
+
     }
+
+}
+
