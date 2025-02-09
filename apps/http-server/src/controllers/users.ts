@@ -86,7 +86,7 @@ export const SignInHandler = async (req:Request<{},{},User>,res:Response) =>{
 
     
 
-    const token = jwt.sign({username:username,email:email,userid:exists?.id},"asdasd",{expiresIn:"1h"})
+    const token = jwt.sign({username:username,email:email,userid:exists?.id},"asdasd",{expiresIn:"7h"})
     res.json({token:token})
     return
 
