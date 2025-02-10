@@ -1,8 +1,9 @@
 "use client"
-import { MouseEvent, useEffect, useRef, useState } from "react"
+import { MouseEvent, useEffect, useRef, useState,RefObject } from "react"
 import { reDrawing,Draw } from "@/draw/Drawing"
 import { GetSelectedShape } from "@/draw/SelectedShape"
 import { Resize,getResizeEdge } from "@/draw/Resizing"
+
 
 
 interface Shape {
@@ -15,25 +16,17 @@ interface Shape {
     isResizing:boolean,
     resizingEdge : string 
 }
+
 type TypeOfShapes = {
     type: "Rectangle" | "default"
 }
 
-export default function Canvas(){
+export default function Canvas({Socket,Existingshapes}:{Socket:WebSocket,Existingshapes:string[]}){
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const shapes = useRef<Shape[]>([
-    {
-      type: "Rectangle",
-      x: 100,
-      y: 110,
-      width: 210,
-      height: 220,
-      selected: false,
-      isResizing: false,
-      resizingEdge: "",
-    },
-  ]);
+  
+  const shapes = useRef<Shape[]>([]);
+  
   const typeOfShapes = useRef<TypeOfShapes>({ type: "default" });
 
   const [isDrawing, setIsDrawing] = useState(false);
@@ -41,11 +34,17 @@ export default function Canvas(){
   const MovingPoints = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const SelectedIndex = useRef<number>(-1);
 
+
+
   useEffect(() => {
     const canvas = canvasRef.current;
+
+    
+
     if (canvas) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      
       ctxRef.current = canvas.getContext("2d");
     }
 
@@ -54,15 +53,28 @@ export default function Canvas(){
       ctxRef.current.lineWidth = 2;
     }
 
-    shapes.current.map((element) => {
-      ctxRef.current?.strokeRect(
-        element.x,
-        element.y,
-        element.width,
-        element.height
-      );
-    });
+    
+
+    if(ctxRef.current && canvasRef.current){
+      console.log(Existingshapes)
+      shapes.current = [...shapes.current]
+      Existingshapes.forEach((element)=>{
+        //@ts-ignore
+        let shape = JSON.parse(element.message)
+        shapes.current.push(shape)
+        ctxRef.current?.strokeRect(shape.x,shape.y,shape.width,shape.height)
+        })
+    }
+
+    Socket.onmessage =(event)=>{
+      const message = JSON.parse(event.data)
+      shapes.current.push(message.message)
+      reDrawing(ctxRef,canvasRef,shapes)
+    }
+
   }, []);
+
+ 
 
   
 
@@ -96,15 +108,10 @@ export default function Canvas(){
 
       case "Rectangle":
         setIsDrawing(true)
-        
-      
+            
       default:
         null
     }
-
-
-
-    
     
   };
 
@@ -112,7 +119,7 @@ export default function Canvas(){
     if (
       isDrawing &&
       typeOfShapes.current.type == "Rectangle" &&
-      SelectedIndex.current == -1
+      SelectedIndex.current == -1 && canvasRef.current
     ) {
       MovingPoints.current.x = e.clientX;
       MovingPoints.current.y = e.clientY;
@@ -121,7 +128,7 @@ export default function Canvas(){
       reDrawing(ctxRef, canvasRef, shapes);
       Draw(ctxRef, canvasRef, InitialPoints, MovingPoints,typeOfShapes);
     } else {
-      Resize(e.clientX, e.clientY);
+      Resize(e.clientX, e.clientY,ctxRef,canvasRef,SelectedIndex,shapes);
       reDrawing(ctxRef,canvasRef,shapes)
     }
   };
@@ -138,6 +145,29 @@ export default function Canvas(){
         isResizing: false,
         resizingEdge: "",
       });
+
+      Socket.send(
+        JSON.stringify({
+          type:"chat",
+          roomId : "2",
+          message:JSON.stringify(
+           {
+        x: InitialPoints.current.x,
+        y: InitialPoints.current.y,
+        width: MovingPoints.current.x - InitialPoints.current.x,
+        height: MovingPoints.current.y - InitialPoints.current.y,
+        type: "Rectangle",
+        selected: false,
+        isResizing: false,
+        resizingEdge: "",
+      }
+          )
+
+
+        })
+      )
+
+
       
       setIsDrawing(false);
     }
@@ -153,24 +183,47 @@ export default function Canvas(){
   };
 
   return (
-    <>
-      <div className="space-x-4 p-4 absolute">
-        <button className="bg-black text-white p-2 rounded-md"
-        onClick={()=>typeOfShapes.current.type = "default"}
-        >cursor</button>
-        <button className="bg-black text-white p-2 rounded-md"
-        onClick={()=>{
-          typeOfShapes.current.type = "Rectangle"
-        }}
-        >Rectangle</button>
-      </div>
+    <div className="h-lvh">
+
+<ToolBar typeOfShapes={typeOfShapes} />
       <canvas
-        
+       width={window.innerWidth}    
+       height={window.innerHeight}
         ref={canvasRef}
         onMouseDown={MouseDown}
         onMouseMove={MouseMove}
         onMouseUp={MouseUp}
-      ></canvas>
-    </>
+        />
+</div>
   );
+}
+
+
+function ToolBar({typeOfShapes}:{typeOfShapes:RefObject<TypeOfShapes>}){
+  return (
+<div className="space-x-4 fixed top-10 left-9 w-fit h-fit" style={{
+  position:"fixed",
+  top : 10,
+  left:10
+}}>
+        <button className="bg-white text-white p-2 rounded-md"
+        style={{
+          backgroundColor:'white'
+        }}
+        onClick={(e)=>{
+          e.stopPropagation()
+          typeOfShapes.current.type = "default"
+        }}
+        >cursor</button>
+        <button className="bg-black text-white p-2 rounded-md"
+        
+        onClick={(e)=>{
+          
+          e.stopPropagation()
+          typeOfShapes.current.type = "Rectangle"
+        }}
+        >Rectangle</button>
+      </div>
+
+  )
 }

@@ -11,10 +11,15 @@ type TypeOfShapes = {
 }
 
 
-export const reDrawing =(ctxRef:RefObject<CanvasRenderingContext2D | null>,canvasRef:RefObject<HTMLCanvasElement | null>,shapes:RefObject<Shape[]>)=>{
+export const reDrawing =(ctxRef:RefObject<CanvasRenderingContext2D | null>,canvasRef:RefObject<HTMLCanvasElement | null>,shapes:RefObject<Shape[] | string[]>)=>{
         if(ctxRef.current && canvasRef.current)
         shapes.current.forEach((element)=>{
-        ctxRef.current?.strokeRect(element.x,element.y,element.width,element.height)
+        if(typeof element == 'string'){
+            let shape = JSON.parse(element)
+        ctxRef.current?.strokeRect(shape.x,shape.y,shape.width,shape.height)
+        }
+        if(typeof element !== "string")
+        ctxRef.current?.strokeRect(element.x,element.y,element.width,element.height) 
         })
 }
 

@@ -1,3 +1,15 @@
+import { RefObject } from "react"
+interface Shape {
+    type : string ,  
+    x : number,
+    y : number,
+    width :number,
+    height:number,
+    selected : boolean,
+    isResizing:boolean,
+    resizingEdge : string 
+}
+
 export function getResizeEdge(mouseX: number, mouseY: number, shape: Shape) {
     const { x, y, selected, width, height } = shape;
     const threshold = 10;
@@ -44,10 +56,10 @@ export function getResizeEdge(mouseX: number, mouseY: number, shape: Shape) {
     return null;
   }
 
-export  const Resize = (mouseX: number, mouseY: number) => {
-    if (
+export  const Resize = (mouseX: number, mouseY: number,ctxRef:RefObject<CanvasRenderingContext2D | null>,canvasRef:RefObject<HTMLCanvasElement | null>,SelectedIndex:RefObject<number>,shapes:RefObject<Shape[]>) => {
+    if (!SelectedIndex ||
       SelectedIndex.current === -1 ||
-      !shapes.current[SelectedIndex.current]
+      !shapes.current[SelectedIndex.current] || !canvasRef.current
     ) {
       return;
     }

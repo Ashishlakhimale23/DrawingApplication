@@ -80,11 +80,12 @@ websocket.on("connection", (socket, req) => {
           }
         });
 
-        await prisma.chats.create({data:{
+        const resp = await prisma.chats.create({data:{
             message:parsedData.message,
-            roomId:parsedData.roomId,
+            roomId:typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId, 
             userId:Number(userId)
         }})
+        console.log(resp)
 
 
 
