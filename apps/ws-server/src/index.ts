@@ -90,9 +90,9 @@ websocket.on("connection", (socket, req) => {
         });
       }
 
-      if(parsedData.type == "resized"){
+      if(parsedData.type == "resized" || parsedData.type == "draged"){
         console.log("reached resized")
-        console.log(parsedData.id)
+        console.log(parsedData)
         const resp = await prisma.chats.update({
           where:{
             id:typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
@@ -109,10 +109,9 @@ websocket.on("connection", (socket, req) => {
           }
         });
 
-        console.log(resp)
-
-
       }
+
+
     } catch (error:any) {
       console.error("Error processing message:", error.message);
     }

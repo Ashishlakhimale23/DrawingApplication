@@ -270,6 +270,43 @@ export class Game {
         
     };
 
+    getDraggingShape() {
+        const shape = this.existingShapes[this.SelectedIndex].messageData
+        if(!shape.isDraging && this.SelectedIndex === -1 && this.typeOfShapes !== "default") {
+            return
+        }
+
+        if (shape.type == "rectangle") {
+            const { x, y, width, height } = shape;
+            if (x < this.InitialPointX && this.InitialPointX < (x + width) && y < this.InitialPointY && this.InitialPointY < (y + height)) {
+                return true;
+            }
+            return false;
+        }
+
+
+    }
+
+    Drag(){
+       if(this.SelectedIndex === -1 || !this.isDraging || !this.existingShapes[this.SelectedIndex].messageData.isDraging){
+         return
+       }
+       
+       const shape = this.existingShapes[this.SelectedIndex].messageData
+
+       const dx = this.MovingPointX - this.InitialPointX
+       const dy = this.MovingPointY - this.InitialPointY
+       if(shape.type == "rectangle"){
+
+            shape.x += dx;
+            shape.y += dy;
+
+       }
+       this.InitialPointX = this.MovingPointX;
+    this.InitialPointY = this.MovingPointY;
+             
+    }
+
     MouseDown=(e:MouseEvent)=>{
 
         this.InitialPointX = e.clientX;
@@ -277,21 +314,43 @@ export class Game {
 
         switch (this.typeOfShapes) {
             case "default":
-                const selectedIndex = this.existingShapes.findIndex((shapes) =>
-                    this.GetSelectedShape(shapes.messageData)
-                );
-                console.log(selectedIndex)
-
-                if (selectedIndex !== -1) {
-                    this.SelectedIndex = selectedIndex;
-                    this.existingShapes[selectedIndex].messageData.selected = true;
+                if(this.SelectedIndex !== -1){
+                    const getDraggingShapeIndex = this.getDraggingShape() 
                     const edge = this.getResizeEdge()
-                    console.log(edge)
+
+                    console.log(getDraggingShapeIndex)
+
                     if (edge) {
+
                         this.existingShapes[this.SelectedIndex].messageData.isResizing = true;
                         this.existingShapes[this.SelectedIndex].messageData.resizingEdge = edge;
                     }
+                    if (getDraggingShapeIndex) {
+                        this.existingShapes[this.SelectedIndex].messageData.isDraging = true
+                        this.isDraging = true
+                    }
+                    if(edge == null && !getDraggingShapeIndex){
+                        const selectedIndex = this.existingShapes.findIndex((shapes) =>
+                            this.GetSelectedShape(shapes.messageData)
+                        );
+
+                        if (selectedIndex !== -1) {
+                            this.SelectedIndex = selectedIndex;
+                            this.existingShapes[selectedIndex].messageData.selected = true;
+                        }
+                    }
+                }else{
+                    const selectedIndex = this.existingShapes.findIndex((shapes) =>
+                        this.GetSelectedShape(shapes.messageData)
+                    );
+
+                    if (selectedIndex !== -1) {
+                        this.SelectedIndex = selectedIndex;
+                        this.existingShapes[selectedIndex].messageData.selected = true;
+                    }
                 }
+
+                
             break;
             case "Rectangle":
               
@@ -312,13 +371,17 @@ export class Game {
         if (
             this.isDrawing &&
             this.typeOfShapes == "Rectangle" &&
-            this.SelectedIndex == -1 && this.canvas
+            this.SelectedIndex == -1 && this.canvas && !this.isDraging
         ) {
-
             this.reDrawShapes();
             this.Draw();
-        }else if(this.SelectedIndex !== -1 && this.typeOfShapes == 'default' ) {
+        }else if(this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && !this.isDraging ) {
+
             this.Resize();
+            this.reDrawShapes()
+        }else if(this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && this.isDraging){
+            console.log("dragging..")
+            this.Drag()
             this.reDrawShapes()
         }
 
@@ -366,9 +429,10 @@ export class Game {
 
 
             this.isDrawing = false
+
         }
 
-        if (this.SelectedIndex !== -1) {
+        if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isResizing && !this.isDraging ) {
             let shape = this.existingShapes[this.SelectedIndex]
             
             switch(shape.messageData.type){
@@ -400,11 +464,47 @@ export class Game {
 
             }
             
+            
 
             shape.messageData.isResizing = false
             shape.messageData.resizingEdge = ""
-            this.SelectedIndex = -1;
 
+        }
+
+        if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isDraging) {
+            console.log("reached here")
+
+           let shape = this.existingShapes[this.SelectedIndex]
+            
+            switch(shape.messageData.type){
+                case "rectangle":
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "draged",
+                            roomId: "2",
+                            id:shape.id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.messageData.x,
+                                    y: shape.messageData.y,
+                                    width: shape.messageData.width,
+                                    height: shape.messageData.height,
+                                    type: "rectangle",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging:false
+                                }
+                            )
+                        })
+                    )
+                    break;
+                default :
+                    null;
+
+
+            }
+            this.isDraging = false
 
         }
 
