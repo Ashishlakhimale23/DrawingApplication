@@ -11,6 +11,7 @@ interface BaseShape {
   selected: boolean;
   isResizing: boolean;
   resizingEdge: string;
+  isDraging :boolean
 }
 
 interface Rectangle extends BaseShape {
@@ -28,14 +29,20 @@ interface Circle extends BaseShape {
 
 type Shape = Rectangle | Circle;
 
+
+interface ShapesFromServer {
+    id : number,
+    messageData : Shape
+}
+
+
 export default function Canvas({
   Socket,
   Existingshapes,
 }: {
   Socket: WebSocket,
-  Existingshapes: Shape[];
+  Existingshapes: ShapesFromServer[];
 }) {
-  console.log(Existingshapes)
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [typeOfShapes,setTypeOfShapes] = useState<TypeOfShapes>("default")
   const [game,setGame] = useState<Game>()
@@ -58,7 +65,7 @@ useEffect(() => {
 
   return (
     <div className="h-lvh">
-      <ToolBar typeOfShapes={typeOfShapes} setTypeOFShapes={setTypeOfShapes} />
+      <ToolBar setTypeOFShapes={setTypeOfShapes} />
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}
@@ -68,7 +75,7 @@ useEffect(() => {
   );
 }
 
-function ToolBar({ typeOfShapes,setTypeOFShapes }: { typeOfShapes: TypeOfShapes ,setTypeOFShapes :Dispatch<SetStateAction<TypeOfShapes>>}) {
+function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction<TypeOfShapes>>}) {
   return (
     <div
       className="space-x-4 fixed top-10 left-9 w-fit h-fit"

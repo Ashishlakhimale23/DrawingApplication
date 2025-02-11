@@ -1,10 +1,12 @@
 interface BaseShape {
+  id?: number
   type: string;
   x: number;
   y: number;
   selected: boolean;
   isResizing: boolean;
   resizingEdge: string;
+  isDraging : boolean
 }
 
 interface Rectangle extends BaseShape {
@@ -22,34 +24,39 @@ interface Circle extends BaseShape {
 
 type Shape = Rectangle | Circle;
 
+interface ShapesFromServer {
+    id ?: number,
+    messageData : Shape
+}
+
 
 type TypeOfShapes = "Rectangle" | "default" | "Circle"
 
 export class Game {
     private canvas : HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
-    private existingShapes : Shape[];
-    private isDrawing : boolean;
+    private existingShapes : ShapesFromServer[];
+    private isDrawing : boolean = false;
     private InitialPointX : number = 0;
     private InitialPointY : number = 0 ;
     private MovingPointX : number = 0;
     private MovingPointY : number = 0;
-    private typeOfShapes : TypeOfShapes = 'Rectangle';
+    private typeOfShapes : TypeOfShapes = 'default';
     private roomId : string;
-    private SelectedIndex : number
+    private SelectedIndex : number = -1;
+    private isDraging : boolean = false
 
     Socket:WebSocket;
 
     
 
-    constructor(canvas:HTMLCanvasElement,roomId:string,Socket:WebSocket,existingShapes:Shape[]){
+    constructor(canvas:HTMLCanvasElement,roomId:string,Socket:WebSocket,existingShapes:ShapesFromServer[]){
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
         this.Socket = Socket;
         this.existingShapes = [...existingShapes];
-        this.isDrawing = false;
-        this.SelectedIndex = -1
+        
         this.init();
         this.onMessageFromSocket();
         this.initMouseHandlers()
@@ -62,34 +69,55 @@ export class Game {
         this.reDrawShapes();
     }
     
-    reDrawShapes(){
-        this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
-        if (this.ctx && this.canvas)
-            console.log(this.existingShapes)
+    reDrawShapes() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-            this.existingShapes.forEach((element) => {
+        this.existingShapes.forEach((element) => {
 
-                if (typeof element == 'string') {
-                    let shape:Shape = JSON.parse(element)
-                    if(shape.type == "rectangle"){
-                        this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height)
-                    }
-                }
 
-                if (typeof element !== "string"){
-                    if(element.type == "rectangle"){
-                        this.ctx.strokeRect(element.x, element.y, element.width, element.height)
-                    }
-                }
+            if (element.messageData.type == "rectangle") {
+                this.ctx.strokeStyle = "black"
+                this.ctx.lineWidth = 2
+                this.ctx.strokeRect(element.messageData.x, element.messageData.y, element.messageData.width, element.messageData.height)
+            }
 
-            })
+        })
     }
 
     onMessageFromSocket(){
         this.Socket.onmessage = (event) => {
             const message = JSON.parse(event.data)
-            this.existingShapes.push(message.message)
-            this.reDrawShapes()
+            
+            const messageData = JSON.parse(message.messageData)
+            const resizedShapeIndexed = this.existingShapes.findIndex((element) => {
+                return element.id === message.id
+            })
+
+
+            if (resizedShapeIndexed !== -1) {
+                const shape = this.existingShapes[resizedShapeIndexed]
+                shape.messageData = messageData
+                this.reDrawShapes()
+
+            } else if (resizedShapeIndexed === -1) {
+
+                const newShapeIndexed = this.existingShapes.findIndex((element) => {
+                    return element.id === undefined
+                })
+
+                if (newShapeIndexed !== -1) {
+                    const shape = this.existingShapes[newShapeIndexed]
+                    shape.id = message.id
+                    shape.messageData = messageData
+
+                } else {
+
+                    this.existingShapes.push({ messageData: messageData, id: message.id })
+                }
+
+
+                this.reDrawShapes()
+            }
         }
     }
 
@@ -99,8 +127,11 @@ export class Game {
 
     Draw(){
         if (this.ctx && this.canvas) {
+
             switch (this.typeOfShapes) {
                 case "Rectangle":
+                    this.ctx.strokeStyle = "black"
+                    this.ctx.lineWidth = 2
                     this.ctx.strokeRect(this.InitialPointX, this.InitialPointY, this.MovingPointX - this.InitialPointX, this.MovingPointY - this.InitialPointY)
                 default:
                     null
@@ -114,17 +145,17 @@ export class Game {
 
     Resize(){
 
-        if (!this.SelectedIndex ||
+        if (
             this.SelectedIndex === -1 ||
             !this.existingShapes[this.SelectedIndex] || !this.canvas
         ) {
             return;
         }
 
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-        const shape = this.existingShapes[this.SelectedIndex];
+        const shape = this.existingShapes[this.SelectedIndex].messageData;
 
         if (shape.type === "rectangle") {
+            
             switch (shape.resizingEdge) {
                 case "top-left":
                     shape.width += shape.x - this.MovingPointX;
@@ -161,11 +192,11 @@ export class Game {
                     shape.height = this.MovingPointY - shape.y;
                     break;
             }
-        }
+        };
     }
 
     getResizeEdge() {
-        let shape = this.existingShapes[this.SelectedIndex]
+        let shape = this.existingShapes[this.SelectedIndex].messageData
         if (shape.type == "rectangle") {
             const { x, y, selected, width, height } = shape;
             const threshold = 10;
@@ -233,9 +264,8 @@ export class Game {
                         this.InitialPointY <= maxY) ||
                     (Math.abs(this.InitialPointY - maxY) <= tolerance && minX <= this.InitialPointX && this.InitialPointX <= maxX)
                 );
+                
             
-
-
         }
         
     };
@@ -248,23 +278,25 @@ export class Game {
         switch (this.typeOfShapes) {
             case "default":
                 const selectedIndex = this.existingShapes.findIndex((shapes) =>
-                    this.GetSelectedShape(shapes)
+                    this.GetSelectedShape(shapes.messageData)
                 );
+                console.log(selectedIndex)
 
                 if (selectedIndex !== -1) {
                     this.SelectedIndex = selectedIndex;
-                    this.existingShapes[selectedIndex].selected = true;
+                    this.existingShapes[selectedIndex].messageData.selected = true;
                     const edge = this.getResizeEdge()
+                    console.log(edge)
                     if (edge) {
-                        this.existingShapes[selectedIndex].isResizing = true;
-                        this.existingShapes[selectedIndex].resizingEdge = edge;
+                        this.existingShapes[this.SelectedIndex].messageData.isResizing = true;
+                        this.existingShapes[this.SelectedIndex].messageData.resizingEdge = edge;
                     }
                 }
-
+            break;
             case "Rectangle":
               
                 this.isDrawing =true
-
+                break
             default:
                 null
         }
@@ -274,18 +306,18 @@ export class Game {
 
 
     MouseMove=(e:MouseEvent)=>{
+        this.MovingPointX = e.clientX;
+        this.MovingPointY = e.clientY;
 
         if (
             this.isDrawing &&
             this.typeOfShapes == "Rectangle" &&
             this.SelectedIndex == -1 && this.canvas
         ) {
-            this.MovingPointX = e.clientX;
-            this.MovingPointY = e.clientY;
 
             this.reDrawShapes();
             this.Draw();
-        } else {
+        }else if(this.SelectedIndex !== -1 && this.typeOfShapes == 'default' ) {
             this.Resize();
             this.reDrawShapes()
         }
@@ -297,14 +329,18 @@ export class Game {
         if (this.isDrawing && this.typeOfShapes == "Rectangle") {
 
             this.existingShapes.push({
-                x: this.InitialPointX,
-                y: this.InitialPointY,
-                width: this.MovingPointX - this.InitialPointX,
-                height: this.MovingPointY - this.InitialPointY,
-                type: "rectangle",
-                selected: false,
-                isResizing: false,
-                resizingEdge: "",
+                messageData: {
+                    x: this.InitialPointX,
+                    y: this.InitialPointY,
+                    width: this.MovingPointX - this.InitialPointX,
+                    height: this.MovingPointY - this.InitialPointY,
+                    type: "rectangle",
+                    selected: false,
+                    isResizing: false,
+                    resizingEdge: "",
+                    isDraging:false
+                }
+
             });
 
             this.Socket.send(
@@ -321,6 +357,7 @@ export class Game {
                             selected: false,
                             isResizing: false,
                             resizingEdge: "",
+                            isDraging:false
                         }
                     )
                 })
@@ -332,7 +369,43 @@ export class Game {
         }
 
         if (this.SelectedIndex !== -1) {
+            let shape = this.existingShapes[this.SelectedIndex]
+            
+            switch(shape.messageData.type){
+                case "rectangle":
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "resized",
+                            roomId: "2",
+                            id:shape.id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.messageData.x,
+                                    y: shape.messageData.y,
+                                    width: shape.messageData.width,
+                                    height: shape.messageData.height,
+                                    type: "rectangle",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging:false
+                                }
+                            )
+                        })
+                    )
+                    break;
+                default :
+                    null;
+
+
+            }
+            
+
+            shape.messageData.isResizing = false
+            shape.messageData.resizingEdge = ""
             this.SelectedIndex = -1;
+
+
         }
 
         this.InitialPointX = 0,

@@ -74,19 +74,42 @@ websocket.on("connection", (socket, req) => {
       }
 
       if (parsedData.type === "chat") {
-        users.forEach((element) => {
-          if (element.rooms.includes(parsedData.roomId) ) {
-            element.ws.send(JSON.stringify({ message: parsedData.message }));
-          }
-        });
+        
 
-        const resp = await prisma.chats.create({data:{
+        const resp = await prisma.chats.create({
+          data:{
             message:parsedData.message,
             roomId:typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId, 
             userId:Number(userId)
         }})
-        console.log(resp)
 
+      users.forEach((element) => {
+          if (element.rooms.includes(parsedData.roomId)) {
+            element.ws.send(JSON.stringify({ messageData: parsedData.message,id:resp.id }));
+          }
+        });
+      }
+
+      if(parsedData.type == "resized"){
+        console.log("reached resized")
+        console.log(parsedData.id)
+        const resp = await prisma.chats.update({
+          where:{
+            id:typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
+            roomId :typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId
+          },
+          data:{
+            message:parsedData.message
+          }
+        })
+
+        users.forEach((element) => {
+          if (element.rooms.includes(parsedData.roomId) && element.ws !== socket) {
+            element.ws.send(JSON.stringify({  messageData: parsedData.message,id:resp.id  }));
+          }
+        });
+
+        console.log(resp)
 
 
       }

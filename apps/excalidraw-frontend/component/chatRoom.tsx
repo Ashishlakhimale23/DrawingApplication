@@ -9,6 +9,7 @@ interface BaseShape {
   selected: boolean;
   isResizing: boolean;
   resizingEdge: string;
+  isDraging : boolean
 }
 
 interface Rectangle extends BaseShape {
@@ -24,12 +25,17 @@ interface Circle extends BaseShape {
   radius: number;
 }
 
+interface ShapesFromServer {
+    id : number,
+    messageData : Shape
+}
+
 type Shape = Rectangle | Circle;
-export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape[]}) {
+export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:ShapesFromServer[]}) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
     useEffect(() => {
-        const ws = new WebSocket(`ws://localhost:8081?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzM5MjUzODA5LCJleHAiOjE3MzkyNzkwMDl9.WiuSsBZXGRMt1sR_AwO-_XzEHwSR2KIZXGPyHIwVsAc`)
+        const ws = new WebSocket(`ws://localhost:8081?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzM5Mjc5MDc5LCJleHAiOjE3MzkzMDQyNzl9.AN0RNVl6Ol-AaAqb52ZvtYua3r27A16GnH0PaH1AL8o`)
 
         ws.onopen = () => {
             setSocket(ws);

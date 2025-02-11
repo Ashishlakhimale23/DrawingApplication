@@ -5,19 +5,20 @@ const getShapes = async (roomId: string) => {
   const shapes = await axios.get("http://localhost:8000/user/getchats", {
     params: { roomId: roomId },
     headers: {
-      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzM5MjUzODA5LCJleHAiOjE3MzkyNzkwMDl9.WiuSsBZXGRMt1sR_AwO-_XzEHwSR2KIZXGPyHIwVsAc"}`,
+      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzM5Mjc5MDc5LCJleHAiOjE3MzkzMDQyNzl9.AN0RNVl6Ol-AaAqb52ZvtYua3r27A16GnH0PaH1AL8o"}`,
     },
   });
 
   const messages = shapes.data.message
-  console.log(messages)
 
-  const shape = messages.map((x: {message: string}) => {
+
+  const shape = messages.map((x: {id:number,message: string}) => {
         const messageData = JSON.parse(x.message)
-        return messageData;
+        const id = x.id
+        return {messageData,id};
     })
 
-    console.log("here is the shape" ,shape)
+   console.log(shape) 
     return shape;
 
 };
