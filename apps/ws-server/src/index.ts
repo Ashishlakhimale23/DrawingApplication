@@ -75,7 +75,7 @@ websocket.on("connection", (socket, req) => {
 
       if (parsedData.type === "chat") {
         users.forEach((element) => {
-          if (element.rooms.includes(parsedData.roomId)) {
+          if (element.rooms.includes(parsedData.roomId) ) {
             element.ws.send(JSON.stringify({ message: parsedData.message }));
           }
         });
