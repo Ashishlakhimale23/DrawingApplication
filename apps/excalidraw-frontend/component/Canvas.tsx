@@ -2,7 +2,7 @@
 import {  useEffect, useRef, useState, RefObject, SetStateAction ,Dispatch} from "react";
 import { Game } from "@/draw/Game";
 
-type TypeOfShapes = "Rectangle" | "default" | "Circle";
+type TypeOfShapes = "rectangle" | "default" | "circle";
 
 interface BaseShape {
   type: string;
@@ -102,7 +102,7 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         onClick={(e) => {
           e.stopPropagation();
 
-          setTypeOFShapes("Rectangle")
+          setTypeOFShapes("rectangle")
 
         }}
       >
@@ -113,7 +113,7 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         className="bg-black text-white p-2 rounded-md"
         onClick={(e) => {
           e.stopPropagation();
-          setTypeOFShapes("Circle")
+          setTypeOFShapes("circle")
         }}
       >
         Circle
