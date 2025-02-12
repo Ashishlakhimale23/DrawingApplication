@@ -91,8 +91,6 @@ websocket.on("connection", (socket, req) => {
       }
 
       if(parsedData.type == "resized" || parsedData.type == "draged"){
-        console.log("reached resized")
-        console.log(parsedData)
         const resp = await prisma.chats.update({
           where:{
             id:typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
@@ -106,6 +104,16 @@ websocket.on("connection", (socket, req) => {
         users.forEach((element) => {
           if (element.rooms.includes(parsedData.roomId) && element.ws !== socket) {
             element.ws.send(JSON.stringify({  messageData: parsedData.message,id:resp.id  }));
+          }
+        });
+
+      }
+
+
+      if(parsedData.type == "moving"){
+        users.forEach((element) => {
+          if (element.rooms.includes(parsedData.roomId) && element.ws !== socket) {
+            element.ws.send(JSON.stringify({  messageData: parsedData.message,id:parsedData.id  }));
           }
         });
 
