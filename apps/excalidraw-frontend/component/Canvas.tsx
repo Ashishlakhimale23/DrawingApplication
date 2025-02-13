@@ -78,11 +78,12 @@ useEffect(() => {
 function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction<TypeOfShapes>>}) {
   return (
     <div
-      className="space-x-4 fixed top-10 left-9 w-fit h-fit"
+      className="space-x-4 bg-white fixed top-10 left-9 w-fit h-fit"
       style={{
         position: "fixed",
         top: 10,
         left: 10,
+        backgroundColor : "white"
       }}
     >
       <button

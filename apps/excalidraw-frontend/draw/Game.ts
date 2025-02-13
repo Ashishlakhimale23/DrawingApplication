@@ -101,17 +101,21 @@ export class Game {
                     this.ctx.closePath()
                     if(element.messageData.selected){
                         this.DrawSelectedShape()
-                    }
+                    } 
                     break
 
                 case "line":
                     this.ctx.strokeStyle = "white"
-                    this.ctx.lineWidth = 2
+                    this.ctx.lineWidth = 3
                     this.ctx.beginPath()
                     this.ctx.moveTo(element.messageData.x, element.messageData.y)
                     this.ctx.lineTo(element.messageData.x1, element.messageData.y1)
                     this.ctx.stroke()
                     this.ctx.closePath()
+                    if(element.messageData.selected){
+                        this.DrawSelectedShape()
+                    } 
+                    break;
 
             }
 
@@ -213,16 +217,68 @@ export class Game {
         if (shape.type === "rectangle") {
             const x1 = (shape.width + shape.x)
             const y1 = shape.height + shape.y
-            if(shape.x > x1 && (shape.resizingEdge == "right" || shape.resizingEdge =="left")){
+            if(shape.x > x1 && shape.y < y1 ){
                 shape.width = shape.x - x1
                 shape.x = x1
-                shape.resizingEdge = shape.resizingEdge == "right" ? "left" : "right"
+                switch(shape.resizingEdge){
+                    case "right":
+                        shape.resizingEdge = "left"
+                        break
+                    case 'left':
+                        shape.resizingEdge = 'right'
+                        break
+                    case "top-left":
+                        shape.resizingEdge = "top-right"
+                        break
+                    case "top-right":
+                        shape.resizingEdge = "top-left"
+                        break
+                    case "bottom-left":
+                        shape.resizingEdge = 'bottom-right'
+                        break
+                    case "bottom-right":
+                        shape.resizingEdge = "bottom-left"
+                        break
+                    default:
+                        break
+
+                }
+                
             }
-            if (shape.y > y1 && (shape.resizingEdge == "top" || shape.resizingEdge =="bottom")) {
+            if (shape.y > y1 && shape.x < x1) {
                 shape.height = shape.y - y1
                 shape.y = y1
-                shape.resizingEdge = shape.resizingEdge == "top" ? "bottom" : "top"
+                switch(shape.resizingEdge){
+                    case "right":
+                        shape.resizingEdge = "left"
+                        break
+                    case 'left':
+                        shape.resizingEdge = 'right'
+                        break
+                    case "top":
+                        shape.resizingEdge = "bottom"
+                        break
+                    case "bottom":
+                        shape.resizingEdge = "top"
+                        break
+                    case "top-left":
+                        shape.resizingEdge = "bottom-right"
+                        break
+                    case "top-right":
+                        shape.resizingEdge = "bottom-left"
+                        break
+                    case "bottom-left":
+                        shape.resizingEdge = 'top-right'
+                        break
+                    case "bottom-right":
+                        shape.resizingEdge = "top-left"
+                        break
+                    default:
+                        break
+
+                }
             }
+            
             if(shape.x > x1 && shape.y > y1){
                 shape.width = shape.x - x1
                 shape.x = x1
@@ -243,7 +299,9 @@ export class Game {
                         shape.resizingEdge = "top-right"
                         break
 
+
                 }
+                
             }
 
             switch (shape.resizingEdge) {
@@ -339,6 +397,27 @@ export class Game {
                     break
             }
 
+            this.Socket.send(
+                JSON.stringify({
+                    type: "moving",
+                    roomId: "2",
+                    id: this.existingShapes[this.SelectedIndex].id,
+                    message: JSON.stringify(
+                        {
+                            x: shape.x,
+                            y: shape.y,
+                            x1:shape.x1,
+                            y1:shape.y1,
+                            type: "line",
+                            selected: false,
+                            isResizing: false,
+                            resizingEdge: "",
+                            isDraging: false
+                        }
+                    )
+                })
+            )
+
         }
     }
 
@@ -417,10 +496,10 @@ export class Game {
             case "line":
                 const slope = (shape.y1 - shape.y) / (shape.x1 - shape.x)
                 if (!isFinite(slope)) {
-                    return Math.abs(this.InitialPointX - shape.x) <= tolerance;
+                    return Math.abs(this.InitialPointX - shape.x) <= 3;
                 }
                 const expectedY = slope * (this.InitialPointX - shape.x) + shape.y
-                return Math.abs(this.InitialPointY - expectedY) <= tolerance
+                return Math.abs(this.InitialPointY - expectedY) <= 3
         }
 
     };
@@ -457,9 +536,9 @@ export class Game {
                 return (calculatedRadius + 5 <= shape.radius )
             case "line":
                 const slope = (shape.y1 - shape.y) / (shape.x1 - shape.x)
-                const tolerance = 10
+                const tolerance = 1
                 if (!isFinite(slope)) {
-                    return Math.abs(this.InitialPointX - shape.x) <= tolerance;
+                    return Math.abs(this.InitialPointX - shape.x) <= tolerance ;
                 }
                 const expectedY = slope * (this.InitialPointX - shape.x) + shape.y
                 return Math.abs(this.InitialPointY - expectedY) <= tolerance
@@ -474,13 +553,14 @@ export class Game {
     }
 
     DrawSelectedShape(){
+       
+        if(this.SelectedIndex == -1){
+            return
+        }
         const shape = this.existingShapes[this.SelectedIndex].messageData
-
-        console.log(shape)
         if(!shape.selected){
             return 
         }
-
        
         switch(shape.type){
             case "rectangle":
@@ -499,6 +579,18 @@ export class Game {
                 this.ctx.closePath()
                 break
             case "line":
+                
+                this.ctx.strokeStyle = "white"
+                this.ctx.beginPath()
+                this.ctx.arc(shape.x-2,shape.y-2,5,0,2*Math.PI)
+                this.ctx.stroke()
+                this.ctx.closePath()
+
+                this.ctx.beginPath()
+                this.ctx.arc(shape.x1+2,shape.y1+2,5,0,2*Math.PI)
+                this.ctx.stroke()
+                this.ctx.closePath()
+
                 break
         }
 
@@ -570,6 +662,26 @@ export class Game {
                 shape.y += dy
                 shape.x1 += dx
                 shape.y1 += dy
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: "2",
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify(
+                            {
+                                x: shape.x,
+                                y: shape.y,
+                                x1: shape.x1,
+                                y1 :shape.y1,
+                                type: "line",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false
+                            }
+                        )
+                    })
+                ) 
                 break
         }
 
@@ -588,14 +700,14 @@ export class Game {
         if (this.existingShapes[this.SelectedIndex].messageData.type === 'line') {
             //@ts-ignore
             const { x, y, x1, y1 } = this.existingShapes[this.SelectedIndex].messageData;
-            const tolerance = 1
+            const tolerance = 4
 
             const distanceToStart = Math.sqrt(
-                Math.pow(this.InitialPointX - x, 2) + Math.pow(this.InitialPointY - y, 2)
+                Math.pow(this.InitialPointX - x + 2, 2) + Math.pow(this.InitialPointY - y + 2, 2)
             );
 
             const distanceToEnd = Math.sqrt(
-                Math.pow(this.InitialPointX - x1, 2) + Math.pow(this.InitialPointY - y1, 2)
+                Math.pow(this.InitialPointX - x1 - 2 , 2) + Math.pow(this.InitialPointY - y1-2, 2)
             );
 
             if (distanceToStart <= tolerance) {
@@ -621,6 +733,7 @@ export class Game {
             const resizeEdge = this.getResizeEdge();
             const onPoint = this.getOnWhichPoint();
             const onCircumfurance = this.getOnCirleCircumfurance()
+            console.log(onPoint)
 
             const selectedShape = this.existingShapes[this.SelectedIndex];
             const { messageData } = selectedShape;
@@ -637,26 +750,38 @@ export class Game {
                 messageData.isResizing = true;
                 messageData.isDraging = false
                 this.isDraging = false;
-            } else if (resizeEdge !==null && !draggingShapeIndex && messageData.type === "line" && onPoint !== null) {
+            } else if (resizeEdge==null && messageData.type === "line" && onPoint !== null) {
                 messageData.isResizing = true;
                 messageData.isDraging = false;
                 //@ts-ignore
                 messageData.Point = onPoint;
                 this.isDraging = false;
-            } else if (messageData.type === "line" && draggingShapeIndex) {
+            } else if (messageData.type === "line" && draggingShapeIndex && onPoint === null) {
                 this.isDraging = true;
                 messageData.isResizing = false;
                 messageData.isDraging = true;
-            } else if (resizeEdge !==null && !draggingShapeIndex) {
+            } else if (resizeEdge ==null && !draggingShapeIndex && onPoint==null) {
                 const selectedIndex = this.existingShapes.findIndex((shape) =>
                     this.GetSelectedShape(shape.messageData)
                 );
 
                 if (selectedIndex !== -1) {
+                    this.existingShapes[this.SelectedIndex].messageData.selected = false
                     this.SelectedIndex = selectedIndex;
                     this.existingShapes[selectedIndex].messageData.selected = true;
                     this.reDrawShapes()
+                }else{
+                    this.SelectedIndex = -1
+                    messageData.isDraging = false;
+                    messageData.isResizing = false;
+                    messageData.selected = false
+                    this.isDraging = false;
+                    this.SelectedIndex = -1;
+                    this.reDrawShapes()
+
                 }
+
+                
             }else if(onPoint == null && !onCircumfurance  && resizeEdge == null && !draggingShapeIndex  ){
                 messageData.isDraging = false;
                 messageData.isResizing = false;
@@ -683,6 +808,7 @@ export class Game {
         this.isDrawing = true;
         this.isDraging = false;
         this.SelectedIndex !== -1 ? this.existingShapes[this.SelectedIndex].messageData.selected = false: -1 ;
+        
     };
 
     MouseDown = (e: MouseEvent) => {
@@ -884,23 +1010,46 @@ export class Game {
                     break;
 
                 case "circle":
-                    JSON.stringify({
-                        type: "resized",
-                        roomId: "2",
-                        id: shape.id,
-                        message: JSON.stringify(
-                            {
-                                x: shape.messageData.x,
-                                y: shape.messageData.y,
-                                type: "circle",
-                                radius: shape.messageData.radius,
-                                selected: false,
-                                isResizing: false,
-                                resizingEdge: "",
-                                isDraging: false
-                            }
-                        )
-                    })
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "resized",
+                            roomId: "2",
+                            id: shape.id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.messageData.x,
+                                    y: shape.messageData.y,
+                                    type: "circle",
+                                    radius: shape.messageData.radius,
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false
+                                }
+                            )
+                        }))
+                    break
+                case "line":
+
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "resized",
+                            roomId: "2",
+                            id: shape.id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.messageData.x,
+                                    y: shape.messageData.y,
+                                    x1:shape.messageData.x1,
+                                    y1:shape.messageData.y1,
+                                    type: "line",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false
+                                }
+                            )
+                        }))
                     break
 
 
@@ -957,6 +1106,28 @@ export class Game {
                                     y: shape.messageData.y,
                                     radius: shape.messageData.radius,
                                     type: "circle",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false
+                                }
+                            )
+                        })
+                    )
+                    break
+                case "line":
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "draged",
+                            roomId: "2",
+                            id: shape.id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.messageData.x,
+                                    y: shape.messageData.y,
+                                    x1:shape.messageData.x1,
+                                    y1:shape.messageData.y1,
+                                    type: "line",
                                     selected: false,
                                     isResizing: false,
                                     resizingEdge: "",
