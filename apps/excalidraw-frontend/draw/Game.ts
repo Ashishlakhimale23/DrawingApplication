@@ -99,6 +99,9 @@ export class Game {
                     this.ctx.arc(element.messageData.x, element.messageData.y, element.messageData.radius, 0, 2 * Math.PI);
                     this.ctx.stroke()
                     this.ctx.closePath()
+                    if(element.messageData.selected){
+                        this.DrawSelectedShape()
+                    }
                     break
 
                 case "line":
@@ -410,7 +413,7 @@ export class Game {
                 );
             case "circle":
                 const calculatedRadius = Math.sqrt(Math.pow(shape.x - this.InitialPointX, 2) + Math.pow(shape.y - this.InitialPointY, 2))
-                return ((calculatedRadius - shape.radius) <= 5)
+                return (Math.abs(calculatedRadius - shape.radius) <= 5)
             case "line":
                 const slope = (shape.y1 - shape.y) / (shape.x1 - shape.x)
                 if (!isFinite(slope)) {
@@ -428,7 +431,7 @@ export class Game {
             const shape = this.existingShapes[this.SelectedIndex].messageData
             const calculatedRadius = Math.sqrt(Math.pow(shape.x - this.InitialPointX, 2) + Math.pow(shape.y - this.InitialPointY, 2))
             //@ts-ignore
-            return ((calculatedRadius - shape.radius) <= 5)
+            return (Math.abs(calculatedRadius - shape.radius) <= 5)
         }
         return false
 
@@ -451,7 +454,7 @@ export class Game {
                 return (x < this.InitialPointX && this.InitialPointX < (x + width) && y < this.InitialPointY && this.InitialPointY < (y + height))
             case "circle":
                 const calculatedRadius = Math.sqrt(Math.pow(shape.x - this.InitialPointX, 2) + Math.pow(shape.y - this.InitialPointY, 2))
-                return (calculatedRadius <= shape.radius)
+                return (calculatedRadius + 5 <= shape.radius )
             case "line":
                 const slope = (shape.y1 - shape.y) / (shape.x1 - shape.x)
                 const tolerance = 10
@@ -464,6 +467,7 @@ export class Game {
 
             default:
                 return false
+                
 
         }
 
@@ -482,12 +486,17 @@ export class Game {
             case "rectangle":
                 this.ctx.strokeStyle = "white"
                 this.ctx.lineWidth = 2
-                console.log(shape.x,shape.y,shape.width,shape.height)
                 const minX = Math.min(shape.x,(Math.abs(shape.width) + shape.x))
                 const minY = Math.min(shape.y,(Math.abs(shape.height) + shape.y))
                 this.ctx.strokeRect(minX - 10, minY - 10, shape.width + 20,shape.height + 20)
                 break 
             case "circle":
+                this.ctx.strokeStyle = "white"
+                this.ctx.lineWidth = 2
+                this.ctx.beginPath()
+                this.ctx.arc(shape.x, shape.y, shape.radius + 5, 0, 2 * Math.PI);
+                this.ctx.stroke()
+                this.ctx.closePath()
                 break
             case "line":
                 break
@@ -600,6 +609,7 @@ export class Game {
             return null;
 
         }
+        return null
 
 
     }
@@ -615,7 +625,7 @@ export class Game {
             const selectedShape = this.existingShapes[this.SelectedIndex];
             const { messageData } = selectedShape;
 
-            if (resizeEdge && messageData.type === "rectangle") {
+            if (resizeEdge !==null && messageData.type === "rectangle") {
                 messageData.isResizing = true;
                 messageData.isDraging = false;
                 this.isDraging = false;
@@ -623,10 +633,11 @@ export class Game {
             } else if (draggingShapeIndex && !messageData.isResizing) {
                 messageData.isDraging = true;
                 this.isDraging = true;
-            } else if (!resizeEdge && messageData.type === "circle" && !draggingShapeIndex && onCircumfurance) {
+            } else if (resizeEdge ==null && messageData.type === "circle" && !draggingShapeIndex && onCircumfurance) {
                 messageData.isResizing = true;
+                messageData.isDraging = false
                 this.isDraging = false;
-            } else if (!resizeEdge && !draggingShapeIndex && messageData.type === "line" && onPoint !== null) {
+            } else if (resizeEdge !==null && !draggingShapeIndex && messageData.type === "line" && onPoint !== null) {
                 messageData.isResizing = true;
                 messageData.isDraging = false;
                 //@ts-ignore
@@ -636,7 +647,7 @@ export class Game {
                 this.isDraging = true;
                 messageData.isResizing = false;
                 messageData.isDraging = true;
-            } else if (!resizeEdge && !draggingShapeIndex) {
+            } else if (resizeEdge !==null && !draggingShapeIndex) {
                 const selectedIndex = this.existingShapes.findIndex((shape) =>
                     this.GetSelectedShape(shape.messageData)
                 );
@@ -644,12 +655,16 @@ export class Game {
                 if (selectedIndex !== -1) {
                     this.SelectedIndex = selectedIndex;
                     this.existingShapes[selectedIndex].messageData.selected = true;
+                    this.reDrawShapes()
                 }
-            } else {
+            }else if(onPoint == null && !onCircumfurance  && resizeEdge == null && !draggingShapeIndex  ){
                 messageData.isDraging = false;
                 messageData.isResizing = false;
+                messageData.selected = false
                 this.isDraging = false;
                 this.SelectedIndex = -1;
+                this.reDrawShapes()
+
             }
         } else {
             const selectedIndex = this.existingShapes.findIndex((shape) =>
@@ -667,7 +682,7 @@ export class Game {
     handleDrawingMode = () => {
         this.isDrawing = true;
         this.isDraging = false;
-        this.SelectedIndex = -1;
+        this.SelectedIndex !== -1 ? this.existingShapes[this.SelectedIndex].messageData.selected = false: -1 ;
     };
 
     MouseDown = (e: MouseEvent) => {
