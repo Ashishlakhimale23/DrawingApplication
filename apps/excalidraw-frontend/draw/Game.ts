@@ -308,8 +308,6 @@ export class Game {
                     case "bottom-left":
                         shape.resizingEdge = "top-right"
                         break
-
-
                 }
                 
             }
@@ -400,10 +398,14 @@ export class Game {
                 case "startingPoint":
                     shape.x = this.MovingPointX
                     shape.y = this.MovingPointY
+                    shape.midX = (this.MovingPointX + shape.x1)/2
+                    shape.midY = (this.MovingPointY + shape.y1)/2
                     break
                 case "endingPoint":
                     shape.x1 = this.MovingPointX
                     shape.y1 = this.MovingPointY
+                    shape.midX = (this.MovingPointX + shape.x)/2
+                    shape.midY = (this.MovingPointY + shape.y)/2
                     break
                 case "midPoint" :
                     shape.midX = this.MovingPointX,
@@ -512,7 +514,6 @@ export class Game {
                return this.isPointOnQuadraticCurve(shape.x,shape.y,shape.midX,shape.midY,shape.x1,shape.y1,this.InitialPointX,this.InitialPointY)
                  
         }
-
     };
 
     isPointOnQuadraticCurve(x:number, y:number, midX:number, midY:number, x1:number, y1:number, actualPointX:number, actualPointY:number, tolerance = 5) {
@@ -679,7 +680,7 @@ export class Game {
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc(shape.midX, shape.midY, 5, 0, 2 * Math.PI)
+                this.ctx.arc((shape.midX -(shape.x+shape.y)/2), shape.midY, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
@@ -808,32 +809,46 @@ export class Game {
             const resizeEdge = this.getResizeEdge();
             const onPoint = this.getOnWhichPoint()
             const onCircumfurance = this.getOnCirleCircumfurance()
+            console.log(onPoint)
 
             const selectedShape = this.existingShapes[this.SelectedIndex];
             const { messageData } = selectedShape;
 
-            if (resizeEdge !==null && messageData.type === "rectangle") {
-                messageData.isResizing = true;
-                messageData.isDraging = false;
-                this.isDraging = false;
-                messageData.resizingEdge = resizeEdge;
-            } else if (draggingShapeIndex && !messageData.isResizing) {
-                messageData.isDraging = true;
-                this.isDraging = true;
-            } else if (resizeEdge ==null && messageData.type === "circle" && !draggingShapeIndex && onCircumfurance) {
-                messageData.isResizing = true;
-                messageData.isDraging = false
-                this.isDraging = false;
-                // add resizing logic for line
-            } else if (resizeEdge==null && messageData.type === "line" && onPoint !==null ) {
-                messageData.isResizing = false;
-                messageData.isDraging = false;
-                this.isDraging = false;
-            } else if (messageData.type === "line" && draggingShapeIndex ) {
-                this.isDraging = true;
-                messageData.isResizing = false;
-                messageData.isDraging = true;
-            } else if (resizeEdge ==null && !draggingShapeIndex ) {
+            if (messageData.type === "rectangle") {
+                if (resizeEdge !== null) {
+                    messageData.isResizing = true;
+                    this.isDraging = false;
+                    messageData.isDraging = false;
+                    messageData.resizingEdge = resizeEdge;
+                }else if(draggingShapeIndex){
+                    messageData.isResizing = false
+                    messageData.isDraging = true
+                    this.isDraging = true
+                }
+            } else if (messageData.type === "circle") {
+                if(onCircumfurance){
+                    messageData.isResizing = true;
+                    messageData.isDraging = false
+                    this.isDraging = false;
+                }else if(draggingShapeIndex){
+                    messageData.isResizing = false;
+                    messageData.isDraging = true 
+                    this.isDraging = true 
+                }
+            } else if (messageData.type === "line") {
+                if(onPoint !== null){
+                    
+                    this.isDraging = false;
+                    messageData.isResizing = true;
+                    messageData.isDraging = false 
+                    messageData.Point = onPoint
+                }else if(draggingShapeIndex){
+                    this.isDraging = true;
+                    messageData.isResizing = false;
+                    messageData.isDraging = true;
+                }
+                
+            } else if (resizeEdge == null && !draggingShapeIndex && onPoint == null && !onCircumfurance) {
                 const selectedIndex = this.existingShapes.findIndex((shape) =>
                     this.GetSelectedShape(shape.messageData)
                 );
@@ -845,21 +860,13 @@ export class Game {
                     this.reDrawShapes()
                 }else{
                     this.SelectedIndex = -1
-                    messageData.isDraging = false;
-                    messageData.isResizing = false;
-                    messageData.selected = false
                     this.isDraging = false;
-                    this.SelectedIndex = -1;
                     this.reDrawShapes()
-
                 }
 
                 
-            }else if(!onCircumfurance  && resizeEdge == null && !draggingShapeIndex  ){
+            }else if(!onCircumfurance  && resizeEdge == null && !draggingShapeIndex && onPoint == null ){
 
-                messageData.isDraging = false;
-                messageData.isResizing = false;
-                messageData.selected = false
                 this.isDraging = false;
                 this.SelectedIndex = -1;
                 this.reDrawShapes()
