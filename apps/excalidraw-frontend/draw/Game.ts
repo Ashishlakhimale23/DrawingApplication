@@ -115,7 +115,6 @@ export class Game {
                     this.ctx.beginPath()
                     this.ctx.moveTo(element.messageData.x, element.messageData.y)
                     this.ctx.quadraticCurveTo(element.messageData.midX,element.messageData.midY,element.messageData.x1,element.messageData.y1)
-                    this.ctx.closePath()
                     this.ctx.stroke()
 
                     if(element.messageData.selected){
@@ -201,7 +200,6 @@ export class Game {
                     this.ctx.beginPath()
                     this.ctx.moveTo(this.InitialPointX,this.InitialPointY)
                     this.ctx.quadraticCurveTo(((this.InitialPointX+this.MovingPointX)/2),((this.InitialPointY+this.MovingPointY)/2),this.MovingPointX,this.MovingPointY)
-                    this.ctx.closePath()
                     this.ctx.stroke()
                     break
                 default:
@@ -398,14 +396,10 @@ export class Game {
                 case "startingPoint":
                     shape.x = this.MovingPointX
                     shape.y = this.MovingPointY
-                    shape.midX = (this.MovingPointX + shape.x1)/2
-                    shape.midY = (this.MovingPointY + shape.y1)/2
                     break
                 case "endingPoint":
                     shape.x1 = this.MovingPointX
                     shape.y1 = this.MovingPointY
-                    shape.midX = (this.MovingPointX + shape.x)/2
-                    shape.midY = (this.MovingPointY + shape.y)/2
                     break
                 case "midPoint" :
                     shape.midX = this.MovingPointX,
@@ -591,7 +585,7 @@ export class Game {
     getDraggingShape() {
         const shape = this.existingShapes[this.SelectedIndex].messageData
         if (!shape.isDraging && this.SelectedIndex === -1 && this.typeOfShapes !== "default") {
-            return
+            return false
         }
 
 
@@ -673,6 +667,8 @@ export class Game {
                 
                 this.ctx.save()
                 this.ctx.fillStyle = "gray"
+                const midX = (shape.x + 2 * shape.midX + shape.x1) / 4;
+                const midY = (shape.y + 2 * shape.midY + shape.y1) / 4;
 
                 this.ctx.beginPath()
                 this.ctx.arc(shape.x,shape.y,5,0,2*Math.PI)
@@ -680,7 +676,7 @@ export class Game {
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc((shape.midX -(shape.x+shape.y)/2), shape.midY, 5, 0, 2 * Math.PI)
+                this.ctx.arc(midX , midY, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
@@ -804,93 +800,99 @@ export class Game {
 
 
     handleDefaultMode = () => {
-        if (this.SelectedIndex !== -1) {
-            const draggingShapeIndex = this.getDraggingShape();
-            const resizeEdge = this.getResizeEdge();
-            const onPoint = this.getOnWhichPoint()
-            const onCircumfurance = this.getOnCirleCircumfurance()
-            console.log(onPoint)
+        if (this.SelectedIndex === -1) {
+            this.selectNewShape();
+            return;
+        }
 
-            const selectedShape = this.existingShapes[this.SelectedIndex];
-            const { messageData } = selectedShape;
+        const draggingShapeIndex = this.getDraggingShape();
+        const resizeEdge = this.getResizeEdge();
+        const onPoint = this.getOnWhichPoint();
+        const onCircumference = this.getOnCirleCircumfurance();
 
-            if (messageData.type === "rectangle") {
-                if (resizeEdge !== null) {
-                    messageData.isResizing = true;
-                    this.isDraging = false;
-                    messageData.isDraging = false;
-                    messageData.resizingEdge = resizeEdge;
-                }else if(draggingShapeIndex){
-                    messageData.isResizing = false
-                    messageData.isDraging = true
-                    this.isDraging = true
-                }
-            } else if (messageData.type === "circle") {
-                if(onCircumfurance){
-                    messageData.isResizing = true;
-                    messageData.isDraging = false
-                    this.isDraging = false;
-                }else if(draggingShapeIndex){
-                    messageData.isResizing = false;
-                    messageData.isDraging = true 
-                    this.isDraging = true 
-                }
-            } else if (messageData.type === "line") {
-                if(onPoint !== null){
-                    
-                    this.isDraging = false;
-                    messageData.isResizing = true;
-                    messageData.isDraging = false 
-                    messageData.Point = onPoint
-                }else if(draggingShapeIndex){
-                    this.isDraging = true;
-                    messageData.isResizing = false;
-                    messageData.isDraging = true;
-                }
-                
-            } else if (resizeEdge == null && !draggingShapeIndex && onPoint == null && !onCircumfurance) {
-                const selectedIndex = this.existingShapes.findIndex((shape) =>
-                    this.GetSelectedShape(shape.messageData)
-                );
+        const selectedShape = this.existingShapes[this.SelectedIndex];
+        const { messageData } = selectedShape;
 
-                if (selectedIndex !== -1) {
-                    this.existingShapes[this.SelectedIndex].messageData.selected = false
-                    this.SelectedIndex = selectedIndex;
-                    this.existingShapes[selectedIndex].messageData.selected = true;
-                    this.reDrawShapes()
-                }else{
-                    this.SelectedIndex = -1
-                    this.isDraging = false;
-                    this.reDrawShapes()
-                }
+        if (messageData.type === "rectangle") {
+            this.handleRectangleMode(messageData, resizeEdge, draggingShapeIndex);
+        } else if (messageData.type === "circle") {
+            this.handleCircleMode(messageData, onCircumference, draggingShapeIndex);
+        } else if (messageData.type === "line") {
+            this.handleLineMode(messageData, onPoint, draggingShapeIndex);
+        }
 
-                
-            }else if(!onCircumfurance  && resizeEdge == null && !draggingShapeIndex && onPoint == null ){
-
-                this.isDraging = false;
-                this.SelectedIndex = -1;
-                this.reDrawShapes()
-
-            }
-        } else {
-            const selectedIndex = this.existingShapes.findIndex((shape) =>
-                this.GetSelectedShape(shape.messageData)
-            );
-
-            if (selectedIndex !== -1) {
-                this.SelectedIndex = selectedIndex;
-                this.existingShapes[selectedIndex].messageData.selected = true;
-                this.reDrawShapes()
-            }
+        if (!resizeEdge && !draggingShapeIndex && onPoint === null && !onCircumference) {
+            this.deselectShape();
         }
     };
+
+    selectNewShape = () => {
+        const selectedIndex = this.existingShapes.findIndex((shape) =>
+            this.GetSelectedShape(shape.messageData)
+        );
+
+        if (selectedIndex !== -1) {
+            this.SelectedIndex = selectedIndex;
+            this.existingShapes[selectedIndex].messageData.selected = true;
+            this.reDrawShapes();
+        }
+    };
+
+    handleRectangleMode = (messageData: Rectangle, resizeEdge: string | null, draggingShapeIndex: boolean) => {
+        if (resizeEdge !== null) {
+            Object.assign(messageData, { isResizing: true, isDraging: false, resizingEdge: resizeEdge });
+            this.isDraging = false;
+        } else if (draggingShapeIndex) {
+            Object.assign(messageData, { isResizing: false, isDraging: true });
+            this.isDraging = true;
+        }
+    };
+
+    handleCircleMode = (messageData: Circle, onCircumference: boolean, draggingShapeIndex: boolean) => {
+        if (onCircumference) {
+            Object.assign(messageData, { isResizing: true, isDraging: false });
+            this.isDraging = false;
+        } else if (draggingShapeIndex) {
+            Object.assign(messageData, { isResizing: false, isDraging: true });
+            this.isDraging = true;
+        }
+    };
+
+    handleLineMode = (messageData: Line, onPoint: string | null, draggingShapeIndex: boolean) => {
+        if (onPoint !== null) {
+            Object.assign(messageData, { isResizing: true, isDraging: false, Point: onPoint });
+            this.isDraging = false;
+            return
+        } else if (draggingShapeIndex && onPoint == null) {
+            Object.assign(messageData, { isResizing: false, isDraging: true });
+            this.isDraging = true;
+        }
+    };
+
+    deselectShape = () => {
+        const selectedIndex = this.existingShapes.findIndex((shape) =>
+            this.GetSelectedShape(shape.messageData)
+        );
+
+        if (selectedIndex !== -1) {
+            this.existingShapes[this.SelectedIndex].messageData.selected = false;
+            this.SelectedIndex = selectedIndex;
+            this.existingShapes[selectedIndex].messageData.selected = true;
+        } else {
+            this.SelectedIndex = -1;
+            this.isDraging = false;
+        }
+
+        this.reDrawShapes();
+    };
+
 
     handleDrawingMode = () => {
 
         this.isDrawing = true;
         this.isDraging = false;
-        this.SelectedIndex !== -1 ? this.existingShapes[this.SelectedIndex].messageData.selected = false: -1 ;
-        
+        this.SelectedIndex !== -1 ? this.existingShapes[this.SelectedIndex].messageData.selected = false : -1;
+
     };
 
     MouseDown = (e: MouseEvent) => {
