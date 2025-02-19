@@ -306,6 +306,8 @@ export class Game {
                     case "bottom-left":
                         shape.resizingEdge = "top-right"
                         break
+
+
                 }
                 
             }
@@ -508,6 +510,7 @@ export class Game {
                return this.isPointOnQuadraticCurve(shape.x,shape.y,shape.midX,shape.midY,shape.x1,shape.y1,this.InitialPointX,this.InitialPointY)
                  
         }
+
     };
 
     isPointOnQuadraticCurve(x:number, y:number, midX:number, midY:number, x1:number, y1:number, actualPointX:number, actualPointY:number, tolerance = 5) {
@@ -676,7 +679,7 @@ export class Game {
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc(midX , midY, 5, 0, 2 * Math.PI)
+                this.ctx.arc((shape.midX -(shape.x+shape.y)/2), shape.midY, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
@@ -800,79 +803,78 @@ export class Game {
 
 
     handleDefaultMode = () => {
-        if (this.SelectedIndex === -1) {
-            this.selectNewShape();
-            return;
-        }
-
-        const draggingShapeIndex = this.getDraggingShape();
-        const resizeEdge = this.getResizeEdge();
-        const onPoint = this.getOnWhichPoint();
-        const onCircumference = this.getOnCirleCircumfurance();
+        if (this.SelectedIndex !== -1) {
+            const draggingShapeIndex = this.getDraggingShape();
+            const resizeEdge = this.getResizeEdge();
+            const onPoint = this.getOnWhichPoint()
+            const onCircumfurance = this.getOnCirleCircumfurance()
+            console.log(onPoint)
 
         const selectedShape = this.existingShapes[this.SelectedIndex];
         const { messageData } = selectedShape;
 
-        if (messageData.type === "rectangle") {
-            this.handleRectangleMode(messageData, resizeEdge, draggingShapeIndex);
-        } else if (messageData.type === "circle") {
-            this.handleCircleMode(messageData, onCircumference, draggingShapeIndex);
-        } else if (messageData.type === "line") {
-            this.handleLineMode(messageData, onPoint, draggingShapeIndex);
-        }
+            if (messageData.type === "rectangle") {
+                if (resizeEdge !== null) {
+                    messageData.isResizing = true;
+                    this.isDraging = false;
+                    messageData.isDraging = false;
+                    messageData.resizingEdge = resizeEdge;
+                }else if(draggingShapeIndex){
+                    messageData.isResizing = false
+                    messageData.isDraging = true
+                    this.isDraging = true
+                }
+            } else if (messageData.type === "circle") {
+                if(onCircumfurance){
+                    messageData.isResizing = true;
+                    messageData.isDraging = false
+                    this.isDraging = false;
+                }else if(draggingShapeIndex){
+                    messageData.isResizing = false;
+                    messageData.isDraging = true 
+                    this.isDraging = true 
+                }
+            } else if (messageData.type === "line") {
+                if(onPoint !== null){
+                    
+                    this.isDraging = false;
+                    messageData.isResizing = true;
+                    messageData.isDraging = false 
+                    messageData.Point = onPoint
+                }else if(draggingShapeIndex){
+                    this.isDraging = true;
+                    messageData.isResizing = false;
+                    messageData.isDraging = true;
+                }
+                
+            } else if (resizeEdge == null && !draggingShapeIndex && onPoint == null && !onCircumfurance) {
+                const selectedIndex = this.existingShapes.findIndex((shape) =>
+                    this.GetSelectedShape(shape.messageData)
+                );
 
-        if (!resizeEdge && !draggingShapeIndex && onPoint === null && !onCircumference) {
-            this.deselectShape();
-        }
-    };
+                if (selectedIndex !== -1) {
+                    this.existingShapes[this.SelectedIndex].messageData.selected = false
+                    this.SelectedIndex = selectedIndex;
+                    this.existingShapes[selectedIndex].messageData.selected = true;
+                    this.reDrawShapes()
+                }else{
+                    this.SelectedIndex = -1
+                    this.isDraging = false;
+                    this.reDrawShapes()
+                }
 
-    selectNewShape = () => {
-        const selectedIndex = this.existingShapes.findIndex((shape) =>
-            this.GetSelectedShape(shape.messageData)
-        );
+                
+            }else if(!onCircumfurance  && resizeEdge == null && !draggingShapeIndex && onPoint == null ){
 
-        if (selectedIndex !== -1) {
-            this.SelectedIndex = selectedIndex;
-            this.existingShapes[selectedIndex].messageData.selected = true;
-            this.reDrawShapes();
-        }
-    };
+                this.isDraging = false;
+                this.SelectedIndex = -1;
+                this.reDrawShapes()
 
-    handleRectangleMode = (messageData: Rectangle, resizeEdge: string | null, draggingShapeIndex: boolean) => {
-        if (resizeEdge !== null) {
-            Object.assign(messageData, { isResizing: true, isDraging: false, resizingEdge: resizeEdge });
-            this.isDraging = false;
-        } else if (draggingShapeIndex) {
-            Object.assign(messageData, { isResizing: false, isDraging: true });
-            this.isDraging = true;
-        }
-    };
-
-    handleCircleMode = (messageData: Circle, onCircumference: boolean, draggingShapeIndex: boolean) => {
-        if (onCircumference) {
-            Object.assign(messageData, { isResizing: true, isDraging: false });
-            this.isDraging = false;
-        } else if (draggingShapeIndex) {
-            Object.assign(messageData, { isResizing: false, isDraging: true });
-            this.isDraging = true;
-        }
-    };
-
-    handleLineMode = (messageData: Line, onPoint: string | null, draggingShapeIndex: boolean) => {
-        if (onPoint !== null) {
-            Object.assign(messageData, { isResizing: true, isDraging: false, Point: onPoint });
-            this.isDraging = false;
-            return
-        } else if (draggingShapeIndex && onPoint == null) {
-            Object.assign(messageData, { isResizing: false, isDraging: true });
-            this.isDraging = true;
-        }
-    };
-
-    deselectShape = () => {
-        const selectedIndex = this.existingShapes.findIndex((shape) =>
-            this.GetSelectedShape(shape.messageData)
-        );
+            }
+        } else {
+            const selectedIndex = this.existingShapes.findIndex((shape) =>
+                this.GetSelectedShape(shape.messageData)
+            );
 
         if (selectedIndex !== -1) {
             this.existingShapes[this.SelectedIndex].messageData.selected = false;
