@@ -1,4 +1,4 @@
-import {getStroke} from "perfect-freehand" 
+import { getStroke } from "perfect-freehand"
 interface BaseShape {
     id?: number
     type: string;
@@ -8,6 +8,13 @@ interface BaseShape {
     isResizing: boolean;
     resizingEdge: string;
     isDraging: boolean
+}
+
+interface Text extends BaseShape {
+    type: "text";
+    content: string;
+    fontSize: number;
+    fontFamily: string;
 }
 
 interface Rectangle extends BaseShape {
@@ -25,18 +32,18 @@ interface Line extends BaseShape {
     type: "line";
     x1: number;
     y1: number;
-    midX:number;
-    midY:number
+    midX: number;
+    midY: number
     Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
 }
 
-interface Pencil extends BaseShape{
-    type : 'pencil';
-    points : number[][]
+interface Pencil extends BaseShape {
+    type: 'pencil';
+    points: number[][]
 
 }
 
-type Shape = Rectangle | Circle | Line | Pencil;
+type Shape = Rectangle | Circle | Line | Pencil | Text;
 
 interface ShapesFromServer {
     id?: number,
@@ -44,7 +51,7 @@ interface ShapesFromServer {
 }
 
 
-type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil"
+type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text"
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -59,7 +66,7 @@ export class Game {
     private roomId: string;
     private SelectedIndex: number = -1;
     private isDraging: boolean = false
-    private Points : number[][] = []
+    private Points: number[][] = []
 
     Socket: WebSocket;
 
@@ -94,9 +101,9 @@ export class Game {
                 case "rectangle":
                     this.ctx.strokeStyle = "white"
                     this.ctx.lineWidth = 4
-                    this.ctx.roundRect(element.messageData.x, element.messageData.y, element.messageData.width, element.messageData.height,10)
+                    this.ctx.roundRect(element.messageData.x, element.messageData.y, element.messageData.width, element.messageData.height, 10)
                     this.ctx.stroke()
-                    if(element.messageData.selected){
+                    if (element.messageData.selected) {
                         this.DrawSelectedShape()
                     }
                     break
@@ -108,9 +115,9 @@ export class Game {
                     this.ctx.arc(element.messageData.x, element.messageData.y, element.messageData.radius, 0, 2 * Math.PI);
                     this.ctx.stroke()
                     this.ctx.closePath()
-                    if(element.messageData.selected){
+                    if (element.messageData.selected) {
                         this.DrawSelectedShape()
-                    } 
+                    }
                     break
 
                 case "line":
@@ -120,22 +127,23 @@ export class Game {
 
                     this.ctx.beginPath()
                     this.ctx.moveTo(element.messageData.x, element.messageData.y)
-                    this.ctx.quadraticCurveTo(element.messageData.midX,element.messageData.midY,element.messageData.x1,element.messageData.y1)
+                    this.ctx.quadraticCurveTo(element.messageData.midX, element.messageData.midY, element.messageData.x1, element.messageData.y1)
                     this.ctx.stroke()
 
-                    if(element.messageData.selected){
+                    if (element.messageData.selected) {
                         this.DrawSelectedShape()
-                    } 
+                    }
 
                     break;
                 case "pencil":
+                    this.ctx.save()
                     if (element.messageData.points.length > 1) {
-                        this.ctx.strokeStyle = "white";
+                        this.ctx.fillStyle = "white";
                         const stroke = getStroke(element.messageData.points, {
-                            size: 4,
-                            smoothing: 0.7,
+                            size: 12,
+                            smoothing: 0.2,
                             thinning: 0.5,
-                            streamline: 0.7,
+                            streamline: 0.99,
                         });
 
                         this.ctx.beginPath();
@@ -146,8 +154,27 @@ export class Game {
                                 this.ctx.lineTo(x, y);
                             }
                         });
-                        this.ctx.stroke();
+                        this.ctx.fill();
                     }
+                    this.ctx.restore()
+                    break;
+                    case "text":
+                    this.ctx.save();
+                    this.ctx.fillStyle = "white";
+                    this.ctx.font = `${element.messageData.fontSize}px ${element.messageData.fontFamily}`;
+                    const lines = element.messageData.content.split('\n');
+                    lines.forEach((line, index) => {
+                        this.ctx.fillText(
+                            line,
+                            element.messageData.x,
+                            element.messageData.y + (index * (element.messageData as Text).fontSize)
+                        );
+                    });
+
+                    if (element.messageData.selected) {
+                        this.DrawSelectedShape();
+                    }
+                    this.ctx.restore();
                     break;
 
             }
@@ -208,10 +235,10 @@ export class Game {
                     this.ctx.strokeStyle = "white"
                     this.ctx.lineWidth = 4
                     this.ctx.beginPath()
-                    this.ctx.roundRect(this.InitialPointX, this.InitialPointY,this.MovingPointX - this.InitialPointX,this.MovingPointY - this.InitialPointY,10)
+                    this.ctx.roundRect(this.InitialPointX, this.InitialPointY, this.MovingPointX - this.InitialPointX, this.MovingPointY - this.InitialPointY, 10)
                     this.ctx.closePath()
                     this.ctx.stroke()
-                    
+
                     break
                 case "circle":
                     this.ctx.strokeStyle = "white"
@@ -226,18 +253,19 @@ export class Game {
                     this.ctx.strokeStyle = "white"
                     this.ctx.lineWidth = 4
                     this.ctx.beginPath()
-                    this.ctx.moveTo(this.InitialPointX,this.InitialPointY)
-                    this.ctx.quadraticCurveTo(((this.InitialPointX+this.MovingPointX)/2),((this.InitialPointY+this.MovingPointY)/2),this.MovingPointX,this.MovingPointY)
+                    this.ctx.moveTo(this.InitialPointX, this.InitialPointY)
+                    this.ctx.quadraticCurveTo(((this.InitialPointX + this.MovingPointX) / 2), ((this.InitialPointY + this.MovingPointY) / 2), this.MovingPointX, this.MovingPointY)
                     this.ctx.stroke()
-                    break
-                    case "pencil":
+                    break;
+                case "pencil":
+                    this.ctx.save()
                     if (this.Points.length > 1) {
-                        this.ctx.strokeStyle = 'white';
+                        this.ctx.fillStyle = 'white';
                         const stroke = getStroke(this.Points, {
-                            size: 4,
-                            smoothing: 0.7,
+                            size: 12,
+                            smoothing: 0.2,
                             thinning: 0.5,
-                            streamline: 0.7,
+                            streamline: 0.99,
                             easing: (t) => t,
                         });
 
@@ -249,11 +277,12 @@ export class Game {
                                 this.ctx.lineTo(x, y);
                             }
                         });
-                       
-                        this.ctx.stroke();
-                    }
 
-                   break
+                        this.ctx.fill();
+                    }
+                    this.ctx.restore()
+
+                    break
 
                 default:
 
@@ -279,10 +308,10 @@ export class Game {
         if (shape.type === "rectangle") {
             const x1 = (shape.width + shape.x)
             const y1 = shape.height + shape.y
-            if(shape.x > x1 && shape.y < y1 ){
+            if (shape.x > x1 && shape.y < y1) {
                 shape.width = shape.x - x1
                 shape.x = x1
-                switch(shape.resizingEdge){
+                switch (shape.resizingEdge) {
                     case "right":
                         shape.resizingEdge = "left"
                         break
@@ -305,12 +334,12 @@ export class Game {
                         break
 
                 }
-                
+
             }
             if (shape.y > y1 && shape.x < x1) {
                 shape.height = shape.y - y1
                 shape.y = y1
-                switch(shape.resizingEdge){
+                switch (shape.resizingEdge) {
                     case "right":
                         shape.resizingEdge = "left"
                         break
@@ -340,21 +369,21 @@ export class Game {
 
                 }
             }
-            
-            if(shape.x > x1 && shape.y > y1){
+
+            if (shape.x > x1 && shape.y > y1) {
                 shape.width = shape.x - x1
                 shape.x = x1
                 shape.height = shape.y - y1
                 shape.y = y1
 
-                switch(shape.resizingEdge){
-                    case "top-left" :
+                switch (shape.resizingEdge) {
+                    case "top-left":
                         shape.resizingEdge = "bottom-right"
                         break
-                    case "top-right" : 
-                        shape.resizingEdge = "bottom-left" 
+                    case "top-right":
+                        shape.resizingEdge = "bottom-left"
                         break
-                    case 'bottom-right' :
+                    case 'bottom-right':
                         shape.resizingEdge = "top-left"
                         break
                     case "bottom-left":
@@ -363,7 +392,7 @@ export class Game {
 
 
                 }
-                
+
             }
 
             switch (shape.resizingEdge) {
@@ -465,9 +494,9 @@ export class Game {
                     shape.midY = (shape.y + shape.y1) / 2;
 
                     break
-                case "midPoint" :
+                case "midPoint":
                     shape.midX = this.MovingPointX,
-                    shape.midY = this.MovingPointY
+                        shape.midY = this.MovingPointY
             }
 
             this.Socket.send(
@@ -477,18 +506,18 @@ export class Game {
                     id: this.existingShapes[this.SelectedIndex].id,
                     message: JSON.stringify(
                         {
-                            x:shape.x,
-                            y:shape.y,
-                            x1:shape.x1,
-                            y1:shape.y1,
-                            midX:shape.midX,
-                            midY:shape.midY,
-                            type:"line",
-                            selected:false,
-                            isResizing:false,
-                            resizingEdge:"",
+                            x: shape.x,
+                            y: shape.y,
+                            x1: shape.x1,
+                            y1: shape.y1,
+                            midX: shape.midX,
+                            midY: shape.midY,
+                            type: "line",
+                            selected: false,
+                            isResizing: false,
+                            resizingEdge: "",
                             isDraging: false,
-                            Point :""
+                            Point: ""
                         }
                     )
                 })
@@ -571,14 +600,23 @@ export class Game {
                 const calculatedRadius = Math.sqrt(Math.pow(shape.x - this.InitialPointX, 2) + Math.pow(shape.y - this.InitialPointY, 2))
                 return (Math.abs(calculatedRadius - shape.radius) <= 5)
             case "line":
-               return this.isPointOnQuadraticCurve(shape.x,shape.y,shape.midX,shape.midY,shape.x1,shape.y1,this.InitialPointX,this.InitialPointY)
-                 
+                return this.isPointOnQuadraticCurve(shape.x, shape.y, shape.midX, shape.midY, shape.x1, shape.y1, this.InitialPointX, this.InitialPointY)
+            case "text":
+                const metrics = this.ctx.measureText(shape.content);
+                const textHeight = shape.fontSize;
+                return (
+                    this.InitialPointX >= shape.x &&
+                    this.InitialPointX <= shape.x + metrics.width &&
+                    this.InitialPointY >= shape.y - textHeight &&
+                    this.InitialPointY <= shape.y
+                );
+
         }
 
     };
 
-    isPointOnQuadraticCurve(x:number, y:number, midX:number, midY:number, x1:number, y1:number, actualPointX:number, actualPointY:number, tolerance = 5) {
-        function quadraticBezier(t:number, xory:number, midX:number, x1ory1:number) {
+    isPointOnQuadraticCurve(x: number, y: number, midX: number, midY: number, x1: number, y1: number, actualPointX: number, actualPointY: number, tolerance = 5) {
+        function quadraticBezier(t: number, xory: number, midX: number, x1ory1: number) {
             return (1 - t) * (1 - t) * xory + 2 * (1 - t) * t * midX + t * t * x1ory1;
         }
         const steps = 1000;
@@ -603,7 +641,7 @@ export class Game {
         if (this.existingShapes[this.SelectedIndex].messageData.type === 'line') {
             const shape = this.existingShapes[this.SelectedIndex].messageData;
             //@ts-ignore
-            const {x,y,x1,y1,midX,midY} = shape
+            const { x, y, x1, y1, midX, midY } = shape
             const tolerance = 10
 
             const distanceToStart = Math.sqrt(
@@ -611,15 +649,15 @@ export class Game {
             );
 
             const distanceToEnd = Math.sqrt(
-                Math.pow(this.InitialPointX - x1 - 2 , 2) + Math.pow(this.InitialPointY - y1-2, 2)
+                Math.pow(this.InitialPointX - x1 - 2, 2) + Math.pow(this.InitialPointY - y1 - 2, 2)
             );
 
-            const midstarttomid = this.getMidPoint({x:x,y:y},{x:midX,y:midY})
-            const midmidtoend = this.getMidPoint({x:midX,y:midY},{x:x1,y:y1})
-            const midPoint = this.getMidPoint(midstarttomid,midmidtoend)
+            const midstarttomid = this.getMidPoint({ x: x, y: y }, { x: midX, y: midY })
+            const midmidtoend = this.getMidPoint({ x: midX, y: midY }, { x: x1, y: y1 })
+            const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
 
             const distanceToMid = Math.sqrt(
-                Math.pow(this.InitialPointX - midPoint.x , 2) + Math.pow(this.InitialPointY - midPoint.y , 2)
+                Math.pow(this.InitialPointX - midPoint.x, 2) + Math.pow(this.InitialPointY - midPoint.y, 2)
             );
 
             if (distanceToStart <= tolerance) {
@@ -642,7 +680,7 @@ export class Game {
     }
 
     getOnCirleCircumfurance() {
-        if (this.existingShapes[this.SelectedIndex].messageData.type == "circle"){
+        if (this.existingShapes[this.SelectedIndex].messageData.type == "circle") {
             const shape = this.existingShapes[this.SelectedIndex].messageData
             const calculatedRadius = Math.sqrt(Math.pow(shape.x - this.InitialPointX, 2) + Math.pow(shape.y - this.InitialPointY, 2))
             //@ts-ignore
@@ -668,69 +706,69 @@ export class Game {
                 return (x < this.InitialPointX && this.InitialPointX < (x + width) && y < this.InitialPointY && this.InitialPointY < (y + height))
             case "circle":
                 const calculatedRadius = Math.sqrt(Math.pow(shape.x - this.InitialPointX, 2) + Math.pow(shape.y - this.InitialPointY, 2))
-                return (calculatedRadius + 5 <= shape.radius )
+                return (calculatedRadius + 5 <= shape.radius)
             case "line":
-               return this.isPointOnQuadraticCurve(shape.x,shape.y,shape.midX,shape.midY,shape.x1,shape.y1,this.InitialPointX,this.InitialPointY)
+                return this.isPointOnQuadraticCurve(shape.x, shape.y, shape.midX, shape.midY, shape.x1, shape.y1, this.InitialPointX, this.InitialPointY)
             default:
                 return false
-                
+
         }
 
     }
 
-    getMidPoint(PointsOne:{x:number,y:number},PointsTwo:{x:number,y:number}){
+    getMidPoint(PointsOne: { x: number, y: number }, PointsTwo: { x: number, y: number }) {
         return {
-        x: (PointsOne.x + PointsTwo.x) / 2,
-        y: (PointsOne.y + PointsTwo.y) / 2,
-    };
+            x: (PointsOne.x + PointsTwo.x) / 2,
+            y: (PointsOne.y + PointsTwo.y) / 2,
+        };
 
     }
 
-    DrawSelectedShape(){
-       
-        if(this.SelectedIndex == -1){
+    DrawSelectedShape() {
+
+        if (this.SelectedIndex == -1) {
             return
         }
         const shape = this.existingShapes[this.SelectedIndex].messageData
-        if(!shape.selected){
-            return 
+        if (!shape.selected) {
+            return
         }
-       
-        switch(shape.type){
+
+        switch (shape.type) {
             case "rectangle":
                 this.ctx.save()
                 this.ctx.strokeStyle = "gray"
                 this.ctx.lineWidth = 1
                 this.ctx.fillStyle = "white"
 
-                const minX = Math.min(shape.x,(Math.abs(shape.width) + shape.x))
-                const minY = Math.min(shape.y,(Math.abs(shape.height) + shape.y))
+                const minX = Math.min(shape.x, (Math.abs(shape.width) + shape.x))
+                const minY = Math.min(shape.y, (Math.abs(shape.height) + shape.y))
 
-                this.ctx.strokeRect(minX - 5, minY - 5, shape.width + 10,shape.height + 10)
+                this.ctx.strokeRect(minX - 5, minY - 5, shape.width + 10, shape.height + 10)
                 this.ctx.beginPath()
-                this.ctx.arc((minX - 5),(minY - 5),5,0,2*Math.PI)
+                this.ctx.arc((minX - 5), (minY - 5), 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc(shape.x + 5+shape.width, (minY - 5), 5, 0, 2 * Math.PI)
+                this.ctx.arc(shape.x + 5 + shape.width, (minY - 5), 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc((minX - 5),shape.y + 5 + shape.height , 5, 0, 2 * Math.PI)
+                this.ctx.arc((minX - 5), shape.y + 5 + shape.height, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc((shape.width+(minX+5)),(shape.height+(minY+5)),3,0,2*Math.PI)
+                this.ctx.arc((shape.width + (minX + 5)), (shape.height + (minY + 5)), 3, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
                 this.ctx.restore()
 
 
-                break 
+                break
             case "circle":
                 this.ctx.save()
                 this.ctx.strokeStyle = "gray"
@@ -742,7 +780,7 @@ export class Game {
                 this.ctx.restore()
                 break
             case "line":
-                
+
                 this.ctx.save()
                 this.ctx.fillStyle = "gray"
 
@@ -752,20 +790,20 @@ export class Game {
 
 
                 this.ctx.beginPath()
-                this.ctx.arc(shape.x,shape.y,5,0,2*Math.PI)
+                this.ctx.arc(shape.x, shape.y, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc(midPoint.x , midPoint.y, 5, 0, 2 * Math.PI)
+                this.ctx.arc(midPoint.x, midPoint.y, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc(shape.x1,shape.y1,5,0,2*Math.PI)
+                this.ctx.arc(shape.x1, shape.y1, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
-                
+
                 this.ctx.restore()
 
                 break
@@ -856,9 +894,9 @@ export class Game {
                                 x: shape.x,
                                 y: shape.y,
                                 x1: shape.x1,
-                                y1 :shape.y1,
-                                midX : shape.midX,
-                                midY : shape.midY,
+                                y1: shape.y1,
+                                midX: shape.midX,
+                                midY: shape.midY,
                                 type: "line",
                                 selected: false,
                                 isResizing: false,
@@ -867,7 +905,7 @@ export class Game {
                             }
                         )
                     })
-                ) 
+                )
                 break
 
         }
@@ -902,13 +940,13 @@ export class Game {
             case "line":
                 this.handleLine(messageData, draggingShapeIndex);
                 break;
-          
+
         }
 
         if (!draggingShapeIndex) this.deselectShape();
     };
 
-   
+
 
     handleRectangle = (messageData: Rectangle, draggingShapeIndex: boolean) => {
         const resizeEdge = this.getResizeEdge();
@@ -928,7 +966,7 @@ export class Game {
     };
 
     handleLine = (messageData: Line, draggingShapeIndex: boolean) => {
-        const onPoint =  this.getOnWhichPoint()
+        const onPoint = this.getOnWhichPoint()
         console.log(onPoint)
         if (onPoint) {
             messageData.Point = onPoint
@@ -938,15 +976,15 @@ export class Game {
         }
     };
 
-    setResizing = (messageData: Shape, resizingEdge: string = "" ) => {
+    setResizing = (messageData: Shape, resizingEdge: string = "") => {
         messageData.isResizing = true;
         messageData.isDraging = false;
         this.isDraging = false;
         messageData.resizingEdge = resizingEdge;
-        
+
     };
 
-    setDragging = (messageData:Shape) => {
+    setDragging = (messageData: Shape) => {
         messageData.isDraging = true;
         this.isDraging = true;
         messageData.isResizing = false;
@@ -980,13 +1018,83 @@ export class Game {
         this.isDrawing = true;
         this.isDraging = false;
         this.SelectedIndex !== -1 ? this.existingShapes[this.SelectedIndex].messageData.selected = false : -1;
-        if(this.typeOfShapes == 'pencil'){
-            this.Points.push([this.InitialPointX,this.InitialPointY])
+        if (this.typeOfShapes == 'pencil') {
+            this.Points.push([this.InitialPointX, this.InitialPointY])
 
         }
-        
+
 
     };
+
+    // Add these methods to your Game class
+private createTextArea(x: number, y: number) {
+    console.log(`Creating textarea at: ${x}, ${y}`);
+
+    const textArea = document.createElement('textarea');
+    textArea.style.position = 'fixed';
+    textArea.style.left = `${x}px`;
+    textArea.style.top = `${y}px`;
+    textArea.style.background = 'transparent';
+    textArea.style.color = 'white';
+    textArea.style.border = '1px solid green';  // Make it visible
+    textArea.style.outline = 'none';
+    textArea.style.font = '20px Arial';
+    textArea.style.padding = '2px';
+    textArea.style.margin = '0px';
+    textArea.style.overflow = 'hidden';
+    textArea.style.resize = 'none';
+    textArea.style.whiteSpace = 'nowrap';
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+const handleBlur = () => {
+        if (textArea.value) {
+            this.existingShapes.push({
+                messageData: {
+                    x,
+                    y: y + 20,
+                    content: textArea.value,
+                    type: "text",
+                    selected: false,
+                    isResizing: false,
+                    resizingEdge: "",
+                    isDraging: false,
+                    fontSize: 20,
+                    fontFamily: 'Arial'
+                }
+            });
+
+            this.Socket.send(
+                JSON.stringify({
+                    type: "chat",
+                    roomId: "2",
+                    message: JSON.stringify({
+                        x,
+                        y: y + 20,
+                        content: textArea.value,
+                        type: "text",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDraging: false,
+                        fontSize: 20,
+                        fontFamily: 'Arial'
+                    })
+                })
+            );
+        }
+        document.body.removeChild(textArea);
+        this.reDrawShapes();
+    };
+
+    textArea.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleBlur();
+        }
+    });
+}
+
 
     MouseDown = (e: MouseEvent) => {
 
@@ -1012,8 +1120,11 @@ export class Game {
 
                 break
             case "pencil":
-            this.handleDrawingMode();
-            break
+                this.handleDrawingMode();
+                break
+            case "text":
+                this.createTextArea(e.clientX, e.clientY);
+                break;
             default:
                 null
         }
@@ -1045,7 +1156,7 @@ export class Game {
         }
 
     }
- 
+
     MouseUp = (e: MouseEvent) => {
 
         if (this.isDrawing) {
@@ -1135,8 +1246,8 @@ export class Game {
                             y: this.InitialPointY,
                             x1: this.MovingPointX,
                             y1: this.MovingPointY,
-                            midX:midPoint.x,
-                            midY:midPoint.y,
+                            midX: midPoint.x,
+                            midY: midPoint.y,
                             type: "line",
                             selected: false,
                             isResizing: false,
@@ -1154,8 +1265,8 @@ export class Game {
                             message: JSON.stringify({
                                 x: this.InitialPointX,
                                 y: this.InitialPointY,
-                                midX:(this.InitialPointX+this.MovingPointX)/2,
-                                midY:(this.InitialPointY+this.MovingPointY)/2,
+                                midX: (this.InitialPointX + this.MovingPointX) / 2,
+                                midY: (this.InitialPointY + this.MovingPointY) / 2,
                                 x1: this.MovingPointX,
                                 y1: this.MovingPointY,
                                 type: "line",
@@ -1172,7 +1283,7 @@ export class Game {
                         messageData: {
                             x: this.InitialPointX,
                             y: this.InitialPointY,
-                            points:this.Points,
+                            points: this.Points,
                             type: "pencil",
                             selected: false,
                             isResizing: false,
@@ -1189,7 +1300,7 @@ export class Game {
                             message: JSON.stringify({
                                 x: this.InitialPointX,
                                 y: this.InitialPointY,
-                                points:this.Points,
+                                points: this.Points,
                                 type: "pencil",
                                 selected: false,
                                 isResizing: false,
@@ -1266,10 +1377,10 @@ export class Game {
                                 {
                                     x: shape.messageData.x,
                                     y: shape.messageData.y,
-                                    x1:shape.messageData.x1,
-                                    y1:shape.messageData.y1,
-                                    midX:shape.messageData.midX,
-                                    midY:shape.messageData.midY,
+                                    x1: shape.messageData.x1,
+                                    y1: shape.messageData.y1,
+                                    midX: shape.messageData.midX,
+                                    midY: shape.messageData.midY,
                                     type: "line",
                                     selected: false,
                                     isResizing: false,
@@ -1351,10 +1462,10 @@ export class Game {
                                 {
                                     x: shape.messageData.x,
                                     y: shape.messageData.y,
-                                    x1:shape.messageData.x1,
-                                    y1:shape.messageData.y1,
-                                    midX:shape.messageData.midX,
-                                    midY:shape.messageData.midY,
+                                    x1: shape.messageData.x1,
+                                    y1: shape.messageData.y1,
+                                    midX: shape.messageData.midX,
+                                    midY: shape.messageData.midY,
                                     type: "line",
                                     selected: false,
                                     isResizing: false,

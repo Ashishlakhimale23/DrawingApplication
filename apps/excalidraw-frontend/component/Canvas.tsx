@@ -2,7 +2,7 @@
 import {  useEffect, useRef, useState, RefObject, SetStateAction ,Dispatch} from "react";
 import { Game } from "@/draw/Game";
 
-type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil";
+type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text";
 
 interface BaseShape {
   type: string;
@@ -137,6 +137,16 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         }}
       >
         pencil 
+      </button>
+      
+      <button
+        className="bg-black text-white p-2 rounded-md"
+        onClick={(e) => {
+          e.stopPropagation();
+          setTypeOFShapes("text");
+        }}
+      >
+       text 
       </button>
       
     </div>
