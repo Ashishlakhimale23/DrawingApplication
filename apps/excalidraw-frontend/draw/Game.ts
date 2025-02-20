@@ -603,6 +603,7 @@ export class Game {
                 return this.isPointOnQuadraticCurve(shape.x, shape.y, shape.midX, shape.midY, shape.x1, shape.y1, this.InitialPointX, this.InitialPointY)
             case "text":
                 const metrics = this.ctx.measureText(shape.content);
+                
                 const textHeight = shape.fontSize;
                 return (
                     this.InitialPointX >= shape.x &&
@@ -709,6 +710,15 @@ export class Game {
                 return (calculatedRadius + 5 <= shape.radius)
             case "line":
                 return this.isPointOnQuadraticCurve(shape.x, shape.y, shape.midX, shape.midY, shape.x1, shape.y1, this.InitialPointX, this.InitialPointY)
+            case "text":
+                const metrics = this.ctx.measureText(shape.content);
+                const textHeight = shape.fontSize;
+                return (
+                    this.InitialPointX >= shape.x &&
+                    this.InitialPointX <= shape.x + metrics.width &&
+                    this.InitialPointY >= shape.y - textHeight &&
+                    this.InitialPointY <= shape.y
+                );
             default:
                 return false
 
@@ -807,6 +817,45 @@ export class Game {
                 this.ctx.restore()
 
                 break
+
+            case "text":
+                this.ctx.save();
+                this.ctx.strokeStyle = "gray";
+                this.ctx.lineWidth = 1;
+                this.ctx.fillStyle = "white";
+
+                // Calculate text bounds
+                const metrics = this.ctx.measureText(shape.content);
+                const textWidth = metrics.width;
+                const textHeight = shape.fontSize;
+
+                // Draw selection rectangle
+                this.ctx.strokeRect(
+                    shape.x - 5,
+                    shape.y - textHeight - 5,
+                    textWidth + 10,
+                    textHeight + 10
+                );
+
+                // Draw corner handles
+                this.ctx.beginPath();
+                this.ctx.arc(shape.x - 5, shape.y - textHeight - 5, 3, 0, 2 * Math.PI); // Top-left
+                this.ctx.fill();
+
+                this.ctx.beginPath();
+                this.ctx.arc(shape.x + textWidth + 5, shape.y - textHeight - 5, 3, 0, 2 * Math.PI); // Top-right
+                this.ctx.fill();
+
+                this.ctx.beginPath();
+                this.ctx.arc(shape.x - 5, shape.y + 5, 3, 0, 2 * Math.PI); // Bottom-left
+                this.ctx.fill();
+
+                this.ctx.beginPath();
+                this.ctx.arc(shape.x + textWidth + 5, shape.y + 5, 3, 0, 2 * Math.PI); // Bottom-right
+                this.ctx.fill();
+
+                this.ctx.restore();
+                break;
         }
 
     }
@@ -908,6 +957,32 @@ export class Game {
                 )
                 break
 
+                case "text":
+                    
+                shape.x += dx;
+                shape.y += dy;
+
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: "2",
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify({
+                            x: shape.x,
+                            y: shape.y,
+                            content: shape.content,
+                            type: "text",
+                            selected: false,
+                            isResizing: false,
+                            resizingEdge: "",
+                            isDraging: false,
+                            fontSize: shape.fontSize,
+                            fontFamily: shape.fontFamily
+                        })
+                    })
+                );
+                break;
+
         }
 
         this.InitialPointX = this.MovingPointX;
@@ -940,10 +1015,18 @@ export class Game {
             case "line":
                 this.handleLine(messageData, draggingShapeIndex);
                 break;
+            case "text":
+                this.handleText(messageData ,draggingShapeIndex)
 
         }
 
         if (!draggingShapeIndex) this.deselectShape();
+    };
+
+    handleText = (messageData: Text, draggingShapeIndex: boolean) => {
+        if (draggingShapeIndex) {
+            this.setDragging(messageData);
+        }
     };
 
 
@@ -1026,7 +1109,6 @@ export class Game {
 
     };
 
-    // Add these methods to your Game class
 private createTextArea(x: number, y: number) {
     console.log(`Creating textarea at: ${x}, ${y}`);
 
@@ -1036,7 +1118,7 @@ private createTextArea(x: number, y: number) {
     textArea.style.top = `${y}px`;
     textArea.style.background = 'transparent';
     textArea.style.color = 'white';
-    textArea.style.border = '1px solid green';  // Make it visible
+    textArea.style.border = "none";  
     textArea.style.outline = 'none';
     textArea.style.font = '20px Arial';
     textArea.style.padding = '2px';
@@ -1047,7 +1129,7 @@ private createTextArea(x: number, y: number) {
 
     document.body.appendChild(textArea);
     textArea.focus();
-const handleBlur = () => {
+    const handlePushText = () => {
         if (textArea.value) {
             this.existingShapes.push({
                 messageData: {
@@ -1090,7 +1172,7 @@ const handleBlur = () => {
     textArea.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleBlur();
+            handlePushText();
         }
     });
 }
@@ -1476,6 +1558,27 @@ const handleBlur = () => {
                         })
                     )
                     break
+                case "text":
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "draged",
+                            roomId: "2",
+                            id: shape.id,
+                            message: JSON.stringify({
+                                x: shape.messageData.x,
+                                y: shape.messageData.y,
+                                content: shape.messageData.content,
+                                type: "text",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false,
+                                fontSize: shape.messageData.fontSize,
+                                fontFamily: shape.messageData.fontFamily
+                            })
+                        })
+                    );
+                    break;
                 default:
                     null;
 
