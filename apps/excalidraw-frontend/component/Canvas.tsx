@@ -2,7 +2,7 @@
 import {  useEffect, useRef, useState, RefObject, SetStateAction ,Dispatch} from "react";
 import { Game } from "@/draw/Game";
 
-type TypeOfShapes = "rectangle" | "default" | "circle" | "line";
+type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil";
 
 interface BaseShape {
   type: string;
@@ -83,7 +83,7 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         position: "fixed",
         top: 10,
         left: 10,
-        backgroundColor : "white"
+        backgroundColor: "white",
       }}
     >
       <button
@@ -93,7 +93,7 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         }}
         onClick={(e) => {
           e.stopPropagation();
-          setTypeOFShapes("default")
+          setTypeOFShapes("default");
         }}
       >
         cursor
@@ -103,8 +103,7 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         onClick={(e) => {
           e.stopPropagation();
 
-          setTypeOFShapes("rectangle")
-
+          setTypeOFShapes("rectangle");
         }}
       >
         Rectangle
@@ -114,7 +113,7 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         className="bg-black text-white p-2 rounded-md"
         onClick={(e) => {
           e.stopPropagation();
-          setTypeOFShapes("circle")
+          setTypeOFShapes("circle");
         }}
       >
         Circle
@@ -124,11 +123,22 @@ function ToolBar({ setTypeOFShapes }: { setTypeOFShapes :Dispatch<SetStateAction
         className="bg-black text-white p-2 rounded-md"
         onClick={(e) => {
           e.stopPropagation();
-          setTypeOFShapes("line")
+          setTypeOFShapes("line");
         }}
       >
         line
       </button>
+
+      <button
+        className="bg-black text-white p-2 rounded-md"
+        onClick={(e) => {
+          e.stopPropagation();
+          setTypeOFShapes("pencil");
+        }}
+      >
+        pencil 
+      </button>
+      
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import {getStroke} from "perfect-freehand" 
 interface BaseShape {
     id?: number
     type: string;
@@ -29,7 +30,13 @@ interface Line extends BaseShape {
     Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
 }
 
-type Shape = Rectangle | Circle | Line;
+interface Pencil extends BaseShape{
+    type : 'pencil';
+    points : number[][]
+
+}
+
+type Shape = Rectangle | Circle | Line | Pencil;
 
 interface ShapesFromServer {
     id?: number,
@@ -37,7 +44,7 @@ interface ShapesFromServer {
 }
 
 
-type TypeOfShapes = "rectangle" | "default" | "circle" | "line"
+type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil"
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -52,6 +59,7 @@ export class Game {
     private roomId: string;
     private SelectedIndex: number = -1;
     private isDraging: boolean = false
+    private Points : number[][] = []
 
     Socket: WebSocket;
 
@@ -69,8 +77,6 @@ export class Game {
         this.initMouseHandlers()
 
     }
-
-
 
     init() {
         this.reDrawShapes();
@@ -120,6 +126,28 @@ export class Game {
                     if(element.messageData.selected){
                         this.DrawSelectedShape()
                     } 
+
+                    break;
+                case "pencil":
+                    if (element.messageData.points.length > 1) {
+                        this.ctx.strokeStyle = "white";
+                        const stroke = getStroke(element.messageData.points, {
+                            size: 4,
+                            smoothing: 0.7,
+                            thinning: 0.5,
+                            streamline: 0.7,
+                        });
+
+                        this.ctx.beginPath();
+                        stroke.forEach(([x, y], i) => {
+                            if (i === 0) {
+                                this.ctx.moveTo(x, y);
+                            } else {
+                                this.ctx.lineTo(x, y);
+                            }
+                        });
+                        this.ctx.stroke();
+                    }
                     break;
 
             }
@@ -202,7 +230,33 @@ export class Game {
                     this.ctx.quadraticCurveTo(((this.InitialPointX+this.MovingPointX)/2),((this.InitialPointY+this.MovingPointY)/2),this.MovingPointX,this.MovingPointY)
                     this.ctx.stroke()
                     break
+                    case "pencil":
+                    if (this.Points.length > 1) {
+                        this.ctx.strokeStyle = 'white';
+                        const stroke = getStroke(this.Points, {
+                            size: 4,
+                            smoothing: 0.7,
+                            thinning: 0.5,
+                            streamline: 0.7,
+                            easing: (t) => t,
+                        });
+
+                        this.ctx.beginPath();
+                        stroke.forEach(([x, y], i) => {
+                            if (i === 0) {
+                                this.ctx.moveTo(x, y);
+                            } else {
+                                this.ctx.lineTo(x, y);
+                            }
+                        });
+                       
+                        this.ctx.stroke();
+                    }
+
+                   break
+
                 default:
+
                     null
             }
 
@@ -841,10 +895,13 @@ export class Game {
             case "line":
                 this.handleLine(messageData, draggingShapeIndex);
                 break;
+          
         }
 
         if (!draggingShapeIndex) this.deselectShape();
     };
+
+   
 
     handleRectangle = (messageData: Rectangle, draggingShapeIndex: boolean) => {
         const resizeEdge = this.getResizeEdge();
@@ -916,6 +973,11 @@ export class Game {
         this.isDrawing = true;
         this.isDraging = false;
         this.SelectedIndex !== -1 ? this.existingShapes[this.SelectedIndex].messageData.selected = false : -1;
+        if(this.typeOfShapes == 'pencil'){
+            this.Points.push([this.InitialPointX,this.InitialPointY])
+
+        }
+        
 
     };
 
@@ -942,6 +1004,9 @@ export class Game {
                 this.handleDrawingMode()
 
                 break
+            case "pencil":
+            this.handleDrawingMode();
+            break
             default:
                 null
         }
@@ -958,6 +1023,9 @@ export class Game {
             this.isDrawing &&
             this.SelectedIndex == -1 && this.canvas && !this.isDraging
         ) {
+            if (this.typeOfShapes === "pencil") {
+                this.Points.push([this.MovingPointX, this.MovingPointY]);
+            }
             this.reDrawShapes();
             this.Draw();
         } else if (this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && !this.isDraging && this.existingShapes[this.SelectedIndex].messageData.isResizing) {
@@ -1085,11 +1153,44 @@ export class Game {
                         })
                     )
                     break;
+                case "pencil":
+                    this.existingShapes.push({
+                        messageData: {
+                            x: this.InitialPointX,
+                            y: this.InitialPointY,
+                            points:this.Points,
+                            type: "pencil",
+                            selected: false,
+                            isResizing: false,
+                            resizingEdge: "",
+                            isDraging: false,
+                        }
+
+                    });
+
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "chat",
+                            roomId: "2",
+                            message: JSON.stringify({
+                                x: this.InitialPointX,
+                                y: this.InitialPointY,
+                                points:this.Points,
+                                type: "pencil",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false
+                            })
+                        })
+                    )
+                    break;
 
             }
 
 
             this.isDrawing = false
+            this.Points = []
 
         }
 
