@@ -447,29 +447,23 @@ export class Game {
                 })
             )
         } else if (shape.type == "line") {
-            console.log(shape.Point)
             switch (shape.Point) {
                 case "startingPoint":
 
-                    const dxStart = this.MovingPointX - shape.x;
-                    const dyStart = this.MovingPointY - shape.y;
 
                     shape.x = this.MovingPointX;
                     shape.y = this.MovingPointY;
+                    shape.midX = (shape.x + shape.x1) / 2;
+                    shape.midY = (shape.y + shape.y1) / 2;
 
-                    shape.midX += dxStart / 2;
-                    shape.midY += dyStart / 2;
                     break
                 case "endingPoint":
-                    const dxEnd = this.MovingPointX - shape.x1;
-                    const dyEnd = this.MovingPointY - shape.y1;
 
                     shape.x1 = this.MovingPointX;
                     shape.y1 = this.MovingPointY;
+                    shape.midX = (shape.x + shape.x1) / 2;
+                    shape.midY = (shape.y + shape.y1) / 2;
 
-                    shape.midX += dxEnd / 2;
-                    shape.midY += dyEnd / 2; shape.x1 = this.MovingPointX
-                    shape.y1 = this.MovingPointY
                     break
                 case "midPoint" :
                     shape.midX = this.MovingPointX,
@@ -610,7 +604,7 @@ export class Game {
             const shape = this.existingShapes[this.SelectedIndex].messageData;
             //@ts-ignore
             const {x,y,x1,y1,midX,midY} = shape
-            const tolerance = 4
+            const tolerance = 10
 
             const distanceToStart = Math.sqrt(
                 Math.pow(this.InitialPointX - x + 2, 2) + Math.pow(this.InitialPointY - y + 2, 2)
@@ -620,11 +614,13 @@ export class Game {
                 Math.pow(this.InitialPointX - x1 - 2 , 2) + Math.pow(this.InitialPointY - y1-2, 2)
             );
 
-            const distanceToMid= Math.sqrt(
-                Math.pow(this.InitialPointX - midX - 2 , 2) + Math.pow(this.InitialPointY - midY - 2, 2)
-            )
+            const midstarttomid = this.getMidPoint({x:x,y:y},{x:midX,y:midY})
+            const midmidtoend = this.getMidPoint({x:midX,y:midY},{x:x1,y:y1})
+            const midPoint = this.getMidPoint(midstarttomid,midmidtoend)
 
-            console.log(distanceToMid)
+            const distanceToMid = Math.sqrt(
+                Math.pow(this.InitialPointX - midPoint.x , 2) + Math.pow(this.InitialPointY - midPoint.y , 2)
+            );
 
             if (distanceToStart <= tolerance) {
                 return "startingPoint";
@@ -638,9 +634,9 @@ export class Game {
                 return "midPoint";
             }
 
-            return null;
+            return false;
         }
-        return null
+        return false
 
 
     }
@@ -679,6 +675,14 @@ export class Game {
                 return false
                 
         }
+
+    }
+
+    getMidPoint(PointsOne:{x:number,y:number},PointsTwo:{x:number,y:number}){
+        return {
+        x: (PointsOne.x + PointsTwo.x) / 2,
+        y: (PointsOne.y + PointsTwo.y) / 2,
+    };
 
     }
 
@@ -741,8 +745,11 @@ export class Game {
                 
                 this.ctx.save()
                 this.ctx.fillStyle = "gray"
-                const midX = (shape.x + 2 * shape.midX + shape.x1) / 4;
-                const midY = (shape.y + 2 * shape.midY + shape.y1) / 4;
+
+                const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
+                const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
+                const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
+
 
                 this.ctx.beginPath()
                 this.ctx.arc(shape.x,shape.y,5,0,2*Math.PI)
@@ -750,7 +757,7 @@ export class Game {
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc(midX , midY, 5, 0, 2 * Math.PI)
+                this.ctx.arc(midPoint.x , midPoint.y, 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
@@ -923,10 +930,10 @@ export class Game {
     handleLine = (messageData: Line, draggingShapeIndex: boolean) => {
         const onPoint =  this.getOnWhichPoint()
         console.log(onPoint)
-        if ( onPoint !== null) {
+        if (onPoint) {
             messageData.Point = onPoint
             this.setResizing(messageData);
-        } else if (draggingShapeIndex && onPoint=== null) {
+        } else if (draggingShapeIndex && !onPoint) {
             this.setDragging(messageData);
         }
     };
@@ -1115,14 +1122,21 @@ export class Game {
 
                     break;
                 case "line":
+
+                    const midX = (this.InitialPointX + this.MovingPointX) / 2
+                    const midY = (this.InitialPointY + this.MovingPointY) / 2
+                    const midstarttomid = this.getMidPoint({ x: this.InitialPointX, y: this.InitialPointY }, { x: midX, y: midY })
+                    const midmidtoend = this.getMidPoint({ x: midX, y: midY }, { x: this.MovingPointX, y: this.MovingPointY })
+                    const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
+
                     this.existingShapes.push({
                         messageData: {
                             x: this.InitialPointX,
                             y: this.InitialPointY,
                             x1: this.MovingPointX,
                             y1: this.MovingPointY,
-                            midX:(this.InitialPointX+this.MovingPointX)/2,
-                            midY:(this.InitialPointY+this.MovingPointY)/2,
+                            midX:midPoint.x,
+                            midY:midPoint.y,
                             type: "line",
                             selected: false,
                             isResizing: false,
