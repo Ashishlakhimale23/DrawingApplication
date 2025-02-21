@@ -101,10 +101,11 @@ export class Game {
                 case "rectangle":
                     this.ctx.strokeStyle = "white"
                     this.ctx.lineWidth = 4
+
                     this.ctx.roundRect(element.messageData.x, element.messageData.y, element.messageData.width, element.messageData.height, 10)
                     this.ctx.stroke()
                     if (element.messageData.selected) {
-                        this.DrawSelectedShape()
+                        this.DrawSelectedShape(element.messageData)
                     }
                     break
 
@@ -116,7 +117,7 @@ export class Game {
                     this.ctx.stroke()
                     this.ctx.closePath()
                     if (element.messageData.selected) {
-                        this.DrawSelectedShape()
+                        this.DrawSelectedShape(element.messageData)
                     }
                     break
 
@@ -131,7 +132,7 @@ export class Game {
                     this.ctx.stroke()
 
                     if (element.messageData.selected) {
-                        this.DrawSelectedShape()
+                        this.DrawSelectedShape(element.messageData)
                     }
 
                     break;
@@ -172,7 +173,7 @@ export class Game {
                     });
 
                     if (element.messageData.selected) {
-                        this.DrawSelectedShape();
+                        this.DrawSelectedShape(element.messageData);
                     }
                     this.ctx.restore();
                     break;
@@ -482,21 +483,17 @@ export class Game {
 
                     shape.x = this.MovingPointX;
                     shape.y = this.MovingPointY;
-                    shape.midX = (shape.x + shape.x1) / 2;
-                    shape.midY = (shape.y + shape.y1) / 2;
 
                     break
                 case "endingPoint":
 
                     shape.x1 = this.MovingPointX;
                     shape.y1 = this.MovingPointY;
-                    shape.midX = (shape.x + shape.x1) / 2;
-                    shape.midY = (shape.y + shape.y1) / 2;
 
                     break
                 case "midPoint":
                     shape.midX = this.MovingPointX,
-                        shape.midY = this.MovingPointY
+                    shape.midY = this.MovingPointY
             }
 
             this.Socket.send(
@@ -734,12 +731,8 @@ export class Game {
 
     }
 
-    DrawSelectedShape() {
-
-        if (this.SelectedIndex == -1) {
-            return
-        }
-        const shape = this.existingShapes[this.SelectedIndex].messageData
+    DrawSelectedShape(shape:Shape) {
+        
         if (!shape.selected) {
             return
         }
@@ -771,7 +764,7 @@ export class Game {
                 this.ctx.fill()
 
                 this.ctx.beginPath()
-                this.ctx.arc((shape.width + (minX + 5)), (shape.height + (minY + 5)), 3, 0, 2 * Math.PI)
+                this.ctx.arc((shape.width + (minX + 5)), (shape.height + (minY + 5)), 5, 0, 2 * Math.PI)
                 this.ctx.closePath()
                 this.ctx.fill()
 
@@ -783,11 +776,14 @@ export class Game {
                 this.ctx.save()
                 this.ctx.strokeStyle = "gray"
                 this.ctx.lineWidth = 2
+
                 this.ctx.beginPath()
                 this.ctx.arc(shape.x, shape.y, shape.radius + 7, 0, 2 * Math.PI);
-                this.ctx.stroke()
                 this.ctx.closePath()
+                this.ctx.stroke()
                 this.ctx.restore()
+
+
                 break
             case "line":
 
@@ -824,12 +820,10 @@ export class Game {
                 this.ctx.lineWidth = 1;
                 this.ctx.fillStyle = "white";
 
-                // Calculate text bounds
                 const metrics = this.ctx.measureText(shape.content);
                 const textWidth = metrics.width;
                 const textHeight = shape.fontSize;
 
-                // Draw selection rectangle
                 this.ctx.strokeRect(
                     shape.x - 5,
                     shape.y - textHeight - 5,
@@ -837,25 +831,25 @@ export class Game {
                     textHeight + 10
                 );
 
-                // Draw corner handles
                 this.ctx.beginPath();
-                this.ctx.arc(shape.x - 5, shape.y - textHeight - 5, 3, 0, 2 * Math.PI); // Top-left
+                this.ctx.arc(shape.x - 5, shape.y - textHeight - 5, 5, 0, 2 * Math.PI); 
                 this.ctx.fill();
 
                 this.ctx.beginPath();
-                this.ctx.arc(shape.x + textWidth + 5, shape.y - textHeight - 5, 3, 0, 2 * Math.PI); // Top-right
+                this.ctx.arc(shape.x + textWidth + 5, shape.y - textHeight - 5, 5, 0, 2 * Math.PI); 
                 this.ctx.fill();
 
                 this.ctx.beginPath();
-                this.ctx.arc(shape.x - 5, shape.y + 5, 3, 0, 2 * Math.PI); // Bottom-left
+                this.ctx.arc(shape.x - 5, shape.y + 5, 5, 0, 2 * Math.PI); 
                 this.ctx.fill();
 
                 this.ctx.beginPath();
-                this.ctx.arc(shape.x + textWidth + 5, shape.y + 5, 3, 0, 2 * Math.PI); // Bottom-right
+                this.ctx.arc(shape.x + textWidth + 5, shape.y + 5, 5, 0, 2 * Math.PI); 
                 this.ctx.fill();
 
                 this.ctx.restore();
                 break;
+            
         }
 
     }
