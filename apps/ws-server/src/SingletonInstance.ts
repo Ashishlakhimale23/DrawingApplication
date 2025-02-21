@@ -1,44 +1,46 @@
-class User{
-    public Socket : WebSocket;
-    public UserId : string;
-
-    constructor(Socket : WebSocket , UserId : string){
-        this.Socket = Socket
-        this.UserId = UserId
-    }
+interface Users{
+    ws : WebSocket,
 }
 
-class Singleton{
-    private static instance :Singleton;
-    private usersWithInRoom : Map<string , User[]>
-    private userAndRoomMapping : Map<string , string>
+class Singleton {
+    private userRoomMapping : Map<string,Users[]> 
+    private static instance : Singleton
 
-    private constructor(){
-        this.userAndRoomMapping = new Map<string , string>();
-        this.usersWithInRoom = new Map<string , User[]>()
+    constructor(){
+        this.userRoomMapping = new Map<string,Users[]>
     }
 
     static getInstance(){
         if(Singleton.instance){
             return Singleton.instance
         }
-
         Singleton.instance = new Singleton()
-
         return Singleton.instance
     }
 
-    addUser(roomId:string , user : User){
-        this.usersWithInRoom.set(roomId,[
-            ...this.usersWithInRoom.get(roomId) || [], user
+    addUser(roomId:string , User:Users){
+        this.userRoomMapping.set(roomId,[
+            ...(this.userRoomMapping.get(roomId) || []),User
         ])
 
-        this.userAndRoomMapping.set(user.UserId,roomId)
+    }
+     
+    broadcast(message:string,roomId:string){
+        const users = this.userRoomMapping.get(roomId)
+        if(!users){
+            console.log("no users in the room")
+            return
+        }
 
+        users.forEach((user)=>{
+            user.ws.send(message)
+        })
     }
 
 
-    broadcast(roomId:string , message : string){
+   //will add more functions
 
-    }
 }
+
+export const singleton = Singleton.getInstance()
+
