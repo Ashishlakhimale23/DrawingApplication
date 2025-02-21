@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import {prisma} from "@repo/db/client"
+import { prisma } from "@repo/db/client"
 
 const websocket = new WebSocketServer({ port: 8081 });
 
@@ -21,7 +21,7 @@ const verifyToken = (token: string): string | null => {
   try {
     const verification = jwt.verify(token, "asdasd") as JwtPayload;
     return verification?.userid ?? null;
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("JWT Verification Failed:", error.message);
     return null;
   }
@@ -52,15 +52,15 @@ websocket.on("connection", (socket, req) => {
 
   console.log(`User connected: ${userId}`);
 
- 
+
   users.push({
     userId,
     ws: socket,
     rooms: [],
   });
 
-  
-  socket.on("message",async (message) => {
+
+  socket.on("message", async (message) => {
     try {
       const parsedData = JSON.parse(message.toString());
       console.log("Received:", parsedData);
@@ -74,53 +74,72 @@ websocket.on("connection", (socket, req) => {
       }
 
       if (parsedData.type === "chat") {
-        
+
 
         const resp = await prisma.chats.create({
-          data:{
-            message:parsedData.message,
-            roomId:typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId, 
-            userId:Number(userId)
-        }})
+          data: {
+            message: parsedData.message,
+            roomId: typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId,
+            userId: Number(userId)
+          }
+        })
 
-      users.forEach((element) => {
+        users.forEach((element) => {
           if (element.rooms.includes(parsedData.roomId)) {
-            element.ws.send(JSON.stringify({ messageData: parsedData.message,id:resp.id }));
+            element.ws.send(JSON.stringify({ messageData: parsedData.message, id: resp.id }));
           }
         });
       }
 
-      if(parsedData.type == "resized" || parsedData.type == "draged"){
+      if (parsedData.type == "resized" || parsedData.type == "draged") {
         const resp = await prisma.chats.update({
-          where:{
-            id:typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
-            roomId :typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId
+          where: {
+            id: typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
+            roomId: typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId
           },
-          data:{
-            message:parsedData.message
+          data: {
+            message: parsedData.message
           }
         })
 
         users.forEach((element) => {
           if (element.rooms.includes(parsedData.roomId) && element.ws !== socket) {
-            element.ws.send(JSON.stringify({  messageData: parsedData.message,id:resp.id  }));
+            element.ws.send(JSON.stringify({ messageData: parsedData.message, id: resp.id }));
           }
         });
 
       }
 
 
-      if(parsedData.type == "moving"){
+      if (parsedData.type == "moving") {
         users.forEach((element) => {
           if (element.rooms.includes(parsedData.roomId) && element.ws !== socket) {
-            element.ws.send(JSON.stringify({  messageData: parsedData.message,id:parsedData.id  }));
+            element.ws.send(JSON.stringify({ messageData: parsedData.message, id: parsedData.id }));
           }
         });
 
       }
 
 
-    } catch (error:any) {
+      if (parsedData.type == "delete") {
+
+        const resp = await prisma.chats.delete({
+          where: {
+            id: typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
+            roomId: typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId
+          }
+        })
+
+        users.forEach((element) => {
+          if (element.rooms.includes(parsedData.roomId) && element.ws !== socket) {
+            element.ws.send(JSON.stringify({ type : "deleted" , id: parsedData.id }));
+          }
+        });
+
+      }
+
+
+    } catch (error: any) {
       console.error("Error processing message:", error.message);
     }
   });

@@ -187,8 +187,22 @@ export class Game {
     onMessageFromSocket() {
         this.Socket.onmessage = (event) => {
             const message = JSON.parse(event.data)
+            let messageData 
 
-            const messageData = JSON.parse(message.messageData)
+
+
+            if (message.messageData) {
+
+                messageData = JSON.parse(message.messageData)
+            }
+
+
+            if(message.type === "deleted"){
+                const filteredArray = this.existingShapes.filter((element)=>element.id !== message.id)
+                this.existingShapes = [...filteredArray]
+                this.reDrawShapes()
+                return
+            }
 
             const resizedShapeIndexed = this.existingShapes.findIndex((element) => {
                 return element.id === message.id
@@ -1589,11 +1603,36 @@ private createTextArea(x: number, y: number) {
 
     }
 
+    KeyDown = (e:KeyboardEvent) =>{
+        if(this.SelectedIndex === -1){
+            return
+        }
+        if(e.key == "Backspace" || e.key == 'Delete'){
+
+            const shape = this.existingShapes[this.SelectedIndex]
+            this.existingShapes.splice(this.SelectedIndex,1)
+            
+            this.Socket.send(
+                JSON.stringify({
+                    type: "delete",
+                    roomId: "2",
+                    id: shape.id,
+                })
+            )
+
+            this.SelectedIndex = -1
+            this.reDrawShapes()
+
+        }
+
+    }
+
     initMouseHandlers() {
 
         this.canvas.addEventListener("mousedown", this.MouseDown)
         this.canvas.addEventListener("mousemove", this.MouseMove)
         this.canvas.addEventListener("mouseup", this.MouseUp)
+        window.addEventListener("keydown",this.KeyDown)
 
     }
 
@@ -1603,6 +1642,7 @@ private createTextArea(x: number, y: number) {
         this.canvas.removeEventListener("mousedown", this.MouseDown)
         this.canvas.removeEventListener("mouseup", this.MouseUp)
         this.canvas.removeEventListener("mousemove", this.MouseMove)
+        
 
     }
 
