@@ -31,15 +31,21 @@ class Singleton {
 
     }
      
-    broadcast(message:string,roomId:string){
+    broadcast(message:string,roomId:string,socket : WebSocket){
         const users = this.usersInRoom.get(roomId)
+        const parsedMessage = JSON.parse(message)
         if(!users){
             console.log("no users in the room")
             return
         }
 
         users.forEach((user)=>{
-            user.socket.send(message)
+            if (parsedMessage.type !== 'created' && user.socket !== socket) {
+                user.socket.send(message)
+            }else{
+                user.socket.send(message)
+            }
+            
         })
     }
 

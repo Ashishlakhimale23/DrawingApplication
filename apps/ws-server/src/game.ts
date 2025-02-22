@@ -43,7 +43,7 @@ export class Game{
                     }
                 }
 
-                if (parsedData.type === "chat") {
+                if (parsedData.type === "created") {
 
 
                     const resp = await prisma.chats.create({
@@ -54,11 +54,14 @@ export class Game{
                         }
                     })
 
-                    singleton.broadcast(JSON.stringify({ messageData: parsedData.message, id: resp.id }),parsedData.roomId)
 
+                    singleton.broadcast(JSON.stringify({type:'created', messageData: parsedData.message, id: resp.id }),parsedData.roomId,user.socket)
                 }
 
                 if (parsedData.type == "resized" || parsedData.type == "draged") {
+
+                    singleton.broadcast(JSON.stringify({type:'moved', messageData: parsedData.message, id: parsedData.id }),parsedData.roomId,user.socket)
+
                     const resp = await prisma.chats.update({
                         where: {
                             id: typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
@@ -69,19 +72,21 @@ export class Game{
                         }
                     })
 
-                    singleton.broadcast(JSON.stringify({ messageData: parsedData.message, id: resp.id }),parsedData.roomId)
 
 
                 }
 
 
                 if (parsedData.type == "moving") {
-                    singleton.broadcast(JSON.stringify({ messageData: parsedData.message, id: parsedData.id }),parsedData.roomId)
+                    singleton.broadcast(JSON.stringify({ type:'moved',messageData: parsedData.message, id: parsedData.id }),parsedData.roomId,user.socket)
 
                 }
 
 
                 if (parsedData.type == "delete") {
+
+
+                    singleton.broadcast(JSON.stringify({ type: "deleted", id: parsedData.id }),parsedData.roomId,user.socket)
 
                     const resp = await prisma.chats.delete({
                         where: {
@@ -91,7 +96,6 @@ export class Game{
                     })
 
 
-                    singleton.broadcast(JSON.stringify({ type: "deleted", id: parsedData.id }),parsedData.roomId)
 
                 }
 
