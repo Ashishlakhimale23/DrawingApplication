@@ -1,13 +1,17 @@
+import { WebSocket } from "ws"
 interface Users{
-    ws : WebSocket,
+    socket : WebSocket,
+    userId : string 
 }
 
 class Singleton {
-    private userRoomMapping : Map<string,Users[]> 
+    private usersInRoom : Map<string,Users[]> 
+    private userRoomMapping : Map<string,string>
     private static instance : Singleton
 
     constructor(){
-        this.userRoomMapping = new Map<string,Users[]>
+        this.usersInRoom  = new Map<string,Users[]>()
+        this.userRoomMapping = new Map<string,string>()
     }
 
     static getInstance(){
@@ -19,26 +23,54 @@ class Singleton {
     }
 
     addUser(roomId:string , User:Users){
-        this.userRoomMapping.set(roomId,[
-            ...(this.userRoomMapping.get(roomId) || []),User
+        this.usersInRoom.set(roomId,[
+            ...(this.usersInRoom.get(roomId) || []),User
         ])
+
+        this.userRoomMapping.set(User.userId,roomId)
 
     }
      
     broadcast(message:string,roomId:string){
-        const users = this.userRoomMapping.get(roomId)
+        const users = this.usersInRoom.get(roomId)
         if(!users){
             console.log("no users in the room")
             return
         }
 
         users.forEach((user)=>{
-            user.ws.send(message)
+            user.socket.send(message)
         })
     }
 
 
-   //will add more functions
+
+   removeUser(user:Users){
+
+    const roomId = this.userRoomMapping.get(user.userId)
+    if(!roomId){
+        console.log("no users exist in the room")
+        return
+    }
+
+    const rooms = this.usersInRoom.get(roomId)
+
+    const remainingUsers = rooms?.filter((user)=>{
+        user.socket ! == user.socket
+    })
+
+    if(!remainingUsers){
+        return
+    }
+
+    this.usersInRoom.set(roomId,remainingUsers)
+
+    if(this.usersInRoom.get(roomId)?.length === 0){
+        this.usersInRoom.delete(roomId)
+    }
+    this.userRoomMapping.delete(user.userId)
+
+   }
 
 }
 
