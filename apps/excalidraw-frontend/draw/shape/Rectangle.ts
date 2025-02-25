@@ -15,9 +15,10 @@ interface Rectangles extends BaseShape {
     height: number;
 }
 
-class Rectangle{
+export class rectangle{
 
     draw(x:number,y:number,width:number,height:number,ctx:CanvasRenderingContext2D){
+        if(!ctx)return 
         ctx.save()
         ctx.strokeStyle = "white"
         ctx.lineWidth = 4
@@ -27,35 +28,25 @@ class Rectangle{
     }
 
     drawSelectedShape(shape:Rectangles,ctx:CanvasRenderingContext2D){
+        ctx.save()
         ctx.strokeStyle = "gray"
         ctx.lineWidth = 1
-        ctx.fillStyle = "white"
 
+        ctx.fillStyle = "white"
         const minX = Math.min(shape.x, (Math.abs(shape.width) + shape.x))
         const minY = Math.min(shape.y, (Math.abs(shape.height) + shape.y))
+        const width = 8
+        const height = 8
 
         ctx.strokeRect(minX - 5, minY - 5, shape.width + 10, shape.height + 10)
-        ctx.beginPath()
-        ctx.arc((minX - 5), (minY - 5), 5, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.closePath()
 
-        ctx.beginPath()
-        ctx.arc(shape.x + 5 + shape.width, (minY - 5), 5, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.closePath()
+        ctx.fillRect((minX - width), (minY -height ), width,height)
+        ctx.fillRect(shape.x  + shape.width, (minY - height), width, height)
+        ctx.fillRect((minX - width), shape.y + shape.height,width,height)
+        ctx.fillRect(shape.x + shape.width , shape.y + shape.height , width, height);
+    
 
-        ctx.beginPath()
-        ctx.arc((minX - 5), shape.y + 5 + shape.height, 5, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.closePath()
-
-        ctx.beginPath();
-        ctx.arc(shape.x + shape.width + 5, shape.y + shape.height + 5, 5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.closePath();
-
-
+        ctx.restore()
 
     }
 
@@ -270,5 +261,3 @@ class Rectangle{
         }
 
 }
-
-export const rectangle = new Rectangle()

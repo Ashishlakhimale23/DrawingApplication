@@ -15,7 +15,7 @@ interface Text extends BaseShape {
     fontSize: number;
     fontFamily: string;
 }
-class Texts {
+export class texts {
 
     draw(shape:Text,ctx:CanvasRenderingContext2D){
         ctx.save();
@@ -34,40 +34,40 @@ class Texts {
     }
 
     drawSelectedShape(shape: Text, ctx: CanvasRenderingContext2D) {
-        ctx.save();
-        ctx.strokeStyle = "gray";
-        ctx.lineWidth = 1;
-        ctx.fillStyle = "white";
+    ctx.save();
+    ctx.strokeStyle = "gray";
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "white";
 
-        const metrics = ctx.measureText(shape.content);
-        const textWidth = metrics.width;
-        const textHeight = shape.fontSize;
+    ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+    const metrics = ctx.measureText(shape.content);
+    const textWidth = metrics.width;
+    const textHeight = shape.fontSize;
+    
+    const padding = 8;
+    const handleSize = 6;
+    const boxPadding = 4;
 
-        ctx.strokeRect(
-            shape.x - 5,
-            shape.y - textHeight - 5,
-            textWidth + 10,
-            textHeight + 10
-        );
+    ctx.strokeRect(
+        shape.x - boxPadding,
+        shape.y - textHeight - boxPadding,
+        textWidth + (boxPadding * 2),
+        textHeight + (boxPadding * 4)
+    );
 
-        ctx.beginPath();
-        ctx.arc(shape.x - 5, shape.y - textHeight - 5, 5, 0, 2 * Math.PI);
-        ctx.fill();
+    const corners = [
+        [shape.x - padding, shape.y - textHeight - padding],             
+        [shape.x + textWidth , shape.y - textHeight - padding],  
+        [shape.x - padding, shape.y + padding],                          
+        [shape.x + textWidth , shape.y + padding]               
+    ];
 
-        ctx.beginPath();
-        ctx.arc(shape.x + textWidth + 5, shape.y - textHeight - 5, 5, 0, 2 * Math.PI);
-        ctx.fill();
+    corners.forEach(([x, y]) => {
+        ctx.fillRect(x, y, 8,8);
+    });
 
-        ctx.beginPath();
-        ctx.arc(shape.x - 5, shape.y + 5, 5, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(shape.x + textWidth + 5, shape.y + 5, 5, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.restore();
-    }
+    ctx.restore();
+}
 
     insideShape(shape:Text,InitialPointX:number,InitialPointY:number,ctx:CanvasRenderingContext2D){
         const metrics = ctx.measureText(shape.content);
@@ -83,5 +83,3 @@ class Texts {
 
 
 }
-
-export const text = new Texts()

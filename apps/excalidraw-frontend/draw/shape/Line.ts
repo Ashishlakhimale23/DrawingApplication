@@ -18,7 +18,7 @@ interface Lines extends BaseShape {
     Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
 }
 
-class Line{
+export class line{
 
     getMidPoint(PointsOne: { x: number, y: number }, PointsTwo: { x: number, y: number }) {
         return {
@@ -29,6 +29,7 @@ class Line{
     }
 
     draw(shape:Lines,ctx:CanvasRenderingContext2D){
+        ctx.save()
         ctx.strokeStyle = "white"
         ctx.lineWidth = 4
         ctx.lineCap = "round"
@@ -37,32 +38,21 @@ class Line{
         ctx.moveTo(shape.x, shape.y)
         ctx.quadraticCurveTo(shape.midX, shape.midY, shape.x1, shape.y1)
         ctx.stroke()
+        ctx.restore()
 
     }
 
     drawSelectedShape(shape:Lines,ctx:CanvasRenderingContext2D){
         ctx.save()
-        ctx.fillStyle = "gray"
+        ctx.fillStyle = "grey"
 
         const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
         const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
         const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
 
-
-        ctx.beginPath()
-        ctx.arc(shape.x, shape.y, 5, 0, 2 * Math.PI)
-        ctx.closePath()
-        ctx.fill()
-
-        ctx.beginPath()
-        ctx.arc(midPoint.x, midPoint.y, 5, 0, 2 * Math.PI)
-        ctx.closePath()
-        ctx.fill()
-
-        ctx.beginPath()
-        ctx.arc(shape.x1, shape.y1, 5, 0, 2 * Math.PI)
-        ctx.closePath()
-        ctx.fill()
+        ctx.fillRect(shape.x, shape.y, 8, 8 )
+        ctx.fillRect(midPoint.x, midPoint.y, 8,8)   
+        ctx.fillRect(shape.x1, shape.y1,8,8)
 
         ctx.restore()
 
@@ -142,10 +132,9 @@ class Line{
             case "midPoint":
                 shape.midX = MovingPointX,
                     shape.midY = MovingPointY
+                break
         }
     }
 
 
 }
-
-export const line = new Line()

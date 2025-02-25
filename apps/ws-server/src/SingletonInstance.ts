@@ -40,7 +40,7 @@ class Singleton {
         }
 
         users.forEach((user)=>{
-            if (parsedMessage.type !== 'created' && user.socket !== socket) {
+            if (parsedMessage.type == 'created' && user.socket !== socket) {
                 user.socket.send(message)
             }else{
                 user.socket.send(message)
