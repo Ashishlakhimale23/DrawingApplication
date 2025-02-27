@@ -3,39 +3,64 @@
 import { useEffect, useRef, useState } from "react";
 import Canvas from "./Canvas";
 interface BaseShape {
-  type: string;
-  x: number;
-  y: number;
-  selected: boolean;
-  isResizing: boolean;
-  resizingEdge: string;
-  isDraging : boolean
+    id?: number
+    type: string;
+    x: number;
+    y: number;
+    selected: boolean;
+    isResizing: boolean;
+    resizingEdge: string;
+    isDraging: boolean
+}
+
+interface Text extends BaseShape {
+    type: "text";
+    content: string;
+    fontSize: number;
+    fontFamily: string;
 }
 
 interface Rectangle extends BaseShape {
-  type: "rectangle";
-  width: number;
-  height: number;
+    type: "rectangle";
+    width: number;
+    height: number;
 }
 
 interface Circle extends BaseShape {
-  type: "circle";
-  x1: number;
-  y1: number;
-  radius: number;
+    type: "circle";
+    radiusX: number;
+    radiusY : number
 }
+
+interface Line extends BaseShape {
+    type: "line";
+    x1: number;
+    y1: number;
+    midX: number;
+    midY: number
+    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
+}
+
+interface Pencil extends BaseShape {
+    type: 'pencil';
+    points: number[][]
+
+}
+
+type Shape = Rectangle | Circle | Line | Pencil | Text;
 
 interface ShapesFromServer {
-    id : number,
-    messageData : Shape
+    id?: number,
+    messageData: Shape
 }
 
-type Shape = Rectangle | Circle;
+
+
 export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:ShapesFromServer[]}) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
     useEffect(() => {
-        const ws = new WebSocket(`ws://localhost:8081?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQwNDY2NjU2LCJleHAiOjE3NDA0OTE4NTZ9.P9ZfSEYNs9Ooy_hiyGNUq6DKN-vW_Q-xw_229n-m5GM`)
+        const ws = new WebSocket(`ws://localhost:8081?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQwNjY0NDI4LCJleHAiOjE3NDA2ODk2Mjh9.z0SYCDt9Avvdz0sW_TcInnQXQAWHlO-9AlhWqXh4PXI`)
 
         ws.onopen = () => {
             setSocket(ws);

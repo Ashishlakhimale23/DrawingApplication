@@ -12,15 +12,15 @@ interface BaseShape {
     isDraging: boolean
 }
 
-interface Pencils extends BaseShape {
+interface Pencil extends BaseShape {
     type: 'pencil';
     points: number[][]
 
 }
 
-class Pencil{
+export class Pencils{
 
-    draw(shape:Pencils,ctx:CanvasRenderingContext2D){
+    draw(shape:Pencil,ctx:CanvasRenderingContext2D){
         ctx.save()
         if (shape.points.length > 1) {
             ctx.fillStyle = "white";
@@ -45,13 +45,15 @@ class Pencil{
 
     }
 
-    drawSelectedShape(shape:Pencils,ctx:CanvasRenderingContext2D){
-        
+    drawSelectedShape(shape:Pencil,ctx:CanvasRenderingContext2D){
+
+
     }
+
+    
+
 
 
 
 
 }
-
-export const pencil = new Pencil()

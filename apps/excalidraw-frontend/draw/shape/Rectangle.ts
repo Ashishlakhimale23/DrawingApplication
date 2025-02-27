@@ -22,8 +22,10 @@ export class rectangle{
         ctx.save()
         ctx.strokeStyle = "white"
         ctx.lineWidth = 4
+        ctx.beginPath()
         ctx.roundRect(x,y,width,height,10)
         ctx.stroke()
+        ctx.closePath()
         ctx.restore()
     }
 
@@ -40,10 +42,25 @@ export class rectangle{
 
         ctx.strokeRect(minX - 5, minY - 5, shape.width + 10, shape.height + 10)
 
-        ctx.fillRect((minX - width), (minY -height ), width,height)
-        ctx.fillRect(shape.x  + shape.width, (minY - height), width, height)
-        ctx.fillRect((minX - width), shape.y + shape.height,width,height)
-        ctx.fillRect(shape.x + shape.width , shape.y + shape.height , width, height);
+        ctx.beginPath()
+        ctx.roundRect((minX - width), (minY -height ), width,height,2)
+        ctx.fill()
+        ctx.closePath()
+
+        ctx.beginPath()
+        ctx.roundRect(shape.x  + shape.width, (minY - height), width, height,2)
+        ctx.fill()
+        ctx.closePath()
+
+        ctx.beginPath()
+        ctx.roundRect((minX - width), shape.y + shape.height,width,height,2)
+        ctx.fill()
+        ctx.closePath()
+        
+        ctx.beginPath()
+        ctx.roundRect(shape.x + shape.width , shape.y + shape.height , width, height,2);
+        ctx.fill()
+        ctx.closePath()
     
 
         ctx.restore()

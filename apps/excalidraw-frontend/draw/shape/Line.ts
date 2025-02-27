@@ -28,35 +28,46 @@ export class line{
 
     }
 
-    draw(shape:Lines,ctx:CanvasRenderingContext2D){
-        ctx.save()
-        ctx.strokeStyle = "white"
-        ctx.lineWidth = 4
-        ctx.lineCap = "round"
+    draw(shape: Lines, ctx: CanvasRenderingContext2D) {
+    ctx.save();
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
 
-        ctx.beginPath()
-        ctx.moveTo(shape.x, shape.y)
-        ctx.quadraticCurveTo(shape.midX, shape.midY, shape.x1, shape.y1)
-        ctx.stroke()
-        ctx.restore()
+    ctx.beginPath();
+    ctx.moveTo(shape.x, shape.y);
+    ctx.quadraticCurveTo(shape.midX, shape.midY, shape.x1, shape.y1);
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+}
 
-    }
+drawSelectedShape(shape: Lines, ctx: CanvasRenderingContext2D) {
+    const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
+    const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
+    const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
 
-    drawSelectedShape(shape:Lines,ctx:CanvasRenderingContext2D){
-        ctx.save()
-        ctx.fillStyle = "grey"
 
-        const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
-        const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
-        const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
+    ctx.save();
 
-        ctx.fillRect(shape.x, shape.y, 8, 8 )
-        ctx.fillRect(midPoint.x, midPoint.y, 8,8)   
-        ctx.fillRect(shape.x1, shape.y1,8,8)
+    
+    ctx.fillStyle = "gray";
+    ctx.strokeStyle = "gray";
+    ctx.lineWidth = 1;
+    [
+        { x: shape.x, y: shape.y },          
+        { x: midPoint.x, y:midPoint.y },    
+        { x: shape.x1, y: shape.y1 }         
+    ].forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+    });
 
-        ctx.restore()
-
-    }
+    ctx.restore();
+}
 
     insideShape(shape:Lines, actualPointX: number, actualPointY: number, tolerance = 5) {
         function quadraticBezier(t: number, xory: number, midX: number, x1ory1: number) {
@@ -129,9 +140,18 @@ export class line{
                 shape.y1 = MovingPointY;
 
                 break
+
             case "midPoint":
-                shape.midX = MovingPointX,
-                    shape.midY = MovingPointY
+
+                const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
+                const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
+                const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
+
+                const dxMid = MovingPointX - midPoint.x;
+                const dyMid = MovingPointY - midPoint.y;
+
+                shape.midX += dxMid;
+                shape.midY += dyMid;
                 break
         }
     }

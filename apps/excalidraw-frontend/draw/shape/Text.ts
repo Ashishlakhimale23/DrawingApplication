@@ -19,14 +19,17 @@ export class texts {
 
     draw(shape:Text,ctx:CanvasRenderingContext2D){
         ctx.save();
-        ctx.fillStyle = "white";
+
+       
+
         ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+        ctx.fillStyle = 'white';
         const lines = shape.content.split('\n');
         lines.forEach((line, index) => {
             ctx.fillText(
                 line,
-                shape.x,
-                shape.y + (index * (shape as Text).fontSize)
+                Math.round(shape.x),
+                Math.round(shape.y) + (index * (shape as Text).fontSize)
             );
         });
         ctx.restore()
@@ -63,7 +66,10 @@ export class texts {
     ];
 
     corners.forEach(([x, y]) => {
-        ctx.fillRect(x, y, 8,8);
+        ctx.beginPath()
+        ctx.roundRect(x, y, 8,8,2);
+        ctx.fill()
+        ctx.closePath()
     });
 
     ctx.restore();

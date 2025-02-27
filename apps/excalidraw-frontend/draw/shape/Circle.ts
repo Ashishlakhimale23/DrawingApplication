@@ -1,3 +1,5 @@
+import { ValueOf } from "next/dist/shared/lib/constants";
+
 interface BaseShape {
     id?: number
     type: string;
@@ -11,20 +13,21 @@ interface BaseShape {
 
 interface Circles extends BaseShape {
     type: "circle";
-    radius: number;
+    radiusX: number;
+    radiusY :number
 }
 
 export class circle {
     
-    draw(x:number,y:number,radius:number,ctx:CanvasRenderingContext2D){
+    draw(shape:Circles,ctx:CanvasRenderingContext2D){
        
         ctx.strokeStyle = "white"
         ctx.lineWidth = 4
     
         ctx.beginPath()
-        ctx.arc(x,y,radius, 0, 2 * Math.PI);
-        ctx.closePath()
+        ctx.ellipse(shape.x, shape.y, shape.radiusX, shape.radiusY, 0, 0, 2 * Math.PI, false);
         ctx.stroke()
+        ctx.closePath()
        
 
     }
@@ -36,10 +39,10 @@ export class circle {
     ctx.fillStyle = "white";
 
     const bounds = {
-        x: shape.x - shape.radius,
-        y: shape.y - shape.radius,
-        width: shape.radius * 2,
-        height: shape.radius * 2
+        x: shape.x - shape.radiusX,
+        y: shape.y - shape.radiusY,
+        width: shape.radiusX * 2,
+        height: shape.radiusY * 2
     };
 
     ctx.strokeRect(
@@ -58,7 +61,13 @@ export class circle {
     ];
 
     handles.forEach(([x, y]) => {
-        ctx.fillRect(x, y,8,8);
+
+        ctx.save() 
+        ctx.beginPath()
+        ctx.roundRect(x, y,8,8,2);
+        ctx.fill()
+        ctx.closePath()
+        ctx.restore()
        
     });
 
@@ -66,27 +75,84 @@ export class circle {
 }
 
     insideShape(shape:Circles,InitialPointX:number,InitialPointY:number){
-        const calculatedRadius = Math.sqrt(Math.pow(shape.x - InitialPointX, 2) + Math.pow(shape.y - InitialPointY, 2))
-        return (calculatedRadius + 5 <= shape.radius)
+       const dx = InitialPointX - shape.x 
+       const dy = InitialPointY - shape.y
+
+       const tolerance = 0.1
+       const result =(Math.pow(dx, 2) / Math.pow(shape.radiusX, 2)) + 
+                  (Math.pow(dy, 2) / Math.pow(shape.radiusY, 2)); 
+
+        return result <= (1 + tolerance )
     }
 
-    getOnCirleCircumfurance(shape:Circles,InitialPointX:number,InitialPointY:number){
-            const calculatedRadius = Math.sqrt(Math.pow(shape.x - InitialPointX, 2) + Math.pow(shape.y - InitialPointY, 2))
-            return (Math.abs(calculatedRadius - shape.radius) <= 5)
-    }
+    getOnCirleCircumfurance(shape: Circles, InitialPointX: number, InitialPointY: number) {
+    const dx = InitialPointX - shape.x;
+    const dy = InitialPointY - shape.y;
+    
+    const result = (Math.pow(dx, 2) / Math.pow(shape.radiusX, 2)) + 
+                  (Math.pow(dy, 2) / Math.pow(shape.radiusY, 2));
+    
+    const tolerance = 0.1; 
+    return Math.abs(result - 1) <= tolerance;
+}
 
-    resizingLogic(shape:Circles,MovingPointX:number,MovingPointY:number){
-        let radius = Math.sqrt(Math.pow(MovingPointX - shape.x, 2) + Math.pow(MovingPointY - shape.y, 2))
-        shape.radius = radius
+resizingLogic(shape: Circles, MovingPointX: number, MovingPointY: number) {
+    const minRadius = 5;
+    
+    switch(shape.resizingEdge) {
+        case "top-left":
+            const bottomRightX = shape.x + shape.radiusX;
+            const bottomRightY = shape.y + shape.radiusY;
+            
+            shape.radiusX = Math.max(Math.abs(bottomRightX - MovingPointX) / 2, minRadius);
+            shape.radiusY = Math.max(Math.abs(bottomRightY - MovingPointY) / 2, minRadius);
+            
+            shape.x = MovingPointX + shape.radiusX;
+            shape.y = MovingPointY + shape.radiusY;
+            break;
+
+        case "top-right":
+            const bottomLeftX = shape.x - shape.radiusX;
+            const bottomLeftY = shape.y + shape.radiusY;
+            
+            shape.radiusX = Math.max(Math.abs(MovingPointX - bottomLeftX) / 2, minRadius);
+            shape.radiusY = Math.max(Math.abs(bottomLeftY - MovingPointY) / 2, minRadius);
+            
+            shape.x = bottomLeftX + shape.radiusX;
+            shape.y = bottomLeftY - shape.radiusY;
+            break;
+
+        case "bottom-left":
+            const topRightX = shape.x + shape.radiusX;
+            const topRightY = shape.y - shape.radiusY;
+            
+            shape.radiusX = Math.max(Math.abs(topRightX - MovingPointX) / 2, minRadius);
+            shape.radiusY = Math.max(Math.abs(MovingPointY - topRightY) / 2, minRadius);
+            
+            shape.x = topRightX - shape.radiusX;
+            shape.y = topRightY + shape.radiusY;
+            break;
+
+        case "bottom-right":
+            const topLeftX = shape.x - shape.radiusX;
+            const topLeftY = shape.y - shape.radiusY;
+            
+            shape.radiusX = Math.max(Math.abs(MovingPointX - topLeftX) / 2, minRadius);
+            shape.radiusY = Math.max(Math.abs(MovingPointY - topLeftY) / 2, minRadius);
+            
+            shape.x = topLeftX + shape.radiusX;
+            shape.y = topLeftY + shape.radiusY;
+            break;
     }
+}
     
     onCorner(shape:Circles,InitialPointX:number,InitialPointY:number){
         //rectangle
         const bounds = {
-            x: shape.x - shape.radius,
-            y: shape.y - shape.radius,
-            width: shape.radius * 2,
-            height: shape.radius * 2
+            x: shape.x - shape.radiusX,
+            y: shape.y - shape.radiusY,
+            width: shape.radiusX * 2,
+            height: shape.radiusY * 2
         };
         //corners 
         const handles = [
@@ -105,17 +171,17 @@ export class circle {
 
         const tolerance = 10
         let result = false
+        let corner : ValueOf<typeof corners> = ""
          handles.forEach(([x,y],i) => {
             console.log(i , x-InitialPointX , y - InitialPointY)
 
             if(Math.abs(x - InitialPointX) < tolerance  && Math.abs(y - InitialPointY) < tolerance){
-                console.log(corners[i as keyof typeof corners])
+                corner = corners[i as keyof typeof corners]
                 result  = true        
             }
         }); 
 
-        console.log(result)
-        return result
+        return {result,corner}
         
 
 
@@ -125,10 +191,10 @@ export class circle {
     handleSelection(shape: Circles, InitialPointX: number, InitialPointY: number):boolean {
         const tolerance = 10
         const bounds = {
-            x: shape.x - shape.radius,
-            y: shape.y - shape.radius,
-            width: shape.radius * 2,
-            height: shape.radius * 2
+            x: shape.x - shape.radiusX,
+            y: shape.y - shape.radiusY,
+            width: shape.radiusX * 2,
+            height: shape.radiusY * 2
         };
         const minX = Math.min(bounds.x, bounds.x + bounds.width);
         const maxX = Math.max(bounds.x, bounds.x + bounds.width);

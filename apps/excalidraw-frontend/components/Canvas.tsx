@@ -5,34 +5,55 @@ import { Game } from "@/draw/Game";
 type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text";
 
 interface BaseShape {
-  type: string;
-  x: number;
-  y: number;
-  selected: boolean;
-  isResizing: boolean;
-  resizingEdge: string;
-  isDraging :boolean
+    id?: number
+    type: string;
+    x: number;
+    y: number;
+    selected: boolean;
+    isResizing: boolean;
+    resizingEdge: string;
+    isDraging: boolean
+}
+
+interface Text extends BaseShape {
+    type: "text";
+    content: string;
+    fontSize: number;
+    fontFamily: string;
 }
 
 interface Rectangle extends BaseShape {
-  type: "rectangle";
-  width: number;
-  height: number;
+    type: "rectangle";
+    width: number;
+    height: number;
 }
 
 interface Circle extends BaseShape {
-  type: "circle";
-  x1: number;
-  y1: number;
-  radius: number;
+    type: "circle";
+    radiusX: number;
+    radiusY: number;
 }
 
-type Shape = Rectangle | Circle;
+interface Line extends BaseShape {
+    type: "line";
+    x1: number;
+    y1: number;
+    midX: number;
+    midY: number
+    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
+}
 
+interface Pencil extends BaseShape {
+    type: 'pencil';
+    points: number[][]
+
+}
+
+type Shape = Rectangle | Circle | Line | Pencil | Text;
 
 interface ShapesFromServer {
-    id : number,
-    messageData : Shape
+    id?: number,
+    messageData: Shape
 }
 
 

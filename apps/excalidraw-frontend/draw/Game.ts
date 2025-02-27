@@ -1,7 +1,7 @@
 import { circle } from "./shape/Circle";
 import { rectangle } from "./shape/Rectangle";
 import { line } from "./shape/Line";
-import { pencil } from "./shape/Pencil";
+import { Pencils } from "./shape/Pencil";
 import { texts } from  "./shape/Text";
 interface BaseShape {
     id?: number
@@ -29,7 +29,8 @@ interface Rectangle extends BaseShape {
 
 interface Circle extends BaseShape {
     type: "circle";
-    radius: number;
+    radiusX: number;
+    radiusY : number
 }
 
 interface Line extends BaseShape {
@@ -76,6 +77,7 @@ export class Game {
     private circle : circle
     private line : line
     private text : texts
+    private pencil : Pencils
 
     Socket: WebSocket;
 
@@ -91,6 +93,7 @@ export class Game {
         this.circle = new circle()
         this.line = new line()
         this.text = new texts()
+        this.pencil = new Pencils()
 
         this.init();
         this.onMessageFromSocket();
@@ -114,13 +117,13 @@ export class Game {
                 this.rectangle.draw(element.messageData.x, element.messageData.y, element.messageData.width, element.messageData.height, this.ctx);
                 break;
             case "circle":
-                this.circle.draw(element.messageData.x, element.messageData.y, element.messageData.radius, this.ctx);
+                this.circle.draw(element.messageData,this.ctx);
                 break;
             case "line":
                 this.line.draw(element.messageData, this.ctx);
                 break;
             case "pencil":
-                pencil.draw(element.messageData, this.ctx);
+                this.pencil.draw(element.messageData, this.ctx);
                 break;
             case "text":
                 this.text.draw(element.messageData, this.ctx);
@@ -212,15 +215,25 @@ export class Game {
 
                     break
                 case "circle":
-                    const radius = Math.sqrt(Math.pow(this.MovingPointX - this.InitialPointX, 2) + Math.pow(this.MovingPointY - this.InitialPointY, 2));
-                    this.circle.draw(this.InitialPointX,this.InitialPointY,radius,this.ctx) 
+                    const radiusX = Math.abs(this.MovingPointX - this.InitialPointX)
+                    const radiusY = Math.abs(this.MovingPointY - this.InitialPointY)
+                    const shapeCircle  =  {
+                        x:this.InitialPointX,
+                        y:this.InitialPointY,
+                        radiusX:radiusX,
+                        radiusY:radiusY
+                    }
+                    this.circle.draw(shapeCircle as Circle,this.ctx) 
                     break
                 case "line":
+                    const midX = (this.InitialPointX + this.MovingPointX) / 2 
+                    const midY = (this.InitialPointY + this.MovingPointY) / 2
+
                     const shape ={
                         x:this.InitialPointX,
                         y:this.InitialPointY,
-                        midX:(this.InitialPointX + this.MovingPointX) / 2,
-                        midY:(this.InitialPointY + this.MovingPointY) / 2,
+                        midX:midX,
+                        midY:midY,
                         x1:this.MovingPointX,
                         y1:this.MovingPointY
 
@@ -231,7 +244,7 @@ export class Game {
                     const pencilShape = {
                         points:this.Points
                     }
-                    pencil.draw(pencilShape as Pencil,this.ctx) 
+                    this.pencil.draw(pencilShape as Pencil,this.ctx) 
 
                     break
                 
@@ -290,7 +303,8 @@ export class Game {
                         {
                             x: shape.x,
                             y: shape.y,
-                            radius: shape.radius,
+                            radiusX: shape.radiusX,
+                            radiusY: shape.radiusY,
                             type: "circle",
                             selected: false,
                             isResizing: false,
@@ -441,7 +455,8 @@ export class Game {
                             {
                                 x: shape.x,
                                 y: shape.y,
-                                radius: shape.radius,
+                                radiusX: shape.radiusX,
+                                radiusY :shape.radiusY,
                                 type: "circle",
                                 selected: false,
                                 isResizing: false,
@@ -569,8 +584,10 @@ export class Game {
     };
 
     handleCircle = (messageData: Circle, draggingShapeIndex: boolean) => {
-        if (this.circle.onCorner(messageData,this.InitialPointX,this.InitialPointY) || this.circle.handleSelection(messageData,this.InitialPointX,this.InitialPointY)) {
-            this.setResizing(messageData);
+        const cornersResult = this.circle.onCorner(messageData,this.InitialPointX,this.InitialPointY)
+        const edgeResult = this.circle.handleSelection(messageData,this.InitialPointX,this.InitialPointY)
+        if ( cornersResult.result ||edgeResult ) {
+            this.setResizing(messageData,cornersResult.corner);
         } else if (draggingShapeIndex) {
             
             this.setDragging(messageData);
@@ -656,7 +673,7 @@ export class Game {
         textArea.style.color = 'white';
         textArea.style.border = "none";
         textArea.style.outline = 'none';
-        textArea.style.font = '20px Arial';
+        textArea.style.font = '20px san-serif';
         textArea.style.padding = '2px';
         textArea.style.margin = '0px';
         textArea.style.overflow = 'hidden';
@@ -673,8 +690,8 @@ export class Game {
             if (textArea.value) {
                 this.existingShapes.push({
                     messageData: {
-                        x,
-                        y: y + 20,
+                        x: x + 4,
+                        y :y + 20,
                         content: textArea.value,
                         type: "text",
                         selected: false,
@@ -682,7 +699,7 @@ export class Game {
                         resizingEdge: "",
                         isDraging: false,
                         fontSize: 20,
-                        fontFamily: 'Arial'
+                        fontFamily: 'san'
                     }
                 });
 
@@ -691,8 +708,8 @@ export class Game {
                         type: "created",
                         roomId: "2",
                         message: JSON.stringify({
-                            x,
-                            y: y + 20,
+                            x : x + 4,
+                            y : y + 20,
                             content: textArea.value,
                             type: "text",
                             selected: false,
@@ -700,7 +717,7 @@ export class Game {
                             resizingEdge: "",
                             isDraging: false,
                             fontSize: 20,
-                            fontFamily: 'Arial'
+                            fontFamily: 'san-serif  '
                         })
                     })
                 );
@@ -825,11 +842,14 @@ export class Game {
 
                     break;
                 case "circle":
+                    const radiusX = Math.abs(this.MovingPointX - this.InitialPointX)
+                    const radiusY = Math.abs(this.MovingPointY - this.InitialPointY)
                     this.existingShapes.push({
                         messageData: {
                             x: this.InitialPointX,
                             y: this.InitialPointY,
-                            radius: Math.sqrt(Math.pow(this.MovingPointX - this.InitialPointX, 2) + Math.pow(this.MovingPointY - this.InitialPointY, 2)),
+                            radiusX:radiusX,
+                            radiusY:radiusY,
                             type: "circle",
                             selected: false,
                             isResizing: false,
@@ -846,7 +866,8 @@ export class Game {
                             message: JSON.stringify({
                                 x: this.InitialPointX,
                                 y: this.InitialPointY,
-                                radius: Math.sqrt(Math.pow(this.MovingPointX - this.InitialPointX, 2) + Math.pow(this.MovingPointY - this.InitialPointY, 2)),
+                                radiusX:radiusX,
+                                radiusY:radiusY,
                                 type: "circle",
                                 selected: false,
                                 isResizing: false,
@@ -861,18 +882,14 @@ export class Game {
 
                     const midX = (this.InitialPointX + this.MovingPointX) / 2
                     const midY = (this.InitialPointY + this.MovingPointY) / 2
-                    const midstarttomid = this.line.getMidPoint({ x: this.InitialPointX, y: this.InitialPointY }, { x: midX, y: midY })
-                    const midmidtoend = this.line.getMidPoint({ x: midX, y: midY }, { x: this.MovingPointX, y: this.MovingPointY })
-                    const midPoint = this.line.getMidPoint(midstarttomid, midmidtoend)
-
                     this.existingShapes.push({
                         messageData: {
                             x: this.InitialPointX,
                             y: this.InitialPointY,
                             x1: this.MovingPointX,
                             y1: this.MovingPointY,
-                            midX: midPoint.x,
-                            midY: midPoint.y,
+                            midX: midX,
+                            midY: midY,
                             type: "line",
                             selected: false,
                             isResizing: false,
@@ -982,7 +999,8 @@ export class Game {
                                     x: shape.messageData.x,
                                     y: shape.messageData.y,
                                     type: "circle",
-                                    radius: shape.messageData.radius,
+                                    radiusX: shape.messageData.radiusX,
+                                    radiusY: shape.messageData.radiusY,
                                     selected: false,
                                     isResizing: false,
                                     resizingEdge: "",
@@ -1068,7 +1086,8 @@ export class Game {
                                 {
                                     x: shape.messageData.x,
                                     y: shape.messageData.y,
-                                    radius: shape.messageData.radius,
+                                    radiusX: shape.messageData.radiusX,
+                                    radiusY: shape.messageData.radiusY,
                                     type: "circle",
                                     selected: false,
                                     isResizing: false,
