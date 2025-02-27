@@ -586,8 +586,10 @@ export class Game {
     handleCircle = (messageData: Circle, draggingShapeIndex: boolean) => {
         const cornersResult = this.circle.onCorner(messageData,this.InitialPointX,this.InitialPointY)
         const edgeResult = this.circle.handleSelection(messageData,this.InitialPointX,this.InitialPointY)
-        if ( cornersResult.result ||edgeResult ) {
-            this.setResizing(messageData,cornersResult.corner);
+        if ( cornersResult.result || edgeResult.result ) {
+            
+            cornersResult.result ?  this.setResizing(messageData,cornersResult.corner) : this.setResizing(messageData,edgeResult.edge) 
+            console.log(edgeResult.edge)
         } else if (draggingShapeIndex) {
             
             this.setDragging(messageData);
@@ -596,7 +598,6 @@ export class Game {
 
     handleLine = (messageData: Line, draggingShapeIndex: boolean) => {
         const onPoint = this.line.getOnWhichPoint(messageData,this.InitialPointX,this.InitialPointY)
-        console.log(onPoint)
         if (onPoint) {
             messageData.Point = onPoint
             this.setResizing(messageData);
