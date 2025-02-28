@@ -11,7 +11,7 @@ interface RoomDetails {
 const getRoomDetails =async ({roomId}:{roomId:string}):Promise<RoomDetails>=>{
     const roomDetails = await axios.get("http://localhost:8000/user/roomdetails",{
         headers:{
-            Authorization:`Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQwNjY0NDI4LCJleHAiOjE3NDA2ODk2Mjh9.z0SYCDt9Avvdz0sW_TcInnQXQAWHlO-9AlhWqXh4PXI"}`
+            Authorization:`Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQwNzE1MzE1LCJleHAiOjE3NDA3NDA1MTV9.6OXbBw_6r8m75doS6sBgLRxXrRZea-cyXYk3J1x54ic"}`
         },
         params:{
             roomId:roomId

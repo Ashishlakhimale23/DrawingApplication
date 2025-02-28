@@ -342,6 +342,8 @@ export class Game {
             )
 
 
+        }else if(shape.type === "text"){
+            this.text.resizingLogic(shape,this.MovingPointX,this.MovingPointY,this.ctx)
         }
 
             this.reDrawShapes()
@@ -392,6 +394,7 @@ export class Game {
                 return resultLine
             case "text":
                 const resultText = this.text.insideShape(shape,this.InitialPointX,this.InitialPointY,this.ctx)
+                
                 return resultText
                 
             default:
@@ -567,7 +570,15 @@ export class Game {
     };
 
     handleText = (messageData: Text, draggingShapeIndex: boolean) => {
-        if (draggingShapeIndex) {
+        const cornersResult = this.text.onCorner(messageData,this.InitialPointX,this.InitialPointY,this.ctx)
+        const edgeResult = this.text.handleSelection(messageData,this.InitialPointX,this.InitialPointY,this.ctx)
+        console.log(cornersResult)
+        if(cornersResult.result || edgeResult.result){
+            console.log("here im get fucked") 
+            cornersResult.result ?  this.setResizing(messageData,cornersResult.corner) : this.setResizing(messageData,edgeResult.edge) 
+
+        }
+        else if (draggingShapeIndex) {
             this.setDragging(messageData);
         }
     };
@@ -597,6 +608,7 @@ export class Game {
     };
 
     handleLine = (messageData: Line, draggingShapeIndex: boolean) => {
+
         const onPoint = this.line.getOnWhichPoint(messageData,this.InitialPointX,this.InitialPointY)
         if (onPoint) {
             messageData.Point = onPoint
