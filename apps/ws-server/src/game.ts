@@ -1,6 +1,7 @@
 import { WebSocket } from "ws"
 import { prisma } from "@repo/db/client"
 import { singleton } from "./SingletonInstance"
+import { parse } from "dotenv"
 
 interface Users{
     socket : WebSocket,
@@ -94,9 +95,22 @@ export class Game{
                             roomId: typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId
                         }
                     })
+                }
+
+                if (parsedData.type == "edited") {
 
 
+                    singleton.broadcast(JSON.stringify({ type: "edited", messageData:parsedData.message ,id:parsedData.id }), parsedData.roomId, user.socket)
 
+                    const resp = await prisma.chats.update({
+                        where: {
+                            id: typeof parsedData.id == "string" ? Number(parsedData.id) : parsedData.id,
+                            roomId: typeof parsedData.roomId == "string" ? Number(parsedData.roomId) : parsedData.roomId
+                        },
+                        data: {
+                            message: parsedData.message
+                        }
+                    })
                 }
 
 

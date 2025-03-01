@@ -1,22 +1,61 @@
-interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
 
+import { Text,ShapesFromServer } from "./types";
 
-interface Text extends BaseShape {
-    type: "text";
-    content: string;
-    fontSize: number;
-    fontFamily: string;
-}
 export class texts {
+
+    createTextArea(Content:ShapesFromServer | null,x: number, y: number,keydownHandler:(e: KeyboardEvent,textArea: HTMLTextAreaElement,x:number,y:number ,content:ShapesFromServer | null)=>void) {
+         
+        const textArea = document.createElement('textarea');
+        textArea.id = 'textarea'
+        textArea.style.position = 'fixed';
+        textArea.style.left = `${x - 4}px`;
+        textArea.style.top = `${y - (Content && Content?.messageData.type == "text" ? Content?.messageData.fontSize : 20)}px`;
+        textArea.style.background = 'transparent';
+        textArea.style.color = 'white';
+        textArea.style.border = "none";
+        textArea.style.outline = 'none';
+        textArea.style.font = `${Content && Content.messageData.type == "text" ? Content.messageData?.fontSize : 20}px san-serif`;
+        textArea.style.padding = '2px';
+        textArea.style.margin = '0px';
+        textArea.style.overflow = 'hidden';
+        textArea.style.resize = 'none';
+        textArea.style.whiteSpace = 'nowrap';
+        textArea.autofocus = true
+        textArea.value = Content && Content.messageData.type == "text" ? Content.messageData.content : ""
+
+        document.body.appendChild(textArea);
+
+
+        const content = Content ? Content : null
+
+        const handleMouseDown = (e: MouseEvent) => {
+            if (e.target !== textArea) {
+                document.body.removeEventListener("mousedown", handleMouseDown);
+
+                if (document.body.contains(textArea)) {
+                    document.body.removeChild(textArea);
+                    const escapeEvent = new KeyboardEvent('keydown', {
+                        key: 'Escape',
+                        bubbles: true,
+                        cancelable: true,
+                        code:"Escape"
+                    });
+                    textArea.dispatchEvent(escapeEvent);
+                }
+
+            }
+        };
+
+        document.body.addEventListener("mousedown", handleMouseDown);
+
+        textArea.addEventListener('keydown', (e) => keydownHandler(e, textArea, x, y, content));
+
+        requestAnimationFrame(() => {
+            textArea.focus();
+    });
+
+
+    }
 
     draw(shape:Text,ctx:CanvasRenderingContext2D){
         ctx.save();

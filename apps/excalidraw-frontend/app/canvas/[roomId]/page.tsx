@@ -5,7 +5,7 @@ const getShapes = async (roomId: string) => {
   const shapes = await axios.get("http://localhost:8000/user/getchats", {
     params: { roomId: roomId },
     headers: {
-      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQwNzE1MzE1LCJleHAiOjE3NDA3NDA1MTV9.6OXbBw_6r8m75doS6sBgLRxXrRZea-cyXYk3J1x54ic"}`,
+      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQwODA1ODk3LCJleHAiOjE3NDA4MzEwOTd9.VopyUkY3OF_r8O_04KuoCT6uYAW6i01Zg4BVt6W3rMI"}`,
     },
   });
 

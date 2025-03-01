@@ -72,6 +72,7 @@ export class Game {
     private roomId: string;
     private SelectedIndex: number = -1;
     private isDraging: boolean = false
+    private isEditing :boolean = false
     private Points: number[][] = []
     private rectangle : rectangle 
     private circle : circle
@@ -147,6 +148,8 @@ export class Game {
                         case "text":
                             this.text.drawSelectedShape(element.messageData, this.ctx);
                             break;
+                        
+
                     }
                 }
             })
@@ -177,6 +180,13 @@ export class Game {
             this.existingShapes = this.existingShapes.filter(
                 (element) => element.id !== message.id
             );
+        }
+
+        if(message.type === "edited"){
+            
+            const index = this.existingShapes.findIndex(element => element.id == message.id)
+            this.existingShapes[index].messageData = messageData
+
         }
 
         if (message.type === "created") {
@@ -351,7 +361,6 @@ export class Game {
 
 
     GetSelectedShape = (shape: Shape) => {
-        const tolerance = 10;
         switch (shape.type) {
             case "rectangle":
                 const rectangleSelection = this.rectangle.handleSelection(shape,this.InitialPointX,this.InitialPointY)
@@ -376,11 +385,11 @@ export class Game {
 
 
     getDraggingShape() {
-        const shape = this.existingShapes[this.SelectedIndex].messageData
-        if (!shape.isDraging && this.SelectedIndex === -1 && this.typeOfShapes !== "default") {
+        if ( this.SelectedIndex === -1 || this.typeOfShapes !== "default" || this.isEditing) {
             return false
         }
 
+        const shape = this.existingShapes[this.SelectedIndex].messageData
 
         switch (shape.type) {
             case "rectangle":
@@ -394,8 +403,8 @@ export class Game {
                 return resultLine
             case "text":
                 const resultText = this.text.insideShape(shape,this.InitialPointX,this.InitialPointY,this.ctx)
-                
                 return resultText
+            
                 
             default:
                 return false
@@ -540,6 +549,7 @@ export class Game {
 
 
     handleDefaultMode = () => {
+        
         if (this.SelectedIndex === -1) {
             this.selectShape();
             return;
@@ -548,6 +558,8 @@ export class Game {
         const draggingShapeIndex = this.getDraggingShape();
         const selectedShape: ShapesFromServer = this.existingShapes[this.SelectedIndex];
         const messageData = selectedShape?.messageData;
+        
+        
 
         if (!messageData) return;
 
@@ -563,6 +575,8 @@ export class Game {
                 break;
             case "text":
                 this.handleText(messageData, draggingShapeIndex)
+                break
+
 
         }
 
@@ -570,13 +584,12 @@ export class Game {
     };
 
     handleText = (messageData: Text, draggingShapeIndex: boolean) => {
+
         const cornersResult = this.text.onCorner(messageData,this.InitialPointX,this.InitialPointY,this.ctx)
         const edgeResult = this.text.handleSelection(messageData,this.InitialPointX,this.InitialPointY,this.ctx)
-        console.log(cornersResult)
+        
         if(cornersResult.result || edgeResult.result){
-            console.log("here im get fucked") 
             cornersResult.result ?  this.setResizing(messageData,cornersResult.corner) : this.setResizing(messageData,edgeResult.edge) 
-
         }
         else if (draggingShapeIndex) {
             this.setDragging(messageData);
@@ -617,6 +630,8 @@ export class Game {
             this.setDragging(messageData);
         }
     };
+
+    
 
     setResizing = (messageData: Shape, resizingEdge: string = "") => {
         messageData.isResizing = true;
@@ -675,79 +690,111 @@ export class Game {
 
     };
 
-    private createTextArea(x: number, y: number) {
-        console.log(`Creating textarea at: ${x}, ${y}`);
+    handlePushNewText = (text: string, x: number, y: number) => {
+        if (text) {
+            this.existingShapes.push({
+                messageData: {
+                    x: x + 4,
+                    y: y + 20,
+                    content: text,
+                    type: "text",
+                    selected: false,
+                    isResizing: false,
+                    resizingEdge: "",
+                    isDraging: false,
+                    fontSize: 20,
+                    fontFamily: 'san'
+                }
+            });
 
-        const textArea = document.createElement('textarea');
-        textArea.style.position = 'fixed';
-        textArea.style.left = `${x}px`;
-        textArea.style.top = `${y}px`;
-        textArea.style.background = 'transparent';
-        textArea.style.color = 'white';
-        textArea.style.border = "none";
-        textArea.style.outline = 'none';
-        textArea.style.font = '20px san-serif';
-        textArea.style.padding = '2px';
-        textArea.style.margin = '0px';
-        textArea.style.overflow = 'hidden';
-        textArea.style.resize = 'none';
-        textArea.style.whiteSpace = 'nowrap';
-        textArea.autofocus
-
-        document.body.appendChild(textArea);
-        requestAnimationFrame(() => {
-            textArea.focus()
-        })
-
-        const handlePushText = () => {
-            if (textArea.value) {
-                this.existingShapes.push({
-                    messageData: {
+            this.Socket.send(
+                JSON.stringify({
+                    type: "created",
+                    roomId: "2",
+                    message: JSON.stringify({
                         x: x + 4,
-                        y :y + 20,
-                        content: textArea.value,
+                        y: y + 20,
+                        content: text,
                         type: "text",
                         selected: false,
                         isResizing: false,
                         resizingEdge: "",
                         isDraging: false,
                         fontSize: 20,
-                        fontFamily: 'san'
-                    }
-                });
-
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "created",
-                        roomId: "2",
-                        message: JSON.stringify({
-                            x : x + 4,
-                            y : y + 20,
-                            content: textArea.value,
-                            type: "text",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false,
-                            fontSize: 20,
-                            fontFamily: 'san-serif  '
-                        })
+                        fontFamily: 'san-serif  '
                     })
-                );
-            }
-            document.body.removeChild(textArea);
-            this.reDrawShapes();
-        };
-
-        textArea.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handlePushText();
-            }
-        });
-
+                })
+            );
+        }
 
     }
+
+    handleEditText(shape:ShapesFromServer){
+
+        if(shape.messageData.type !== "text"){
+            return
+        }
+
+        this.existingShapes.splice(this.SelectedIndex,0,shape)
+
+
+        this.Socket.send(
+            JSON.stringify({
+                type: "edited",
+                roomId: "2",
+                id : shape.id,
+                message: JSON.stringify({
+                    x: shape.messageData.x ,
+                    y: shape.messageData.y ,
+                    content: shape.messageData.content,
+                    type: "text",
+                    selected: false,
+                    isResizing: false,
+                    resizingEdge: "",
+                    isDraging: false,
+                    fontSize: shape.messageData.fontSize,
+                    fontFamily: 'san-serif  '
+                })
+            })
+        )
+
+      
+
+        
+    }
+    
+
+    handlekeydown = (e: KeyboardEvent, textArea: HTMLTextAreaElement, x: number, y: number, Content: ShapesFromServer | null) => {
+    if (e.key === 'Enter' && !e.shiftKey || e.key === "Escape") {
+        e.preventDefault();
+
+        if (e.key === 'Enter') {
+            const textContent = textArea.value.trim();
+            
+            if (textContent) {
+                if (Content && Content.messageData.type === "text") {
+                    Content.messageData.content = textContent;
+                    
+                    if (this.isEditing) {
+                        this.handleEditText(Content);
+                    }
+                } else {
+                    this.handlePushNewText(textContent, x, y);
+                }
+            }
+        } else if (e.key === "Escape" && this.isEditing && Content) {
+            this.existingShapes.splice(this.SelectedIndex, 0, Content);
+        }
+
+        if (document.body.contains(textArea)) {
+            document.body.removeChild(textArea);
+        }
+
+        this.isEditing = false;
+        this.SelectedIndex = -1;
+        this.reDrawShapes();
+    }
+}
 
 
     MouseDown = (e: MouseEvent) => {
@@ -777,12 +824,11 @@ export class Game {
                 this.handleDrawingMode();
                 break
             case "text":
-                this.createTextArea(e.clientX, e.clientY);
+                this.text.createTextArea(null,e.clientX, e.clientY,this.handlekeydown);
                 break;
             default:
                 null
         }
-
 
     }
 
@@ -801,7 +847,7 @@ export class Game {
 
             this.reDrawShapes();
             this.Draw();
-        } else if (this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && !this.isDraging && this.existingShapes[this.SelectedIndex].messageData.isResizing) {
+        } else if (!this.isEditing && this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && !this.isDraging && this.existingShapes[this.SelectedIndex].messageData.isResizing) {
             this.Resize();
             this.reDrawShapes()
         } else if (this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && this.isDraging && this.existingShapes[this.SelectedIndex].messageData.isDraging) {
@@ -1173,7 +1219,7 @@ export class Game {
     }
 
     KeyDown = (e: KeyboardEvent) => {
-        if (this.SelectedIndex === -1) {
+        if (this.SelectedIndex === -1 || this.isEditing) {
             return
         }
         if (e.key == "Backspace" || e.key == 'Delete') {
@@ -1197,12 +1243,40 @@ export class Game {
 
     }
 
+    DoubleClick=(e:MouseEvent)=>{
+        if(this.SelectedIndex == -1 ){
+            return 
+        }
+        const shape = this.existingShapes[this.SelectedIndex]
+
+        if(shape.messageData.type !== 'text'){
+            return
+        }
+
+        const result = this.text.insideShape(shape.messageData,e.clientX,e.clientY,this.ctx)
+
+        if(result){
+            this.isEditing = true
+            this.existingShapes.splice(this.SelectedIndex,1)
+            this.SelectedIndex = -1 
+            this.reDrawShapes()
+            this.text.createTextArea(shape,shape.messageData.x ,shape.messageData.y,this.handlekeydown)
+
+        }
+
+        
+
+
+
+    }
+
     initMouseHandlers() {
 
         this.canvas.addEventListener("mousedown", this.MouseDown)
         this.canvas.addEventListener("mousemove", this.MouseMove)
         this.canvas.addEventListener("mouseup", this.MouseUp)
         window.addEventListener("keydown", this.KeyDown)
+        window.addEventListener("dblclick",this.DoubleClick)
 
     }
 
