@@ -509,5 +509,40 @@ export class Pencils{
         }
     }
 
+    DragTest(shape:Pencil,InitialPointX:number,InitialPointY:number){
+        const stroke = getStroke(shape.points, {
+            size: 12,
+            smoothing: 0.2,
+            thinning: 0.5,
+            streamline: 0.99,
+        });
+
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        stroke.forEach(([x, y]) => {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        });
+
+        const padding = 6;
+
+        const rect = {
+            x: minX - padding,
+            y: minY - padding,
+            width: maxX - minX + (padding * 2),
+            height: maxY - minY + (padding * 2)
+        }
+        const x = rect.width < 0 ? rect.x + rect.width : rect.x;
+        const y = rect.height < 0 ? rect.y + rect.height : rect.y;
+        const width = Math.abs(rect.width)
+        const height = Math.abs(rect.height);
+        return (x < InitialPointX && InitialPointX < (x + width) && y < InitialPointY && InitialPointY < (y + height))
+
+    }
 
 }

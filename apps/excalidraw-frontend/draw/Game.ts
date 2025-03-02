@@ -382,7 +382,6 @@ export class Game {
                 return textSelection
             case "pencil":
                 const pencilSelection = this.pencil.insideShape(shape,this.InitialPointX,this.InitialPointY)
-                console.log(pencilSelection)
                 return pencilSelection
 
         }
@@ -412,8 +411,9 @@ export class Game {
             case "text":
                 const resultText = this.text.insideShape(shape,this.InitialPointX,this.InitialPointY,this.ctx)
                 return resultText
-            
-                
+            case "pencil":
+                const resultPencil = this.pencil.DragTest(shape,this.InitialPointX,this.InitialPointY)
+                return resultPencil
             default:
                 return false
 
@@ -546,6 +546,20 @@ export class Game {
                     })
                 );
                 break;
+
+            case "pencil":
+                const transformedPoints = []
+                for(let i = 0;i<shape.points.length;i++){
+                    const [x,y] = shape.points[i]
+
+                    transformedPoints.push([
+                        x + dx, y + dy
+                    ])
+                }
+
+                shape.points = transformedPoints
+
+                break
 
         }
 
