@@ -3,7 +3,7 @@ import { Text,ShapesFromServer } from "./types";
 
 export class texts {
 
-    createTextArea(Content:ShapesFromServer | null,x: number, y: number,keydownHandler:(e: KeyboardEvent,textArea: HTMLTextAreaElement,x:number,y:number ,content:ShapesFromServer | null)=>void) {
+    createTextArea(Content:ShapesFromServer | null,x: number, y: number, selectedIndex: number,keydownHandler:(e: KeyboardEvent,textArea: HTMLTextAreaElement,x:number,y:number ,content:ShapesFromServer | null,selectedIndex:number)=>void) {
          
         const textArea = document.createElement('textarea');
         textArea.id = 'textarea'
@@ -25,30 +25,9 @@ export class texts {
 
         document.body.appendChild(textArea);
 
-
         const content = Content ? Content : null
 
-        const handleMouseDown = (e: MouseEvent) => {
-            if (e.target !== textArea) {
-                document.body.removeEventListener("mousedown", handleMouseDown);
-
-                if (document.body.contains(textArea)) {
-                    document.body.removeChild(textArea);
-                    const escapeEvent = new KeyboardEvent('keydown', {
-                        key: 'Escape',
-                        bubbles: true,
-                        cancelable: true,
-                        code:"Escape"
-                    });
-                    textArea.dispatchEvent(escapeEvent);
-                }
-
-            }
-        };
-
-        document.body.addEventListener("mousedown", handleMouseDown);
-
-        textArea.addEventListener('keydown', (e) => keydownHandler(e, textArea, x, y, content));
+        textArea.addEventListener('keydown', (e) => keydownHandler(e, textArea, x, y, content,selectedIndex));
 
         requestAnimationFrame(() => {
             textArea.focus();

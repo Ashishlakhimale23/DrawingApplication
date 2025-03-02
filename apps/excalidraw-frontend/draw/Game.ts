@@ -3,6 +3,7 @@ import { rectangle } from "./shape/Rectangle";
 import { line } from "./shape/Line";
 import { Pencils } from "./shape/Pencil";
 import { texts } from  "./shape/Text";
+import { requestToBodyStream } from "next/dist/server/body-streams";
 interface BaseShape {
     id?: number
     type: string;
@@ -148,6 +149,9 @@ export class Game {
                         case "text":
                             this.text.drawSelectedShape(element.messageData, this.ctx);
                             break;
+                        case "pencil":
+                            this.pencil.drawSelectedShape(element.messageData,this.ctx)
+                            break
                         
 
                     }
@@ -354,6 +358,8 @@ export class Game {
 
         }else if(shape.type === "text"){
             this.text.resizingLogic(shape,this.MovingPointX,this.MovingPointY,this.ctx)
+        }else if(shape.type == "pencil"){
+            this.pencil.resizingLogic(shape,this.MovingPointX,this.MovingPointY)
         }
 
             this.reDrawShapes()
@@ -374,12 +380,14 @@ export class Game {
             case "text":
                 const textSelection = this.text.insideShape(shape,this.InitialPointX,this.InitialPointY,this.ctx)
                 return textSelection
+            case "pencil":
+                const pencilSelection = this.pencil.insideShape(shape,this.InitialPointX,this.InitialPointY)
+                console.log(pencilSelection)
+                return pencilSelection
 
         }
 
     };
-
-    
 
     
 
@@ -548,11 +556,34 @@ export class Game {
     }
 
 
-    handleDefaultMode = () => {
+    handleDefaultMode = (e: MouseEvent) => {
         
-        if (this.SelectedIndex === -1) {
+        if (this.SelectedIndex === -1 && !this.isEditing) {
             this.selectShape();
             return;
+        }
+
+        if(this.isEditing){
+            const textArea = document.getElementById('textarea')
+            if(!textArea){
+                this.isEditing = false
+                return
+            }
+            if (e.target !== textArea) {
+
+                if (document.body.contains(textArea)) {
+                    document.body.removeChild(textArea);
+                    const escapeEvent = new KeyboardEvent('keydown', {
+                        key: 'Escape',
+                        bubbles: true,
+                        cancelable: true,
+                        code: "Escape"
+                    });
+                    textArea.dispatchEvent(escapeEvent);
+                }
+
+            }
+
         }
 
         const draggingShapeIndex = this.getDraggingShape();
@@ -576,6 +607,10 @@ export class Game {
             case "text":
                 this.handleText(messageData, draggingShapeIndex)
                 break
+            case "pencil" : 
+                this.handlePencil(messageData,draggingShapeIndex)
+                break
+
 
 
         }
@@ -596,6 +631,20 @@ export class Game {
         }
     };
 
+
+    handlePencil =(messageData : Pencil, draggingShapeIndex : boolean)=>{
+        const cornersResult = this.pencil.onCorner(messageData,this.InitialPointX,this.InitialPointY)
+        const edgeResult = this.pencil.handleSelection(messageData,this.InitialPointX,this.InitialPointY)
+
+        if (cornersResult.result || edgeResult.result) {
+            cornersResult.result ? this.setResizing(messageData, cornersResult.corner) : this.setResizing(messageData, edgeResult.edge)
+        }
+        else if (draggingShapeIndex) {
+            this.setDragging(messageData);
+        }
+
+
+    }
 
 
     handleRectangle = (messageData: Rectangle, draggingShapeIndex: boolean) => {
@@ -659,6 +708,7 @@ export class Game {
             this.SelectedIndex = selectedIndex;
             this.existingShapes[selectedIndex].messageData.selected = true;
             this.reDrawShapes();
+            console.log(this.existingShapes)
         }
     };
 
@@ -694,8 +744,8 @@ export class Game {
         if (text) {
             this.existingShapes.push({
                 messageData: {
-                    x: x + 4,
-                    y: y + 20,
+                    x: x ,
+                    y: y ,
                     content: text,
                     type: "text",
                     selected: false,
@@ -712,8 +762,8 @@ export class Game {
                     type: "created",
                     roomId: "2",
                     message: JSON.stringify({
-                        x: x + 4,
-                        y: y + 20,
+                        x: x ,
+                        y: y ,
                         content: text,
                         type: "text",
                         selected: false,
@@ -757,14 +807,11 @@ export class Game {
                 })
             })
         )
-
-      
-
         
     }
     
 
-    handlekeydown = (e: KeyboardEvent, textArea: HTMLTextAreaElement, x: number, y: number, Content: ShapesFromServer | null) => {
+    handlekeydown = (e: KeyboardEvent, textArea: HTMLTextAreaElement, x: number, y: number, Content: ShapesFromServer | null,selectedIndex:number) => {
     if (e.key === 'Enter' && !e.shiftKey || e.key === "Escape") {
         e.preventDefault();
 
@@ -783,7 +830,8 @@ export class Game {
                 }
             }
         } else if (e.key === "Escape" && this.isEditing && Content) {
-            this.existingShapes.splice(this.SelectedIndex, 0, Content);
+            this.existingShapes.splice(selectedIndex, 0, Content);
+            this.existingShapes[selectedIndex].messageData.selected = false
         }
 
         if (document.body.contains(textArea)) {
@@ -804,7 +852,7 @@ export class Game {
 
         switch (this.typeOfShapes) {
             case "default":
-                this.handleDefaultMode();
+                this.handleDefaultMode(e);
 
                 break;
             case "rectangle":
@@ -824,7 +872,7 @@ export class Game {
                 this.handleDrawingMode();
                 break
             case "text":
-                this.text.createTextArea(null,e.clientX, e.clientY,this.handlekeydown);
+                this.text.createTextArea(null,e.clientX, e.clientY,this.SelectedIndex,this.handlekeydown);
                 break;
             default:
                 null
@@ -1016,6 +1064,7 @@ export class Game {
 
 
             this.isDrawing = false
+            this.setTool('default')
             this.Points = []
 
         }
@@ -1258,9 +1307,9 @@ export class Game {
         if(result){
             this.isEditing = true
             this.existingShapes.splice(this.SelectedIndex,1)
-            this.SelectedIndex = -1 
             this.reDrawShapes()
-            this.text.createTextArea(shape,shape.messageData.x ,shape.messageData.y,this.handlekeydown)
+            this.text.createTextArea(shape,shape.messageData.x ,shape.messageData.y,this.SelectedIndex,this.handlekeydown)
+            this.SelectedIndex = -1 
 
         }
 
@@ -1269,6 +1318,8 @@ export class Game {
 
 
     }
+
+
 
     initMouseHandlers() {
 
