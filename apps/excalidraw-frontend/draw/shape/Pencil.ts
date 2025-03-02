@@ -30,6 +30,7 @@ export class Pencils{
                 thinning: 0.5,
                 streamline: 0.99,
             });
+            console.log(stroke)
 
             ctx.beginPath();
             stroke.forEach(([x, y], i) => {
@@ -315,19 +316,19 @@ export class Pencils{
         
         switch(shape.resizingEdge){
             case 'top-right':
-                const fixedX = minX - padding;
-                const fixedY = maxY + padding;
+                const fixedX = minX - padding ;
+                const fixedY = (minY - padding) + (rect.height - (padding * 2)) ;
 
-                const originalWidth = maxX - minX + padding * 2;
-                const originalHeight = maxY - minY + padding * 2;
+                const originalWidth = rect.width -  (padding * 2);
+                const originalHeight = rect.height -  (padding * 2);
 
-                const newWidth = Math.max(10, MovingPointX - fixedX); 
-                const newHeight = Math.max(10, fixedY - MovingPointY);
+                let newWidth = Math.max(10, MovingPointX - fixedX); 
+                let newHeight = Math.max(10, fixedY - MovingPointY);
 
-                const scaleX = newWidth / originalWidth;
-                const scaleY = newHeight / originalHeight;
+                let scaleX = newWidth / originalWidth;
+                let scaleY = newHeight / originalHeight;
 
-                const transformedPoints = [];
+                let transformedPoints = [];
 
                 for (let i = 0; i < shape.points.length; i++) {
                     const [x, y] = shape.points[i];
@@ -343,6 +344,95 @@ export class Pencils{
 
                 shape.points = transformedPoints;
                 break;
+                 
+                case "top-left":
+                    const bottonRightX = maxX - padding
+                    const bottonRightY = maxY - padding
+
+                    let newWidthBr = bottonRightX - (MovingPointX - padding)
+                    let newHeightBr = bottonRightY - (MovingPointY - padding)
+
+                    let scaleXBr = newWidthBr / (rect.width - (padding * 2))
+                    let scaleYBr = newHeightBr / (rect.height - (padding * 2))
+
+
+                    let transformedPointsBr = []
+
+                for (let i = 0; i < shape.points.length; i++) {
+                    const [x, y] = shape.points[i];
+
+                    const relX = bottonRightX - x;
+                    const relY = bottonRightY - y;
+
+
+                    transformedPointsBr.push([
+                        bottonRightX - relX * scaleXBr,
+                        bottonRightY - relY * scaleYBr
+                    ]);
+                }
+
+                shape.points = transformedPointsBr
+
+                    break
+
+                case "bottom-right":
+
+                    const topLeftX = minX - padding
+                    const topLeftY = minY - padding 
+
+                    const newWidthTl = (MovingPointX - padding) - topLeftX 
+                    const newHeightTl = (MovingPointY - padding) - topLeftY
+
+                    const scaleXTl = newWidthTl / (rect.width - (padding * 2))
+                    const scaleYTl = newHeightTl / (rect.height - (padding * 2))
+
+                let transformedPointsTL = []
+                for (let i = 0; i < shape.points.length; i++) {
+                    const [x, y] = shape.points[i]
+
+                    const relX = x - topLeftX
+                    const relY = y - topLeftY
+
+                    transformedPointsTL.push([
+                        topLeftX + relX * scaleXTl,
+                        topLeftY +  relY * scaleYTl
+                    ]);
+
+
+                }
+                shape.points = transformedPointsTL
+
+
+                    break
+                
+                case "bottom-left":
+                    const topRightX = (minX - padding) + (rect.width - (padding * 2))
+                    const topRightY = minY - padding
+
+                    const newWidthTR = topRightX - (MovingPointX - padding)
+                    const newHeightTR = (MovingPointY - padding) - topRightY  
+
+                    const scaleXTR = newWidthTR / (rect.width - (padding*2))
+                    const scaleYTR = newHeightTR / (rect.height - (padding*2))
+
+                    const transformedPointsTR = []
+
+                    for(let i = 0 ;i<shape.points.length;i++){
+                        const [x,y] = shape.points[i]
+
+                        const relX = x - topRightX 
+                        const relY = y - topRightY
+
+                        transformedPointsTR.push([
+                            topRightX + relX * scaleXTR,
+                            topRightY + relY * scaleYTR
+                        ])
+
+                    }
+
+                    shape.points = transformedPointsTR
+                    break
+
             }
     }
 

@@ -1062,7 +1062,6 @@ export class Game {
 
             }
 
-
             this.isDrawing = false
             this.setTool('default')
             this.Points = []
