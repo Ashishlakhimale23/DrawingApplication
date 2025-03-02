@@ -317,7 +317,7 @@ export class Pencils{
         switch(shape.resizingEdge){
             case 'top-right':
                 const fixedX = minX - padding ;
-                const fixedY = (minY - padding) + (rect.height - (padding * 2)) ;
+                const fixedY = maxY + padding ;
 
                 const originalWidth = rect.width -  (padding * 2);
                 const originalHeight = rect.height -  (padding * 2);
@@ -334,11 +334,11 @@ export class Pencils{
                     const [x, y] = shape.points[i];
                     
                     const relX = x - fixedX;
-                    const relY = fixedY - y;
+                    const relY =y - fixedY ;
 
                     transformedPoints.push([
                         fixedX + relX * scaleX,
-                        fixedY - relY * scaleY
+                        fixedY + relY * scaleY
                     ]);
                 }
 
@@ -432,8 +432,81 @@ export class Pencils{
 
                     shape.points = transformedPointsTR
                     break
+            case 'left':
+                const fixedXLeft = maxX + padding;
 
-            }
+                const originalWidthLeft = rect.width - (padding * 2);
+
+                const newWidthLeft = Math.max(10, fixedXLeft - MovingPointX);
+
+                const scaleXLeft = newWidthLeft / originalWidthLeft;
+
+                shape.points = shape.points.map(([x, y]) => {
+                    const relX = fixedXLeft - x;
+
+                    return [
+                        fixedXLeft - relX * scaleXLeft,
+                        y
+                    ];
+                });
+                break;
+            case 'right':
+                const fixedXRight= minX + padding;
+
+                const originalWidthRight= rect.width - (padding * 2);
+
+                const newWidthRight= Math.max(10, MovingPointX - fixedXRight );
+
+                const scaleXRight= newWidthRight/ originalWidthRight;
+
+                shape.points = shape.points.map(([x, y]) => {
+                    const relX = x - fixedXRight ;
+
+                    return [
+                        fixedXRight + relX * scaleXRight,
+                        y
+                    ];
+                });
+                break;
+            case 'bottom':
+                const fixedYTop= minY + padding;
+
+                const originalHeightTop= rect.height - (padding * 2);
+
+                const newHeightTop = Math.max(10, MovingPointY - fixedYTop);
+
+                const scaleXTop = newHeightTop / originalHeightTop;
+
+                shape.points = shape.points.map(([x, y]) => {
+                    const relX = y - fixedYTop;
+
+                    return [
+                        x,
+                        fixedYTop + relX * scaleXTop
+                    ];
+                });
+                break;
+            case 'top':
+                const fixedYbottom = maxY + padding;
+
+                const originalHeightbottom = rect.height - (padding * 2);
+
+                const newHeightbottom = Math.max(10,fixedYbottom - MovingPointY);
+
+                const scaleXbottom = newHeightbottom / originalHeightbottom;
+
+                shape.points = shape.points.map(([x, y]) => {
+                    const relX =  fixedYbottom - y;
+
+                    return [
+                        x,
+                        fixedYbottom - relX * scaleXbottom
+                    ];
+                });
+                break;
+
+
+        }
     }
 
 
