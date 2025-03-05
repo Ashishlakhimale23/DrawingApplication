@@ -1,4 +1,5 @@
 
+import { HtmlContext } from "next/dist/server/route-modules/pages/vendored/contexts/entrypoints";
 import { Text,ShapesFromServer } from "./types";
 
 export class texts {
@@ -9,12 +10,12 @@ export class texts {
         textArea.id = 'textarea'
         textArea.style.position = 'fixed';
         textArea.style.left = `${x - 4}px`;
-        textArea.style.top = `${y - (Content && Content?.messageData.type == "text" ? Content?.messageData.fontSize : 20)}px`;
+        textArea.style.top = `${y - (Content && Content?.messageData.type == "text" ? Content?.messageData.fontSize : 30)}px`;
         textArea.style.background = 'transparent';
         textArea.style.color = 'white';
         textArea.style.border = "none";
         textArea.style.outline = 'none';
-        textArea.style.font = `${Content && Content.messageData.type == "text" ? Content.messageData?.fontSize : 20}px san-serif`;
+        textArea.style.font = `${Content && Content.messageData.type == "text" ? Content.messageData?.fontSize : 30}px san-serif`;
         textArea.style.padding = '2px';
         textArea.style.margin = '0px';
         textArea.style.overflow = 'hidden';
@@ -39,9 +40,7 @@ export class texts {
     draw(shape:Text,ctx:CanvasRenderingContext2D){
         ctx.save();
 
-       
-
-        ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+        ctx.font = `${shape.fontSize }px ${shape.fontFamily}`;
         ctx.fillStyle = 'white';
         const lines = shape.content.split('\n');
         lines.forEach((line, index) => {

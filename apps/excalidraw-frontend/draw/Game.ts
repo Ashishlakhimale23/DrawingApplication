@@ -766,7 +766,7 @@ export class Game {
                     isResizing: false,
                     resizingEdge: "",
                     isDraging: false,
-                    fontSize: 20,
+                    fontSize: 30,
                     fontFamily: 'san'
                 }
             });
@@ -784,7 +784,7 @@ export class Game {
                         isResizing: false,
                         resizingEdge: "",
                         isDraging: false,
-                        fontSize: 20,
+                        fontSize: 30,
                         fontFamily: 'san-serif  '
                     })
                 })
