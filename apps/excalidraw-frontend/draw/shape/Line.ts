@@ -29,6 +29,7 @@ export class line{
     }
 
     draw(shape: Lines, ctx: CanvasRenderingContext2D) {
+       
     ctx.save();
     ctx.strokeStyle = "white";
     ctx.lineWidth = 4;

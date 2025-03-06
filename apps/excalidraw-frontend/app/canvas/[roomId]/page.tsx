@@ -5,7 +5,7 @@ const getShapes = async (roomId: string) => {
   const shapes = await axios.get("http://localhost:8000/user/getchats", {
     params: { roomId: roomId },
     headers: {
-      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQxMDYxNzgxLCJleHAiOjE3NDEwODY5ODF9.Qu8rUaIdYRCiPRTDlia4Md-X0oTqmNlDD7epKuZm4K8"}`,
+      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQxMjM0MTYzLCJleHAiOjE3NDEyNTkzNjN9.zx9O3PpdcvS63vD9JvCLemEb8XUBOxlsmLjXmdr26eo"}`,
     },
   });
 
@@ -18,7 +18,6 @@ const getShapes = async (roomId: string) => {
         return {messageData,id};
     })
 
-   console.log(shape) 
     return shape;
 
 };
@@ -32,5 +31,6 @@ export default async function CollabrationRoom({
 }) {
   const roomId = (await params).roomId;
   const shapes = await getShapes(roomId);
+  console.log(shapes)
   return <RoomCanvas roomId={roomId} shapes={shapes} />;
 }

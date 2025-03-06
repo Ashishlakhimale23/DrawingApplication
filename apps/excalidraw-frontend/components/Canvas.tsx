@@ -1,6 +1,7 @@
 "use client";
 import {  useEffect, useRef, useState, RefObject, SetStateAction ,Dispatch} from "react";
 import { Game } from "@/draw/Game";
+import { invoker } from "@/utils/Invoker";
 
 type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text";
 
@@ -87,6 +88,12 @@ useEffect(() => {
   return (
     <div className="h-lvh">
       <ToolBar setTypeOFShapes={setTypeOfShapes} typeOfShapes={typeOfShapes}/>
+      <div
+      className="space-x-4 bg-white fixed bottom-10 left-10 w-fit h-fit rounded-md px-2 py-1"
+      >
+        <button className="text-black" onClick={()=>invoker.undo()}>Undo</button>
+        <button className="text-black"onClick={()=>invoker.redo()}>Redo</button>
+      </div>
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}

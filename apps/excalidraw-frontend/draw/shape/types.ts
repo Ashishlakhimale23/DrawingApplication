@@ -52,4 +52,8 @@ export interface ShapesFromServer {
 
 
 export type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text"
+export interface Command {
+    execute : () => void,
+    undo : () => void
+}
 

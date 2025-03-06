@@ -30,7 +30,6 @@ export class Pencils{
                 thinning: 0.5,
                 streamline: 0.99,
             });
-            console.log(stroke)
 
             ctx.beginPath();
             stroke.forEach(([x, y], i) => {
