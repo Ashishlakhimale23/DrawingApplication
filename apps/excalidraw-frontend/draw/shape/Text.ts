@@ -123,7 +123,7 @@ export class texts {
         const textWidth = metrics.width;
         const textHeight = shape.fontSize;
         const boxPadding = 4;
-        const tolerance = 3;
+        const tolerance = 8;
         const handleSize = 8;
 
         const bounds = {

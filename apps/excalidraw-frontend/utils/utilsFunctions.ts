@@ -62,8 +62,9 @@ export class UtlisFunction{
             case "rectangle":
                 const edgeRectangle = this.rectangle.resizingEdge(shape,MovingPointX,MovingPointY) 
                 return edgeRectangle?.edge
+               
             case "circle":
-                const edgeCircle = this.circle.resizingEdge(shape,MovingPointX,MovingPointX)
+                const edgeCircle = this.circle.resizingEdge(shape,MovingPointX,MovingPointY)
                 return edgeCircle.edge
             case "line":
                 const edgeLine = this.line.getOnWhichPoint(shape,MovingPointX,MovingPointY)

@@ -7,7 +7,6 @@ import { invoker } from "@/utils/Invoker";
 import { DraggedCommand, DrawCommand, ResizedCommand, SelectedCommand } from "@/utils/Commands";
 import { ShapesFromServer,TypeOfShapes,Rectangle,Circle,Line,Pencil,Text,Shape } from "./shape/types";
 import { UtlisFunction } from "@/utils/utilsFunctions";
-import { boolean } from "joi";
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -477,7 +476,7 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging:false 
+                                isDraging:true
                             }
                         )
                     })
@@ -535,7 +534,7 @@ export class Game {
                             selected: false,
                             isResizing: false,
                             resizingEdge: "",
-                            isDraging: false,
+                            isDraging: true,
                             fontSize: shape.fontSize,
                             fontFamily: shape.fontFamily
                         })
@@ -946,49 +945,6 @@ export class Game {
     }
 
 
-    DraggedShape(shape:ShapesFromServer,dx:number,dy:number){
-
-        if(shape.messageData.type == "line"){
-            shape.messageData.x += dx
-            shape.messageData.y += dy
-            shape.messageData.x1 += dx
-            shape.messageData.y1 += dy
-            shape.messageData.midX += dx
-            shape.messageData.midY += dy
-        }else if(shape.messageData.type == "pencil"){
-            const transformedPoints = []
-            for (let i = 0; i < shape.messageData.points.length; i++) {
-                const [x, y] = shape.messageData.points[i]
-
-                transformedPoints.push([
-                    x + dx, y + dy
-                ])
-            }
-
-            shape.messageData.points = transformedPoints
-
-
-        }else{
-            shape.messageData.x += dx
-            shape.messageData.y += dy
-        }
-
-
-        
-        
-        this.Socket.send(
-            JSON.stringify({
-                type: "draged",
-                roomId: "2",
-                id: shape.id,
-                message: JSON.stringify(shape.messageData)
-            })
-        )
-
-        this.reDrawShapes()
-
-    }
-
     ResizedShape(shape:ShapesFromServer,dimensions:Shape){
         Object.assign(shape.messageData,dimensions)
         this.reDrawShapes()
@@ -1030,8 +986,10 @@ MouseMove = (e: MouseEvent) => {
                 this.reDrawShapes();
             } else {
 
+                console.log(shape)
                 
                 let edge = this.utilsFunctions.getOnWhichEdge(shape,this.MovingPointX,this.MovingPointY)
+                console.log(edge)
 
                 if (edge) {
                     switch(edge) {
@@ -1178,6 +1136,7 @@ MouseMove = (e: MouseEvent) => {
             shape.messageData.isDraging = false
             shape.messageData.isResizing = false
             shape.messageData.resizingEdge = ''
+            shape.messageData.selected = false
             if (shape.messageData.type == 'line') {
                 shape.messageData.Point = ''
             }
@@ -1187,8 +1146,6 @@ MouseMove = (e: MouseEvent) => {
             
             invoker.setCommand(new ResizedCommand(this,shape,old,newshape)) 
 
-
-           
             this.Socket.send(
                 JSON.stringify({
                     type: "resized",
@@ -1197,6 +1154,8 @@ MouseMove = (e: MouseEvent) => {
                     message: JSON.stringify(shape.messageData)
                 })
             )
+
+            shape.messageData.selected = true 
 
             shape.messageData.isResizing = false
             shape.messageData.resizingEdge = ""
@@ -1209,6 +1168,7 @@ MouseMove = (e: MouseEvent) => {
 
             let shape = this.existingShapes[this.SelectedIndex]
             shape.messageData.isDraging = false
+            shape.messageData.selected= false
             let dx = shape.messageData.x - this.originalCordinates.x 
             let dy = shape.messageData.y - this.originalCordinates.y 
 
@@ -1223,6 +1183,7 @@ MouseMove = (e: MouseEvent) => {
                 })
             )
 
+            shape.messageData.selected= true 
             this.originalCordinates.x = 0
             this.originalCordinates.y = 0
             this.isDraging = false
