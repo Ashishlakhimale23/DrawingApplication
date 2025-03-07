@@ -1,25 +1,9 @@
 import { ValueOf } from "next/dist/shared/lib/constants";
-
-interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
-
-interface Circles extends BaseShape {
-    type: "circle";
-    radiusX: number;
-    radiusY :number
-}
+import { Circle  } from "./types";
 
 export class circle {
     
-    draw(shape:Circles,ctx:CanvasRenderingContext2D){
+    draw(shape:Circle,ctx:CanvasRenderingContext2D){
        
         ctx.strokeStyle = "white"
         ctx.lineWidth = 4
@@ -29,10 +13,9 @@ export class circle {
         ctx.stroke()
         ctx.closePath()
        
-
     }
 
-    drawSelectedShape(shape: Circles, ctx: CanvasRenderingContext2D) {
+    drawSelectedShape(shape: Circle, ctx: CanvasRenderingContext2D) {
     ctx.save();
     ctx.strokeStyle = "gray";
     ctx.lineWidth = 2;
@@ -74,7 +57,7 @@ export class circle {
     ctx.restore();
 }
 
-    insideShape(shape:Circles,InitialPointX:number,InitialPointY:number){
+    insideShape(shape:Circle,InitialPointX:number,InitialPointY:number){
        const dx = InitialPointX - shape.x 
        const dy = InitialPointY - shape.y
 
@@ -85,7 +68,7 @@ export class circle {
         return result <= (1 + tolerance )
     }
 
-    getOnCirleCircumfurance(shape: Circles, InitialPointX: number, InitialPointY: number) {
+    getOnCirleCircumfurance(shape: Circle, InitialPointX: number, InitialPointY: number) {
     const dx = InitialPointX - shape.x;
     const dy = InitialPointY - shape.y;
     
@@ -96,7 +79,7 @@ export class circle {
     return Math.abs(result - 1) <= tolerance;
 }
 
-resizingLogic(shape: Circles, MovingPointX: number, MovingPointY: number) {
+resizingLogic(shape: Circle, MovingPointX: number, MovingPointY: number) {
     const minRadius = 5;
     
     if (shape.radiusX <= minRadius && shape.radiusY > minRadius) {
@@ -263,15 +246,18 @@ resizingLogic(shape: Circles, MovingPointX: number, MovingPointY: number) {
     }
 }
     
-    onCorner(shape:Circles,InitialPointX:number,InitialPointY:number){
-        //rectangle
+    resizingEdge(shape: Circle, InitialPointX: number, InitialPointY: number){
+
+        let edge = null;
+        const tolerance = 10
+
         const bounds = {
             x: shape.x - shape.radiusX,
             y: shape.y - shape.radiusY,
             width: shape.radiusX * 2,
             height: shape.radiusY * 2
         };
-        //corners 
+
         const handles = [
             [bounds.x - 10, bounds.y - 10], // top left 
             [bounds.x + bounds.width + 2, bounds.y - 10], // top right
@@ -280,56 +266,12 @@ resizingLogic(shape: Circles, MovingPointX: number, MovingPointY: number) {
         ];
 
         const corners = {
-            0 : 'top-left',
-            1 : 'top-right',
-            2 : 'bottom-left',
-            3 : 'bottom-right'
+            0: 'top-left',
+            1: 'top-right',
+            2: 'bottom-left',
+            3: 'bottom-right'
         }
 
-        const tolerance = 10
-        let result = false
-        let corner : ValueOf<typeof corners> = ""
-         handles.forEach(([x,y],i) => {
-            console.log(i , x-InitialPointX , y - InitialPointY)
-
-            if(Math.abs(x - InitialPointX) < tolerance  && Math.abs(y - InitialPointY) < tolerance){
-                corner = corners[i as keyof typeof corners]
-                result  = true        
-            }
-        }); 
-
-        return {result,corner}
-        
-
-
-    }
-
-
-    handleSelection(shape: Circles, InitialPointX: number, InitialPointY: number){
-        const tolerance = 10
-        const bounds = {
-            x: shape.x - shape.radiusX,
-            y: shape.y - shape.radiusY,
-            width: shape.radiusX * 2,
-            height: shape.radiusY * 2
-        };
-        let edge ;
-        const minX = Math.min(bounds.x, bounds.x + bounds.width);
-        const maxX = Math.max(bounds.x, bounds.x + bounds.width);
-        const minY = Math.min(bounds.y, bounds.y + bounds.height);
-        const maxY = Math.max(bounds.y, bounds.y + bounds.height);
-        const result  = (
-            (Math.abs(InitialPointX - minX) <= tolerance &&
-                minY <= InitialPointY &&
-                InitialPointY <= maxY) ||
-            (Math.abs(InitialPointY - minY) <= tolerance &&
-                minX <= InitialPointX &&
-                InitialPointX <= maxX) ||
-            (Math.abs(InitialPointX - maxX) <= tolerance &&
-                minY <= InitialPointY &&
-                InitialPointY <= maxY) ||
-            (Math.abs(InitialPointY - maxY) <= tolerance && minX <= InitialPointX && InitialPointX <= maxX)
-        );
 
          if (Math.abs(InitialPointX - bounds.x) < tolerance) {
                 edge = "left";
@@ -343,7 +285,20 @@ resizingLogic(shape: Circles, MovingPointX: number, MovingPointY: number) {
             if (Math.abs(InitialPointY - (bounds.y + bounds.height)) < tolerance) {
                 edge = "bottom";
             } 
-        return {result,edge} 
+
+
+        
+
+        handles.forEach(([x, y], i) => {
+            console.log(i, x - InitialPointX, y - InitialPointY)
+
+            if (Math.abs(x - InitialPointX) < tolerance && Math.abs(y - InitialPointY) < tolerance) {
+                edge = corners[i as keyof typeof corners]
+            }
+        })
+
+        const result = edge ! == null 
+        return { result, edge } 
 
 
     }

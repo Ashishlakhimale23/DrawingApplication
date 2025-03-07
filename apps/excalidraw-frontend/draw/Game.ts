@@ -5,61 +5,9 @@ import { Pencils } from "./shape/Pencil";
 import { texts } from  "./shape/Text";
 import { invoker } from "@/utils/Invoker";
 import { DraggedCommand, DrawCommand, ResizedCommand, SelectedCommand } from "@/utils/Commands";
-
-interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
-
-interface Text extends BaseShape {
-    type: "text";
-    content: string;
-    fontSize: number;
-    fontFamily: string;
-}
-
-interface Rectangle extends BaseShape {
-    type: "rectangle";
-    width: number;
-    height: number;
-}
-
-interface Circle extends BaseShape {
-    type: "circle";
-    radiusX: number;
-    radiusY : number
-}
-
-interface Line extends BaseShape {
-    type: "line";
-    x1: number;
-    y1: number;
-    midX: number;
-    midY: number
-    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
-}
-
-interface Pencil extends BaseShape {
-    type: 'pencil';
-    points: number[][]
-
-}
-
-type Shape = Rectangle | Circle | Line | Pencil | Text;
-
-interface ShapesFromServer {
-    id?: number,
-    messageData: Shape
-}
-
-
-type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text"
+import { ShapesFromServer,TypeOfShapes,Rectangle,Circle,Line,Pencil,Text,Shape } from "./shape/types";
+import { UtlisFunction } from "@/utils/utilsFunctions";
+import { boolean } from "joi";
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -71,7 +19,7 @@ export class Game {
     private InitialPointY: number = 0;
     private MovingPointX: number = 0;
     private MovingPointY: number = 0;
-    private typeOfShapes: TypeOfShapes = 'default';
+    static typeOfShapes: TypeOfShapes = 'default';
     private roomId: string;
     private SelectedIndex: number = -1;
     private isDraging: boolean = false
@@ -84,9 +32,9 @@ export class Game {
     private pencil : Pencils
     private originalCordinates:{x:number,y:number} = {x:0,y:0};
     private oldshape : ShapesFromServer | null = null
+    private utilsFunctions : UtlisFunction
 
     Socket: WebSocket;
-
 
 
     constructor(canvas: HTMLCanvasElement, roomId: string, Socket: WebSocket, existingShapes: ShapesFromServer[]) {
@@ -100,6 +48,7 @@ export class Game {
         this.line = new line()
         this.text = new texts()
         this.pencil = new Pencils()
+        this.utilsFunctions = new UtlisFunction(this.ctx)
 
         this.init();
         this.onMessageFromSocket();
@@ -111,7 +60,6 @@ export class Game {
         this.reDrawShapes();
     }
 
-    
     reDrawShapes() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.fillStyle = 'black';
@@ -218,14 +166,13 @@ export class Game {
 }
 
     setTool(tool: TypeOfShapes) {
-        this.typeOfShapes = tool;
+        Game.typeOfShapes = tool;
     }
 
     Draw() {
         if (this.ctx && this.canvas) {
-            
-
-            switch (this.typeOfShapes) {
+            document.body.style.cursor = "crosshair"
+            switch (Game.typeOfShapes) {
                 case "rectangle":
                     const width = this.MovingPointX - this.InitialPointX
                     const height = this.MovingPointY - this.InitialPointY
@@ -265,12 +212,13 @@ export class Game {
                     this.pencil.draw(pencilShape as Pencil,this.ctx) 
 
                     break
-                
-
                 default:
+                    document.body.style.cursor = "default"
                     null
             }
         }
+
+
     }
 
 
@@ -438,8 +386,8 @@ export class Game {
     
 
 
-    getDraggingShape() {
-        if ( this.SelectedIndex === -1 || this.typeOfShapes !== "default" || this.isEditing) {
+    getDraggingShape(PointX :number , PointY : number) {
+        if ( this.SelectedIndex === -1 || Game.typeOfShapes !== "default" || this.isEditing) {
             return false
         }
 
@@ -447,19 +395,19 @@ export class Game {
 
         switch (shape.type) {
             case "rectangle":
-                const resultRectangle = this.rectangle.insideShape(shape,this.InitialPointX,this.InitialPointY)
+                const resultRectangle = this.rectangle.insideShape(shape,PointX,PointY)
                 return resultRectangle
             case "circle":
-                const resultCircle = this.circle.insideShape(shape,this.InitialPointX,this.InitialPointY) 
+                const resultCircle = this.circle.insideShape(shape,PointX,PointY) 
                 return resultCircle
             case "line":
-                const resultLine = this.line.insideShape(shape,this.InitialPointX,this.InitialPointY)
+                const resultLine = this.line.insideShape(shape,PointX,PointY)
                 return resultLine
             case "text":
-                const resultText = this.text.insideShape(shape,this.InitialPointX,this.InitialPointY,this.ctx)
+                const resultText = this.text.insideShape(shape,PointX,PointY,this.ctx)
                 return resultText
             case "pencil":
-                const resultPencil = this.pencil.DragTest(shape,this.InitialPointX,this.InitialPointY)
+                const resultPencil = this.pencil.DragTest(shape,PointX,PointY)
                 return resultPencil
             default:
                 return false
@@ -667,7 +615,7 @@ export class Game {
 
         }
 
-        const draggingShapeIndex = this.getDraggingShape();
+        const draggingShapeIndex = this.getDraggingShape(this.InitialPointX,this.InitialPointY);
         const selectedShape: ShapesFromServer = this.existingShapes[this.SelectedIndex];
         
         
@@ -700,11 +648,10 @@ export class Game {
 
     handleText = (shape:ShapesFromServer, draggingShapeIndex: boolean) => {
 
-        const cornersResult = this.text.onCorner(shape.messageData as Text,this.InitialPointX,this.InitialPointY,this.ctx)
-        const edgeResult = this.text.handleSelection(shape.messageData as Text,this.InitialPointX,this.InitialPointY,this.ctx)
+        const edgeResult = this.text.resizingEdge(shape.messageData as Text,this.InitialPointX,this.InitialPointY,this.ctx)
         
-        if(cornersResult.result || edgeResult.result){
-            cornersResult.result ?  this.setResizing(shape,cornersResult.corner) : this.setResizing(shape,edgeResult.edge) 
+        if(edgeResult.result && edgeResult.edge !== null){
+            this.setResizing(shape,edgeResult.edge) 
         }
         else if (draggingShapeIndex) {
             this.setDragging(shape.messageData);
@@ -713,11 +660,10 @@ export class Game {
 
 
     handlePencil =(shape: ShapesFromServer, draggingShapeIndex : boolean)=>{
-        const cornersResult = this.pencil.onCorner(shape.messageData as Pencil,this.InitialPointX,this.InitialPointY)
-        const edgeResult = this.pencil.handleSelection(shape.messageData as Pencil,this.InitialPointX,this.InitialPointY)
+        const edgeResult = this.pencil.resizingEdge(shape.messageData as Pencil,this.InitialPointX,this.InitialPointY)
 
-        if (cornersResult.result || edgeResult.result) {
-            cornersResult.result ? this.setResizing(shape, cornersResult.corner) : this.setResizing(shape, edgeResult.edge)
+        if ( edgeResult.result && edgeResult.edge !==null) {
+            this.setResizing(shape, edgeResult.edge)
         }
         else if (draggingShapeIndex) {
             this.setDragging(shape.messageData);
@@ -729,23 +675,18 @@ export class Game {
 
     handleRectangle = (shape : ShapesFromServer, draggingShapeIndex: boolean) => {
         const resizeEdge = this.rectangle.resizingEdge(shape.messageData as Rectangle,this.InitialPointX,this.InitialPointY);
-        if (resizeEdge !== null) {
-            this.setResizing(shape, resizeEdge);
+        if (resizeEdge?.result && resizeEdge.edge !== null) {
+            this.setResizing(shape, resizeEdge.edge);
         } else if (draggingShapeIndex) {
-            console.log("dragging")
             this.setDragging(shape.messageData);
         }
     };
 
     handleCircle = (shape:ShapesFromServer, draggingShapeIndex: boolean) => {
-        const cornersResult = this.circle.onCorner(shape.messageData as Circle,this.InitialPointX,this.InitialPointY)
-        const edgeResult = this.circle.handleSelection(shape.messageData as Circle,this.InitialPointX,this.InitialPointY)
-        if ( cornersResult.result || edgeResult.result ) {
-            
-            cornersResult.result ?  this.setResizing(shape,cornersResult.corner) : this.setResizing(shape,edgeResult.edge) 
-            console.log(edgeResult.edge)
+        const edgeResult = this.circle.resizingEdge(shape.messageData as Circle,this.InitialPointX,this.InitialPointY)
+        if (edgeResult.result && edgeResult.edge !==null) {
+            this.setResizing(shape,edgeResult.edge) 
         } else if (draggingShapeIndex) {
-            
             this.setDragging(shape.messageData);
         }
     };
@@ -791,6 +732,7 @@ export class Game {
             this.isDraging = false
 
             this.SelectedIndex = selectedIndex;
+            document.body.style.cursor = 'default'
             
             invoker.executeCommand(new SelectedCommand(this,this.SelectedIndex))
         }
@@ -827,7 +769,7 @@ export class Game {
             this.reDrawShapes()
         }
 
-        if (this.typeOfShapes == 'pencil') {
+        if (Game.typeOfShapes == 'pencil') {
             this.Points.push([this.InitialPointX, this.InitialPointY])
 
         }
@@ -945,7 +887,7 @@ export class Game {
         this.InitialPointX = e.clientX;
         this.InitialPointY = e.clientY;
 
-        switch (this.typeOfShapes) {
+        switch (Game.typeOfShapes) {
             case "default":
                 this.handleDefaultMode(e);
 
@@ -977,6 +919,7 @@ export class Game {
     
 
 
+    // undo redo
     addShape(shape:ShapesFromServer){
         this.existingShapes.push(shape)
         this.Socket.send(
@@ -1051,31 +994,84 @@ export class Game {
         this.reDrawShapes()
     }
 
+    // cursor change
+    getOnshape() {
+        let result = this.existingShapes.some(shape =>{
+            const result = this.utilsFunctions.getIfOnAnyShapesEdge(shape.messageData,this.MovingPointX,this.MovingPointY)
+            return result
 
-    MouseMove = (e: MouseEvent) => {
-        this.MovingPointX = e.clientX;
-        this.MovingPointY = e.clientY;
+        }) 
+        return result
+    }
 
-        if (
-            this.isDrawing &&
-            this.SelectedIndex == -1 && this.canvas && !this.isDraging
-        ) {
-            if (this.typeOfShapes === "pencil") {
+
+MouseMove = (e: MouseEvent) => {
+    this.MovingPointX = e.clientX;
+    this.MovingPointY = e.clientY;
+
+    if (Game.typeOfShapes !== "default") {
+        document.body.style.cursor = "crosshair";
+        if (this.isDrawing && this.SelectedIndex == -1 && this.canvas && !this.isDraging) {
+            if (Game.typeOfShapes === "pencil") {
                 this.Points.push([this.MovingPointX, this.MovingPointY]);
             }
-
             this.reDrawShapes();
             this.Draw();
-        } else if (!this.isEditing && this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && !this.isDraging && this.existingShapes[this.SelectedIndex].messageData.isResizing) {
-            this.Resize();
-            this.reDrawShapes()
-        } else if (this.SelectedIndex !== -1 && this.typeOfShapes == 'default' && this.isDraging && this.existingShapes[this.SelectedIndex].messageData.isDraging) {
-
-            this.Drag()
-            this.reDrawShapes()
         }
+    } else {
+        if (!this.isEditing && this.SelectedIndex !== -1) {
+            const shape = this.existingShapes[this.SelectedIndex].messageData;
 
+            if (shape.isResizing && this.isResizing) {
+                this.Resize();
+                this.reDrawShapes();
+            } else if (this.isDraging && shape.isDraging) {
+                this.Drag();
+                this.reDrawShapes();
+            } else {
+
+                
+                let edge = this.utilsFunctions.getOnWhichEdge(shape,this.MovingPointX,this.MovingPointY)
+
+                if (edge) {
+                    switch(edge) {
+                        case 'top':
+                        case 'bottom':
+                            document.body.style.cursor = "ns-resize";
+                            break;
+                        case 'left':
+                        case 'right':
+                            document.body.style.cursor = "ew-resize";
+                            break;
+                        case 'top-left':
+                        case 'bottom-right':
+                            document.body.style.cursor = "nwse-resize";
+                            break;
+                        case 'top-right':
+                        case 'bottom-left':
+                            document.body.style.cursor = "nesw-resize";
+                            break;
+
+                        case "startingPoint":
+                        case "endingPoint":
+                        case "midPoint":
+                            document.body.style.cursor = 'pointer'
+                            break
+                        default:
+                            document.body.style.cursor = "default";
+                    }
+                } else if (this.getDraggingShape(this.MovingPointX, this.MovingPointY)) {
+                    document.body.style.cursor = "move";
+                } else {
+                    document.body.style.cursor = "default";
+                }
+            }
+        } else {
+            const isOnShape = this.getOnshape();
+            document.body.style.cursor = isOnShape ? "move" : "default";
+        }
     }
+};
 
 
 
@@ -1084,7 +1080,7 @@ export class Game {
         if (this.isDrawing) {
             let shape : ShapesFromServer 
 
-            switch (this.typeOfShapes) {
+            switch (Game.typeOfShapes) {
                 case "rectangle":
                     shape = {
                         messageData: {
@@ -1172,6 +1168,7 @@ export class Game {
             invoker.executeCommand(new DrawCommand(this,shape))
             this.isDrawing = false
             this.setTool('default')
+            document.body.style.cursor = 'default'
             this.Points = []
 
         }
@@ -1211,6 +1208,7 @@ export class Game {
         if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isDraging && this.isDraging ) {
 
             let shape = this.existingShapes[this.SelectedIndex]
+            shape.messageData.isDraging = false
             let dx = shape.messageData.x - this.originalCordinates.x 
             let dy = shape.messageData.y - this.originalCordinates.y 
 
@@ -1283,12 +1281,8 @@ export class Game {
 
         }
 
-        
-
-
 
     }
-
 
 
     initMouseHandlers() {

@@ -1,19 +1,4 @@
-interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
-
-interface Rectangles extends BaseShape {
-    type: "rectangle";
-    width: number;
-    height: number;
-}
+import { Rectangle } from "./types"
 
 export class rectangle{
 
@@ -29,46 +14,45 @@ export class rectangle{
         ctx.restore()
     }
 
-    drawSelectedShape(shape:Rectangles,ctx:CanvasRenderingContext2D){
+    drawSelectedShape(shape:Rectangle,ctx:CanvasRenderingContext2D){
         ctx.save()
         ctx.strokeStyle = "gray"
         ctx.lineWidth = 1
 
         ctx.fillStyle = "white"
-        const minX = Math.min(shape.x, (Math.abs(shape.width) + shape.x))
-        const minY = Math.min(shape.y, (Math.abs(shape.height) + shape.y))
-        const width = 8
-        const height = 8
 
-        ctx.strokeRect(minX - 5, minY - 5, shape.width + 10, shape.height + 10)
+        const rect = {
+           x : shape.x - 5 ,
+           y : shape.y - 5 ,
+           width : shape.width + 10,
+           height : shape.height + 10
+        }
 
+        const corners = [
+            [rect.x - 4 ,rect.y - 4 ] ,
+            [rect.x + rect.width  -4 , rect.y - 4],
+            [rect.x - 4 , rect.y + rect.height - 4 ],
+            [rect.x + rect.width - 4 , rect.y + rect.height - 4]
+        ]
+        ctx.strokeRect(rect.x, rect.y,rect.width, rect.height)
+
+        corners.forEach(([x, y]) => {
+
+        ctx.save() 
         ctx.beginPath()
-        ctx.roundRect((minX - width), (minY -height ), width,height,2)
+        ctx.roundRect(x, y,8,8,2);
         ctx.fill()
         ctx.closePath()
-
-        ctx.beginPath()
-        ctx.roundRect(shape.x  + shape.width, (minY - height), width, height,2)
-        ctx.fill()
-        ctx.closePath()
-
-        ctx.beginPath()
-        ctx.roundRect((minX - width), shape.y + shape.height,width,height,2)
-        ctx.fill()
-        ctx.closePath()
-        
-        ctx.beginPath()
-        ctx.roundRect(shape.x + shape.width , shape.y + shape.height , width, height,2);
-        ctx.fill()
-        ctx.closePath()
-    
+        ctx.restore()
+       
+    });
 
         ctx.restore()
 
     }
 
 
-    insideShape(shape:Rectangles,InitialPointX:number,InitialPointY:number){
+    insideShape(shape:Rectangle,InitialPointX:number,InitialPointY:number){
         const x = shape.width < 0 ? shape.x + shape.width : shape.x;
         const y = shape.height < 0 ? shape.y + shape.height : shape.y;
         const width = Math.abs(shape.width)
@@ -77,57 +61,74 @@ export class rectangle{
 
     }
 
-    resizingEdge(shape:Rectangles,InitialPointX:number,InitialPointY:number){
-    
+    resizingEdge(shape: Rectangle, InitialPointX: number, InitialPointY: number) {
+
         if (shape.type == "rectangle") {
             const { x, y, selected, width, height } = shape;
-            const threshold = 5;
+            const tolerance = 10
 
-            if (!selected) {
-                return null;
-            }
-
-            if (
-                Math.abs(InitialPointX - (x + width)) < threshold &&
-                Math.abs(InitialPointY - (y + height)) < threshold
-            ) {
-                return "bottom-right";
-            }
-            if (Math.abs(InitialPointX - x) < threshold && Math.abs(InitialPointY - y) < threshold) {
-                return "top-left";
-            }
-            if (
-                Math.abs(InitialPointX - (x + width)) < threshold &&
-                Math.abs(InitialPointY - y) < threshold
-            ) {
-                return "top-right";
-            }
-            if (
-                Math.abs(InitialPointX - x) < threshold &&
-                Math.abs(InitialPointY - (y + height)) < threshold
-            ) {
-                return "bottom-left";
+            const rect = {
+                x: shape.x - 5,
+                y: shape.y - 5,
+                width: shape.width + 10,
+                height: shape.height + 10
             }
 
-            if (Math.abs(InitialPointX - x) < threshold) {
-                return "left";
+            const handle = [
+                [rect.x - 4, rect.y - 4],
+                [rect.x + rect.width - 4, rect.y - 4],
+                [rect.x - 4, rect.y + rect.height - 4],
+                [rect.x + rect.width - 4, rect.y + rect.height - 4]
+            ]
+
+            const corners = {
+                0: 'top-left',
+                1: 'top-right',
+                2: 'bottom-left',
+                3: 'bottom-right'
             }
-            if (Math.abs(InitialPointX - (x + width)) < threshold) {
-                return "right";
+
+
+            let edge = null;
+
+            if (Math.abs(InitialPointX - rect.x) <= tolerance &&
+                InitialPointY >= rect.y &&
+                InitialPointY <= rect.y + rect.height) {
+                edge = 'left';
+            } else if (Math.abs(InitialPointX - (rect.x + rect.width)) <= tolerance &&
+                InitialPointY >= rect.y &&
+                InitialPointY <= rect.y + rect.height) {
+                edge = 'right';
+            } else if (Math.abs(InitialPointY - rect.y) <= tolerance &&
+                InitialPointX >= rect.x &&
+                InitialPointX <= rect.x + rect.width) {
+                edge = 'top';
+            } else if (Math.abs(InitialPointY - (rect.y + rect.height)) <= tolerance &&
+                InitialPointX >= rect.x &&
+                InitialPointX <= rect.x + rect.width) {
+                edge = 'bottom';
             }
-            if (Math.abs(InitialPointY - y) < threshold) {
-                return "top";
-            }
-            if (Math.abs(InitialPointY - (y + height)) < threshold) {
-                return "bottom";
-            }
+
+
+
+            handle.forEach(([x, y], i) => {
+
+
+                if (Math.abs(x - InitialPointX) < tolerance && Math.abs(y - InitialPointY) < tolerance) {
+                    edge = corners[i as keyof typeof corners]
+                }
+            });
+
+
+            const result = edge !== null
+            return { result, edge }
+
 
         }
-        return null;
 
     }
 
-    handleSelection(shape:Rectangles,InitialPointX:number,InitialPointY:number){
+    handleSelection(shape:Rectangle,InitialPointX:number,InitialPointY:number){
         const tolerance = 10
         const minX = Math.min(shape.x, shape.x + shape.width);
         const maxX = Math.max(shape.x, shape.x + shape.width);
@@ -147,7 +148,7 @@ export class rectangle{
         );
     }
 
-    resizingLogic(shape:Rectangles,MovingPointX:number,MovingPointY:number){
+    resizingLogic(shape:Rectangle,MovingPointX:number,MovingPointY:number){
             const x1 = (shape.width + shape.x)
             const y1 = shape.height + shape.y
             if (shape.x > x1 && shape.y < y1) {

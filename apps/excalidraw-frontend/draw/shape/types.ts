@@ -52,6 +52,15 @@ export interface ShapesFromServer {
 
 
 export type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text"
+
+export interface BaseShapeClass {
+    draw : (shape: Shape, ctx: CanvasRenderingContext2D) => void , 
+    drawSelectedShape : (shape:Shape, ctx: CanvasRenderingContext2D) => void,
+    insideShape : (shape:Shape, actualPointX: number, actualPointY: number) => void ,
+    resizingLogic : (shape: Shape, MovingPointX: number, MovingPointY: number) => void
+
+
+}
 export interface Command {
     execute : () => void,
     undo : () => void

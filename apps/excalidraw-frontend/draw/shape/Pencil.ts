@@ -1,22 +1,6 @@
 import { getStroke } from "perfect-freehand"
+import { Pencil } from "./types";
 
-interface BaseShape {
-
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
-
-interface Pencil extends BaseShape {
-    type: 'pencil';
-    points: number[][]
-
-}
 
 export class Pencils{
 
@@ -141,25 +125,25 @@ export class Pencils{
     const padding = 6; 
 
     ctx.strokeStyle = "gray";
-    ctx.lineWidth = 1;
-    ctx.fillStyle = "white"
+        ctx.lineWidth = 1;
+        ctx.fillStyle = "white"
 
-    const rect = {
-        x : minX - padding,
-        y : minY - padding,
-        width : maxX - minX + (padding * 2),
-        height : maxY - minY + (padding * 2)
-    }
-    ctx.strokeRect(
-        rect.x,rect.y,rect.width,rect.height
-    );
+        const rect = {
+            x: minX - padding,
+            y: minY - padding,
+            width: maxX - minX + (padding * 2),
+            height: maxY - minY + (padding * 2)
+        }
+        ctx.strokeRect(
+            rect.x, rect.y, rect.width, rect.height
+        );
 
-    const corners = [
-        [rect.x - 4 ,rect.y - 4],
-        [rect.x + rect.width - 4, rect.y - 4],
-        [rect.x -4  , rect.y + rect.height -4 ],
-        [rect.x + rect.width - 4 , rect.y + rect.height - 4]
-    ] 
+        const corners = [
+            [rect.x - 4, rect.y - 4],
+            [rect.x + rect.width - 4, rect.y - 4],
+            [rect.x - 4, rect.y + rect.height - 4],
+            [rect.x + rect.width - 4, rect.y + rect.height - 4]
+        ]
 
         corners.forEach(([x, y]) => {
             ctx.beginPath()
@@ -169,61 +153,17 @@ export class Pencils{
         });
 
 
-    
-    ctx.restore();
-}
 
-    onCorner(shape: Pencil, InitialPointX: number, InitialPointY: number) {
-        const tolerance = 5;
-        const stroke = getStroke(shape.points, {
-            size: 12,
-            smoothing: 0.2,
-            thinning: 0.5,
-            streamline: 0.99,
-        });
-
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        stroke.forEach(([x, y]) => {
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-        });
-
-        const padding = 6;
-
-        const rect = {
-            x: minX - padding,
-            y: minY - padding,
-            width: maxX - minX + (padding * 2),
-            height: maxY - minY + (padding * 2)
-        }
-
-        const handles = [
-            { pos:[rect.x - 4 ,rect.y - 4] , type: 'top-left' },
-            { pos: [rect.x + rect.width - 4, rect.y - 4], type: 'top-right' },
-            { pos: [rect.x -4  , rect.y + rect.height -4 ], type: 'bottom-left' },
-            { pos: [rect.x + rect.width - 4 , rect.y + rect.height - 4], type: 'bottom-right' }
-        ];
-
-        for (const handle of handles) {
-            const [x, y] = handle.pos;
-            if (Math.abs(x - InitialPointX) <= tolerance &&
-                Math.abs(y - InitialPointY) <= tolerance) {
-                return { result: true, corner: handle.type };
-            }
-        }
-
-        return { result: false, corner: '' };
+        ctx.restore();
     }
 
-    handleSelection(shape: Pencil, InitialPointX: number, InitialPointY: number) {
-        
-        const tolerance = 3;
+
+    resizingEdge(shape: Pencil, InitialPointX: number, InitialPointY: number) {
+
+        const tolerance = 5
+
+        let edge = null;
+
         const stroke = getStroke(shape.points, {
             size: 12,
             smoothing: 0.2,
@@ -251,7 +191,14 @@ export class Pencils{
             width: maxX - minX + (padding * 2),
             height: maxY - minY + (padding * 2)
         }
-        let edge = '';
+
+        const handles = [
+            { pos: [bounds.x - 4, bounds.y - 4], type: 'top-left' },
+            { pos: [bounds.x + bounds.width - 4, bounds.y - 4], type: 'top-right' },
+            { pos: [bounds.x - 4, bounds.y + bounds.height - 4], type: 'bottom-left' },
+            { pos: [bounds.x + bounds.width - 4, bounds.y + bounds.height - 4], type: 'bottom-right' }
+        ];
+
         if (Math.abs(InitialPointX - bounds.x) <= tolerance &&
             InitialPointY >= bounds.y &&
             InitialPointY <= bounds.y + bounds.height) {
@@ -269,8 +216,16 @@ export class Pencils{
             InitialPointX <= bounds.x + bounds.width) {
             edge = 'bottom';
         }
+    
 
-        const result = edge !== '';
+        for (const handle of handles) {
+            const [x, y] = handle.pos;
+            if (Math.abs(x - InitialPointX) <= tolerance &&
+                Math.abs(y - InitialPointY) <= tolerance) {
+                edge =  handle.type 
+            }
+        }
+        const result = edge !== null;
         return { result, edge };
     }
 

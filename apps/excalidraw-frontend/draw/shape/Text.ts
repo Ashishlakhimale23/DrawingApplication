@@ -1,5 +1,4 @@
 
-import { HtmlContext } from "next/dist/server/route-modules/pages/vendored/contexts/entrypoints";
 import { Text,ShapesFromServer } from "./types";
 
 export class texts {
@@ -113,39 +112,19 @@ export class texts {
                InitialPointY <= bounds.y + bounds.height;
     }
 
-    onCorner(shape: Text, InitialPointX: number, InitialPointY: number, ctx: CanvasRenderingContext2D) {
+
+    resizingEdge(shape: Text, InitialPointX: number, InitialPointY: number, ctx: CanvasRenderingContext2D) {
         ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-        const metrics = ctx.measureText(shape.content);
-        const textWidth = metrics.width;
-        const textHeight = shape.fontSize;
-        const handleSize = 8;
-        const tolerance = 5;
 
-        const handles = [
-            { pos: [shape.x - handleSize, shape.y - textHeight - handleSize], type: 'top-left' },
-            { pos: [shape.x + textWidth, shape.y - textHeight - handleSize], type: 'top-right' },
-            { pos: [shape.x - handleSize, shape.y + handleSize], type: 'bottom-left' },
-            { pos: [shape.x + textWidth, shape.y + handleSize], type: 'bottom-right' }
-        ];
 
-        for (const handle of handles) {
-            const [x, y] = handle.pos;
-            if (Math.abs(x - InitialPointX) <= tolerance && 
-                Math.abs(y - InitialPointY) <= tolerance) {
-                return { result: true, corner: handle.type };
-            }
-        }
+        let edge = null;
 
-        return { result: false, corner: '' };
-    }
-
-    handleSelection(shape: Text, InitialPointX: number, InitialPointY: number, ctx: CanvasRenderingContext2D) {
-        ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
         const metrics = ctx.measureText(shape.content);
         const textWidth = metrics.width;
         const textHeight = shape.fontSize;
         const boxPadding = 4;
         const tolerance = 3;
+        const handleSize = 8;
 
         const bounds = {
             x: shape.x - boxPadding,
@@ -154,7 +133,14 @@ export class texts {
             height: textHeight + (boxPadding * 4)
         };
 
-        let edge = '';
+        const handles = [
+            { pos: [shape.x - handleSize, shape.y - textHeight - handleSize], type: 'top-left' },
+            { pos: [shape.x + textWidth, shape.y - textHeight - handleSize], type: 'top-right' },
+            { pos: [shape.x - handleSize, shape.y + handleSize], type: 'bottom-left' },
+            { pos: [shape.x + textWidth, shape.y + handleSize], type: 'bottom-right' }
+        ];
+
+        
         if (Math.abs(InitialPointX - bounds.x) <= tolerance && 
             InitialPointY >= bounds.y && 
             InitialPointY <= bounds.y + bounds.height) {
@@ -173,7 +159,14 @@ export class texts {
             edge = 'bottom';
         }
 
-        const result = edge !== '';
+        for (const handle of handles) {
+            const [x, y] = handle.pos;
+            if (Math.abs(x - InitialPointX) <= tolerance &&
+                Math.abs(y - InitialPointY) <= tolerance) {
+                edge =  handle.type ;
+            }
+        }
+        const result = edge !== null;
         return { result, edge };
     }
 

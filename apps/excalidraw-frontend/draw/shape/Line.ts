@@ -1,24 +1,6 @@
-interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
+import { Line } from "./types";
 
-interface Lines extends BaseShape {
-    type: "line";
-    x1: number;
-    y1: number;
-    midX: number;
-    midY: number
-    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
-}
-
-export class line{
+export class line {
 
     getMidPoint(PointsOne: { x: number, y: number }, PointsTwo: { x: number, y: number }) {
         return {
@@ -28,49 +10,49 @@ export class line{
 
     }
 
-    draw(shape: Lines, ctx: CanvasRenderingContext2D) {
-       
-    ctx.save();
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
+    draw(shape: Line, ctx: CanvasRenderingContext2D) {
 
-    ctx.beginPath();
-    ctx.moveTo(shape.x, shape.y);
-    ctx.quadraticCurveTo(shape.midX, shape.midY, shape.x1, shape.y1);
-    ctx.stroke();
-    ctx.closePath();
-    ctx.restore();
-}
+        ctx.save();
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
 
-drawSelectedShape(shape: Lines, ctx: CanvasRenderingContext2D) {
-    const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
-    const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
-    const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
-
-
-    ctx.save();
-
-    
-    ctx.fillStyle = "gray";
-    ctx.strokeStyle = "gray";
-    ctx.lineWidth = 1;
-    [
-        { x: shape.x, y: shape.y },          
-        { x: midPoint.x, y:midPoint.y },    
-        { x: shape.x1, y: shape.y1 }         
-    ].forEach(point => {
         ctx.beginPath();
-        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(shape.x, shape.y);
+        ctx.quadraticCurveTo(shape.midX, shape.midY, shape.x1, shape.y1);
         ctx.stroke();
         ctx.closePath();
-    });
+        ctx.restore();
+    }
 
-    ctx.restore();
-}
+    drawSelectedShape(shape: Line, ctx: CanvasRenderingContext2D) {
+        const midstarttomid = this.getMidPoint({ x: shape.x, y: shape.y }, { x: shape.midX, y: shape.midY })
+        const midmidtoend = this.getMidPoint({ x: shape.midX, y: shape.midY }, { x: shape.x1, y: shape.y1 })
+        const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
 
-    insideShape(shape:Lines, actualPointX: number, actualPointY: number, tolerance = 5) {
+
+        ctx.save();
+
+
+        ctx.fillStyle = "gray";
+        ctx.strokeStyle = "gray";
+        ctx.lineWidth = 1;
+        [
+            { x: shape.x, y: shape.y },
+            { x: midPoint.x, y: midPoint.y },
+            { x: shape.x1, y: shape.y1 }
+        ].forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.closePath();
+        });
+
+        ctx.restore();
+    }
+
+    insideShape(shape: Line, actualPointX: number, actualPointY: number, tolerance = 5) {
         function quadraticBezier(t: number, xory: number, midX: number, x1ory1: number) {
             return (1 - t) * (1 - t) * xory + 2 * (1 - t) * t * midX + t * t * x1ory1;
         }
@@ -88,45 +70,45 @@ drawSelectedShape(shape: Lines, ctx: CanvasRenderingContext2D) {
     }
 
 
-    getOnWhichPoint(shape:Lines,InitialPointX:number,InitialPointY:number) {
-        
-            const { x, y, x1, y1, midX, midY } = shape
-            const tolerance = 10
+    getOnWhichPoint(shape: Line, InitialPointX: number, InitialPointY: number) {
 
-            const distanceToStart = Math.sqrt(
-                Math.pow(InitialPointX - x + 2, 2) + Math.pow(InitialPointY - y + 2, 2)
-            );
+        const { x, y, x1, y1, midX, midY } = shape
+        const tolerance = 10
 
-            const distanceToEnd = Math.sqrt(
-                Math.pow(InitialPointX - x1 - 2, 2) + Math.pow(InitialPointY - y1 - 2, 2)
-            );
+        const distanceToStart = Math.sqrt(
+            Math.pow(InitialPointX - x + 2, 2) + Math.pow(InitialPointY - y + 2, 2)
+        );
 
-            const midstarttomid = this.getMidPoint({ x: x, y: y }, { x: midX, y: midY })
-            const midmidtoend = this.getMidPoint({ x: midX, y: midY }, { x: x1, y: y1 })
-            const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
+        const distanceToEnd = Math.sqrt(
+            Math.pow(InitialPointX - x1 - 2, 2) + Math.pow(InitialPointY - y1 - 2, 2)
+        );
 
-            const distanceToMid = Math.sqrt(
-                Math.pow(InitialPointX - midPoint.x, 2) + Math.pow(InitialPointY - midPoint.y, 2)
-            );
+        const midstarttomid = this.getMidPoint({ x: x, y: y }, { x: midX, y: midY })
+        const midmidtoend = this.getMidPoint({ x: midX, y: midY }, { x: x1, y: y1 })
+        const midPoint = this.getMidPoint(midstarttomid, midmidtoend)
 
-            if (distanceToStart <= tolerance) {
-                return "startingPoint";
-            }
+        const distanceToMid = Math.sqrt(
+            Math.pow(InitialPointX - midPoint.x, 2) + Math.pow(InitialPointY - midPoint.y, 2)
+        );
 
-            if (distanceToEnd <= tolerance) {
-                return "endingPoint";
-            }
+        if (distanceToStart <= tolerance) {
+            return "startingPoint";
+        }
 
-            if (distanceToMid <= tolerance) {
-                return "midPoint";
-            }
+        if (distanceToEnd <= tolerance) {
+            return "endingPoint";
+        }
 
-            return false;
+        if (distanceToMid <= tolerance) {
+            return "midPoint";
+        }
+
+        return false;
 
 
     }
 
-    resizingLogic(shape: Lines, MovingPointX: number, MovingPointY: number) {
+    resizingLogic(shape: Line, MovingPointX: number, MovingPointY: number) {
         switch (shape.Point) {
             case "startingPoint":
 
