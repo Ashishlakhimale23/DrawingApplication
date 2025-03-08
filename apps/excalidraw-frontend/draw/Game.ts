@@ -8,6 +8,7 @@ import { DraggedCommand, DrawCommand, ResizedCommand, SelectedCommand } from "@/
 import { ShapesFromServer,TypeOfShapes,Rectangle,Circle,Line,Pencil,Text,Shape } from "./shape/types";
 import { UtlisFunction } from "@/utils/utilsFunctions";
 
+
 export class Game {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
@@ -32,6 +33,10 @@ export class Game {
     private originalCordinates:{x:number,y:number} = {x:0,y:0};
     private oldshape : ShapesFromServer | null = null
     private utilsFunctions : UtlisFunction
+    private viewPort : {x : number , y : number , scale : number} = {x: 0 ,y : 0 , scale:1}
+    private previousX : number = 0
+    private previousY : number = 0 
+    private isPanning : boolean = false
 
     Socket: WebSocket;
 
@@ -59,10 +64,61 @@ export class Game {
         this.reDrawShapes();
     }
 
+
+ DraggedShape(shape:ShapesFromServer,dx:number,dy:number){
+ 
+         if(shape.messageData.type == "line"){
+             shape.messageData.x += dx
+             shape.messageData.y += dy
+             shape.messageData.x1 += dx
+             shape.messageData.y1 += dy
+             shape.messageData.midX += dx
+             shape.messageData.midY += dy
+         }else if(shape.messageData.type == "pencil"){
+             const transformedPoints = []
+             for (let i = 0; i < shape.messageData.points.length; i++) {
+                 const [x, y] = shape.messageData.points[i]
+ 
+                 transformedPoints.push([
+                     x + dx, y + dy
+                 ])
+             }
+ 
+             shape.messageData.points = transformedPoints
+ 
+ 
+         }else{
+             shape.messageData.x += dx
+             shape.messageData.y += dy
+         }
+ 
+ 
+         
+         
+         this.Socket.send(
+             JSON.stringify({
+                 type: "draged",
+                 roomId: "2",
+                 id: shape.id,
+                 message: JSON.stringify(shape.messageData)
+             })
+         )
+ 
+         this.reDrawShapes()
+ 
+     }
     reDrawShapes() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = 'black';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.setTransform(this.viewPort.scale, 0, 0, this.viewPort.scale, this.viewPort.x, this.viewPort.y);
+
+        this.ctx.fillStyle = 'black';
+        this.ctx.fillRect(0, 0, this.canvas.width / this.viewPort.scale, this.canvas.height / this.viewPort.scale);
+
+
+
 
     this.existingShapes.forEach((element) => {
         switch (element.messageData.type) {
@@ -167,6 +223,18 @@ export class Game {
     setTool(tool: TypeOfShapes) {
         Game.typeOfShapes = tool;
     }
+
+    updatePanning  (clientX:number , clientY :number) {
+        const localX = clientX;
+        const localY = clientY;
+
+        this.viewPort.x += localX - this.previousX;
+        this.viewPort.y += localY - this.previousY;
+
+        this.previousX = localX;
+        this.previousY = localY;
+    };
+
 
     Draw() {
         if (this.ctx && this.canvas) {
@@ -883,8 +951,8 @@ export class Game {
 
     MouseDown = (e: MouseEvent) => {
 
-        this.InitialPointX = e.clientX;
-        this.InitialPointY = e.clientY;
+        this.InitialPointX = (e.clientX - this.viewPort.x) / this.viewPort.scale;
+        this.InitialPointY = (e.clientY - this.viewPort.y) / this.viewPort.scale;
 
         switch (Game.typeOfShapes) {
             case "default":
@@ -910,6 +978,11 @@ export class Game {
             case "text":
                 this.text.createTextArea(null,e.clientX, e.clientY,this.SelectedIndex,this.handlekeydown);
                 break;
+            case "panning":
+                this.isPanning = true
+                this.previousX = e.clientX
+                this.previousY = e.clientY
+                break
             default:
                 null
         }
@@ -962,10 +1035,10 @@ export class Game {
 
 
 MouseMove = (e: MouseEvent) => {
-    this.MovingPointX = e.clientX;
-    this.MovingPointY = e.clientY;
+    this.MovingPointX = (e.clientX - this.viewPort.x)/ this.viewPort.scale;
+    this.MovingPointY = (e.clientY - this.viewPort.y) / this.viewPort.scale
 
-    if (Game.typeOfShapes !== "default") {
+    if (Game.typeOfShapes !== "default" &&  Game.typeOfShapes !== "panning") {
         document.body.style.cursor = "crosshair";
         if (this.isDrawing && this.SelectedIndex == -1 && this.canvas && !this.isDraging) {
             if (Game.typeOfShapes === "pencil") {
@@ -974,6 +1047,12 @@ MouseMove = (e: MouseEvent) => {
             this.reDrawShapes();
             this.Draw();
         }
+
+    }else if(Game.typeOfShapes === 'panning' && this.isPanning){
+        document.body.style.cursor = "grabbing"
+        this.updatePanning(e.clientX,e.clientY)
+        this.reDrawShapes()
+
     } else {
         if (!this.isEditing && this.SelectedIndex !== -1) {
             const shape = this.existingShapes[this.SelectedIndex].messageData;
@@ -1193,6 +1272,8 @@ MouseMove = (e: MouseEvent) => {
         this.InitialPointY = 0
         this.MovingPointX = 0
         this.MovingPointY = 0
+        this.isPanning = false 
+        this.setTool("default")
 
     }
 
@@ -1251,6 +1332,11 @@ MouseMove = (e: MouseEvent) => {
         this.canvas.addEventListener("mousedown", this.MouseDown)
         this.canvas.addEventListener("mousemove", this.MouseMove)
         this.canvas.addEventListener("mouseup", this.MouseUp)
+        window.addEventListener("resize",(e)=>{
+            this.canvas.width = window.innerWidth
+            this.canvas.height = window.innerHeight
+            
+        })
         window.addEventListener("keydown", this.KeyDown)
         window.addEventListener("dblclick",this.DoubleClick)
 

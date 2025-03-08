@@ -44,6 +44,7 @@ export default function Canvas({
         </button>
       </div>
       <canvas
+        className="bg-black"
         width={window.innerWidth}
         height={window.innerHeight}
         ref={canvasRef}
@@ -88,6 +89,12 @@ function ToolBar({
       />
       <ButtonComponent
         toolName="text"
+        setTypeOFShapes={setTypeOFShapes}
+        typeOfShapes={typeOfShapes}
+      />
+
+      <ButtonComponent
+        toolName="panning"
         setTypeOFShapes={setTypeOFShapes}
         typeOfShapes={typeOfShapes}
       />

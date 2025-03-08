@@ -51,7 +51,7 @@ export interface ShapesFromServer {
 }
 
 
-export type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text"
+export type TypeOfShapes = "rectangle" | "default" | "circle" | "line" | "pencil" | "text" | "panning"
 
 export interface BaseShapeClass {
     draw : (shape: Shape, ctx: CanvasRenderingContext2D) => void , 
