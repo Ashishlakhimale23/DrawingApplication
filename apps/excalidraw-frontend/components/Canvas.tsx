@@ -15,6 +15,11 @@ export default function Canvas({
   const [game, setGame] = useState<Game>();
   const [typeOfShapes, setTypeOfShapes] = useState<TypeOfShapes>("default");
 
+  const setTool = (tool:TypeOfShapes)=>{
+    setTypeOfShapes(tool)
+
+  }
+
   useEffect(()=>{
 
     game?.setTool(typeOfShapes)
@@ -23,7 +28,7 @@ export default function Canvas({
 
   useEffect(() => {
     if (canvasRef.current) {
-      const g = new Game(canvasRef.current, "2", Socket, Existingshapes);
+      const g = new Game(canvasRef.current, "2", Socket, Existingshapes,setTypeOfShapes);
       setGame(g);
 
       return () => {
@@ -32,7 +37,9 @@ export default function Canvas({
     }
   }, [canvasRef]);
 
+
   return (
+   
     <div className="h-lvh">
       <ToolBar setTypeOFShapes={setTypeOfShapes} typeOfShapes={typeOfShapes} />
       <div className="space-x-4 bg-white fixed bottom-10 left-10 w-fit h-fit rounded-md px-2 py-1">
@@ -116,8 +123,10 @@ const ButtonComponent = ({
       className={`${ typeOfShapes === toolName ? "bg-black text-white" : "bg-white"} "text-black p-2 rounded-md " `}
       onClick={(e) => {
         e.stopPropagation();
+
         setTypeOFShapes(`${toolName}`);
-      }}
+          
+        }}
     >
       {toolName}
     </button>

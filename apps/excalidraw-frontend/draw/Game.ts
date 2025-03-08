@@ -7,7 +7,7 @@ import { invoker } from "@/utils/Invoker";
 import { DraggedCommand, DrawCommand, ResizedCommand, SelectedCommand } from "@/utils/Commands";
 import { ShapesFromServer, TypeOfShapes, Rectangle, Circle, Line, Pencil, Text, Shape } from "./shape/types";
 import { UtlisFunction } from "@/utils/utilsFunctions";
-
+import React from "react";
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -37,11 +37,13 @@ export class Game {
     private previousX: number = 0
     private previousY: number = 0
     private isPanning: boolean = false
+    private setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>
+    
 
     Socket: WebSocket;
 
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, Socket: WebSocket, existingShapes: ShapesFromServer[]) {
+    constructor(canvas: HTMLCanvasElement, roomId: string, Socket: WebSocket, existingShapes: ShapesFromServer[],setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
@@ -53,6 +55,7 @@ export class Game {
         this.text = new texts()
         this.pencil = new Pencils()
         this.utilsFunctions = new UtlisFunction(this.ctx)
+        this.setTypeOfShape = setTypeOfShape
 
         this.init();
         this.onMessageFromSocket();
@@ -222,8 +225,13 @@ export class Game {
 
     setTool(tool: TypeOfShapes) {
         Game.typeOfShapes = tool;
+        this.setTypeOfShape(tool)
+        
     }
 
+    static getTypeOfShape(){
+        return Game.typeOfShapes
+    }
     updatePanning(clientX: number, clientY: number) {
         const localX = clientX;
         const localY = clientY;
@@ -1036,7 +1044,7 @@ export class Game {
     updateZooming(clientX:number, clientY:number, deltaY:number) {
     const previousScale = this.viewPort.scale;
     
-    const zoomSensitivity = 0.010;
+    const zoomSensitivity = 0.06;
     const minScale = 0.1;  
     const maxScale = 10;   
     
