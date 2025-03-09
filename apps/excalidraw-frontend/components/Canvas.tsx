@@ -125,6 +125,7 @@ const ButtonComponent = ({
         e.stopPropagation();
 
         setTypeOFShapes(`${toolName}`);
+        
           
         }}
     >

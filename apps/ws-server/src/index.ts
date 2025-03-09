@@ -1,4 +1,4 @@
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer} from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Game } from "./game";
 
@@ -7,7 +7,7 @@ const websocket = new WebSocketServer({ port: 8081 });
 
 const game = new Game()
 
-const verifyToken = (token: string): string | null => {
+const verifyToken = (token: string): number | null => {
   try {
     const verification = jwt.verify(token, "asdasd") as JwtPayload;
     return verification?.userid ?? null;
@@ -35,7 +35,8 @@ websocket.on("connection", (socket, req) => {
     return;
   }
 
-  const userId = verifyToken(token);
+  const userId :number | null = verifyToken(token);
+  
   if (!userId) {
     console.log("Invalid token, closing connection");
     socket.close();
