@@ -1,15 +1,18 @@
-"use client"
+'use client'
 import RoomCanvas from "@/components/chatRoom";
-import axios from "axios";
+import { api } from "@/utils/AxiosApiConfig";
+import { useEffect, useState } from "react";
+import {ShapesFromServer} from "../../../draw/shape/types"
 
-const getShapes = async (roomId: string,token:string) => {
+
+const getShapes = async (roomId: string) => {
   
-  const shapes = await axios.get("http://localhost:8000/user/getchats", {
-    params: { roomId: roomId },
-    
+  const shapes = await api.get("/user/getchats", {
+    params: { roomId: roomId }
   });
 
   const messages = shapes.data.message
+  console.log(messages)
 
   const shape = messages.map((x: {id:number,message: string}) => {
         const messageData = JSON.parse(x.message)
@@ -21,18 +24,29 @@ const getShapes = async (roomId: string,token:string) => {
 
 };
 
-export default async function CollabrationRoom({
+export default function CollabrationRoom({
   params,
 }: {
   params: {
     roomId: string;
   };
 }) {
-  const token = localStorage.getItem("authtoken")
-  if(token==null){
-    return
-  }
-  const roomId = (await params).roomId;
-  const shapes = await getShapes(roomId,token);
+  const [roomId,setRoomId] = useState<string>("")
+  const [shapes,setShapes] = useState<ShapesFromServer[]>([])
+
+  useEffect( ()=>{
+    async function getRoomId(){
+      const roomId = (await params).roomId;
+      setRoomId(roomId)
+
+      const shapes = await getShapes(roomId);
+      setShapes(shapes)
+
+    }
+
+    getRoomId()
+  },[])
+  
+ 
   return <RoomCanvas roomId={roomId} shapes={shapes} />;
 }

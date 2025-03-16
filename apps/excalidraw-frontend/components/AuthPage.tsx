@@ -35,7 +35,7 @@ export default function AuthPage({signup}: {signup: boolean}) {
                 localStorage.setItem("authtoken", response.data.token);
                 router.push("/canvas/2");
             }
-        } catch (err) {
+        } catch (err:any) {
             setError(err.response?.data?.message || "An error occurred");
         }
     };

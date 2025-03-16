@@ -8,8 +8,10 @@ declare global {
     }
 }
 export const Middleware =async (req:Request,res:Response,next:NextFunction)=>{
+    console.log(req.headers)
     let token : string | undefined= req.headers.authorization 
     token = token?.split(" ")[1]
+    console.log(token)
     if(token==undefined && typeof token !="string"){
         res.json({message:"unathorized"})
         return
