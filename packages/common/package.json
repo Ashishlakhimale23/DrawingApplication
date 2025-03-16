@@ -2,17 +2,21 @@
   "name": "@repo/common",
   "version": "1.0.0",
   "main": "index.js",
- 
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build" : "tsc -b"
   },
   "exports": {
-    "./zod": "./src/zodValidationSchemas.ts"
+    "./zod":{
+      "default" : "./dist/index.js",
+      "types" : "./src/index.ts"
+    } 
+
   },
   "devDependencies": {
     "@repo/typescript-config": "*"
   },
   "dependencies": {
+    "typescript": "^5.7.3",
     "zod": "^3.24.1"
   },
   "keywords": [],

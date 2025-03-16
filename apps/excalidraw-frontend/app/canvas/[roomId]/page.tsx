@@ -1,16 +1,15 @@
+"use client"
 import RoomCanvas from "@/components/chatRoom";
 import axios from "axios";
 
-const getShapes = async (roomId: string) => {
+const getShapes = async (roomId: string,token:string) => {
+  
   const shapes = await axios.get("http://localhost:8000/user/getchats", {
     params: { roomId: roomId },
-    headers: {
-      Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzaGlzaCIsImVtYWlsIjoiYXNoaXNoQGdtYWlsLmNvbSIsInVzZXJpZCI6MSwiaWF0IjoxNzQxNTIzNDMyLCJleHAiOjE3NDE1NDg2MzJ9.Id-CFUaDdY3VDYPeMaqP9hgHgszTzJVGewRGrvKCBSs"}`,
-    },
+    
   });
 
   const messages = shapes.data.message
-
 
   const shape = messages.map((x: {id:number,message: string}) => {
         const messageData = JSON.parse(x.message)
@@ -29,8 +28,11 @@ export default async function CollabrationRoom({
     roomId: string;
   };
 }) {
+  const token = localStorage.getItem("authtoken")
+  if(token==null){
+    return
+  }
   const roomId = (await params).roomId;
-  const shapes = await getShapes(roomId);
-  console.log(shapes)
+  const shapes = await getShapes(roomId,token);
   return <RoomCanvas roomId={roomId} shapes={shapes} />;
 }

@@ -17,7 +17,6 @@ export default function Canvas({
 
   const setTool = (tool:TypeOfShapes)=>{
     setTypeOfShapes(tool)
-
   }
 
   useEffect(()=>{
@@ -28,6 +27,7 @@ export default function Canvas({
 
   useEffect(() => {
     if (canvasRef.current) {
+      
       const g = new Game(canvasRef.current, "2", Socket, Existingshapes,setTypeOfShapes);
       setGame(g);
 

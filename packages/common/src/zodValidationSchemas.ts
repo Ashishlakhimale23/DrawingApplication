@@ -1,6 +1,23 @@
-import {z} from 'zod'
-export const userverification = z.object({
-        email:z.string().email({message:"invalid format"}),
-        username:z.string().max(20,{message:"out of length"}).min(4,{message:'too short'}),
-        password:z.string(),
- })
+import { z } from 'zod';
+import { Userdata } from "./types";
+
+const userSchema = z.object({
+    username: z.string(),
+    email: z.string().email(),
+    password: z.string()
+        .min(6, { message: "Password should be at least 6 characters" })
+        .regex(/(?=.*[a-zA-Z])/, { message: "Password should contain at least one letter" })
+        .regex(/(?=.*[!@#$%^&*(),.?":{}|<>])/, { message: "Password should contain at least one special character" })
+        .regex(/(?=.*\d)/, { message: "Password should contain at least one number" })
+});
+export function ZodValidation(data : Userdata): { result: boolean; errormessage: string } {
+    const validation = userSchema.safeParse(data);
+    console.log(validation)
+    
+    if (!validation.success) {
+        const errorMessage = validation.error.errors[0]?.message || "Validation failed";
+        return { result: false, errormessage: errorMessage };
+    }
+    
+    return { result: true, errormessage: "success" };
+};

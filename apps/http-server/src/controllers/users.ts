@@ -1,8 +1,9 @@
 import { Request,Response } from "express"
 import jwt from "jsonwebtoken"
-import {userverification} from '@repo/common/zod'
+import {ZodValidation} from '@repo/common/zod'
 import {prisma} from "@repo/db/client"
 import bcrypjs from "bcryptjs"
+
 interface User{
     email:string,
     password:string,
@@ -17,13 +18,13 @@ interface roomID {
 export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
     const {email,password,username} = req.body
     
-    const validationCheck = userverification.safeParse({
+    const validationCheck = ZodValidation({
         username:username,
         email:email,
         password:password
     })
-    if(validationCheck.error){
-        res.json({message:validationCheck.error.message})
+    if(!validationCheck.result){
+        res.json({message:validationCheck.errormessage})
         return
     }
    
@@ -50,7 +51,7 @@ export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
     }
 
     const token = jwt.sign({username:username,email:email,userid:create.id},"asdasd",{expiresIn:"1h"})
-     res.json({token:token})
+     res.json({token:token}).status(200)
      return
 
 }
@@ -58,13 +59,13 @@ export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
 export const SignInHandler = async (req:Request<{},{},User>,res:Response) =>{
     const {email,password,username} = req.body
     
-    const validationCheck = userverification.safeParse({
+    const validationCheck = ZodValidation({
         username:username,
         email:email,
         password:password
     })
-    if(validationCheck.error){
-        res.json({message:validationCheck.error.message})
+    if(!validationCheck.result){
+        res.json({message:validationCheck.errormessage})
         return
     }
 
@@ -87,7 +88,7 @@ export const SignInHandler = async (req:Request<{},{},User>,res:Response) =>{
     
 
     const token = jwt.sign({username:username,email:email,userid:exists?.id},"asdasd",{expiresIn:"7h"})
-    res.json({token:token})
+    res.json({token:token}).status(200)
     return
 
 }
