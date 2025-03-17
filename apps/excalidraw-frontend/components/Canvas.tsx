@@ -7,13 +7,16 @@ import { ShapesFromServer, TypeOfShapes } from "@/draw/shape/types";
 export default function Canvas({
   Socket,
   Existingshapes,
+  roomId
 }: {
   Socket: WebSocket;
   Existingshapes: ShapesFromServer[];
+  roomId:string
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [game, setGame] = useState<Game>();
   const [typeOfShapes, setTypeOfShapes] = useState<TypeOfShapes>("default");
+
 
   const setTool = (tool:TypeOfShapes)=>{
     setTypeOfShapes(tool)
@@ -28,7 +31,7 @@ export default function Canvas({
   useEffect(() => {
     if (canvasRef.current) {
       
-      const g = new Game(canvasRef.current, "2", Socket, Existingshapes,setTypeOfShapes);
+      const g = new Game(canvasRef.current,roomId, Socket, Existingshapes,setTypeOfShapes);
       setGame(g);
 
       return () => {

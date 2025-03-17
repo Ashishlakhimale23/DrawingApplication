@@ -44,6 +44,7 @@ export class Game {
 
 
     constructor(canvas: HTMLCanvasElement, roomId: string, Socket: WebSocket, existingShapes: ShapesFromServer[],setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>) {
+        console.log(existingShapes)
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
@@ -64,6 +65,7 @@ export class Game {
     }
 
     init() {
+        console.log(this.existingShapes)
         this.reDrawShapes();
     }
 
@@ -101,7 +103,7 @@ export class Game {
         this.Socket.send(
             JSON.stringify({
                 type: "draged",
-                roomId: "2",
+                roomId: this.roomId,
                 id: shape.id,
                 message: JSON.stringify(shape.messageData)
             })
@@ -294,7 +296,7 @@ export class Game {
                     this.Socket.send(
                         JSON.stringify({
                             type: "drawing",
-                            roomId: "2",
+                            roomId: this.roomId,
                             message: JSON.stringify(
                                 {
                                     x: this.InitialPointX,
@@ -325,7 +327,7 @@ export class Game {
                     this.Socket.send(
                         JSON.stringify({
                             type: "drawing",
-                            roomId: "2",
+                            roomId: this.roomId,
                             message: JSON.stringify(
                                 {
                                     x: this.InitialPointX,
@@ -360,7 +362,7 @@ export class Game {
                     this.Socket.send(
                         JSON.stringify({
                             type: "drawing",
-                            roomId: "2",
+                            roomId: this.roomId,
                             message: JSON.stringify(
                                 {
                                     x: shape.x,
@@ -388,7 +390,7 @@ export class Game {
                     this.Socket.send(
                         JSON.stringify({
                             type: "drawing",
-                            roomId: "2",
+                            roomId: this.roomId,
                             message: JSON.stringify({
                                 x: this.InitialPointX,
                                 y: this.InitialPointY,
@@ -432,7 +434,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "moving",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: this.existingShapes[this.SelectedIndex].id,
                     message: JSON.stringify(
                         {
@@ -454,7 +456,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "moving",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: this.existingShapes[this.SelectedIndex].id,
                     message: JSON.stringify(
                         {
@@ -477,7 +479,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "moving",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: this.existingShapes[this.SelectedIndex].id,
                     message: JSON.stringify(
                         {
@@ -504,7 +506,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "moving",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: this.existingShapes[this.SelectedIndex].id,
                     message: JSON.stringify(
                         {
@@ -529,7 +531,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "moving",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: this.existingShapes[this.SelectedIndex].id,
                     message: JSON.stringify(
                         {
@@ -629,7 +631,7 @@ export class Game {
                 this.Socket.send(
                     JSON.stringify({
                         type: "moving",
-                        roomId: "2",
+                        roomId: this.roomId,
                         id: this.existingShapes[this.SelectedIndex].id,
                         message: JSON.stringify(
                             {
@@ -656,7 +658,7 @@ export class Game {
                 this.Socket.send(
                     JSON.stringify({
                         type: "moving",
-                        roomId: "2",
+                        roomId: this.roomId,
                         id: this.existingShapes[this.SelectedIndex].id,
                         message: JSON.stringify(
                             {
@@ -687,7 +689,7 @@ export class Game {
                 this.Socket.send(
                     JSON.stringify({
                         type: "moving",
-                        roomId: "2",
+                        roomId: this.roomId,
                         id: this.existingShapes[this.SelectedIndex].id,
                         message: JSON.stringify(
                             {
@@ -716,7 +718,7 @@ export class Game {
                 this.Socket.send(
                     JSON.stringify({
                         type: "moving",
-                        roomId: "2",
+                        roomId: this.roomId,
                         id: this.existingShapes[this.SelectedIndex].id,
                         message: JSON.stringify({
                             x: shape.x,
@@ -750,7 +752,7 @@ export class Game {
                 this.Socket.send(
                     JSON.stringify({
                         type: "moving",
-                        roomId: "2",
+                        roomId: this.roomId,
                         id: this.existingShapes[this.SelectedIndex].id,
                         message: JSON.stringify({
                             x: shape.x,
@@ -988,7 +990,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "created",
-                    roomId: "2",
+                    roomId: this.roomId,
                     message: JSON.stringify({
                         x: x,
                         y: y,
@@ -1019,7 +1021,7 @@ export class Game {
         this.Socket.send(
             JSON.stringify({
                 type: "edited",
-                roomId: "2",
+                roomId: this.roomId,
                 id: shape.id,
                 message: JSON.stringify({
                     x: shape.messageData.x,
@@ -1122,7 +1124,7 @@ export class Game {
         this.Socket.send(
             JSON.stringify({
                 type: "created",
-                roomId: "2",
+                roomId: this.roomId,
                 message: JSON.stringify(shape.messageData)
             })
         )
@@ -1135,7 +1137,7 @@ export class Game {
         this.Socket.send(
             JSON.stringify({
                 type: "delete",
-                roomId: "2",
+                roomId: this.roomId,
                 id: shape.id,
             })
         )
@@ -1383,7 +1385,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "resized",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: shape.id,
                     message: JSON.stringify(shape.messageData)
                 })
@@ -1411,7 +1413,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "draged",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: shape.id,
                     message: JSON.stringify(shape.messageData)
                 })
@@ -1444,7 +1446,7 @@ export class Game {
             this.Socket.send(
                 JSON.stringify({
                     type: "delete",
-                    roomId: "2",
+                    roomId: this.roomId,
                     id: shape.id,
                 })
             )

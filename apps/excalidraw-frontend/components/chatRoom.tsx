@@ -57,17 +57,20 @@ interface ShapesFromServer {
 
 
 export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:ShapesFromServer[]}) {
+  
     const [socket, setSocket] = useState<WebSocket | null>(null);
+  
 
     useEffect(() => {
         const token = localStorage.getItem("authtoken")
         const ws = new WebSocket(`ws://localhost:8081?token=${token}`)
-
+        
+        console.log(roomId)
         ws.onopen = () => {
             setSocket(ws);
             const data = JSON.stringify({
                 type: "join_room",
-                roomId
+                roomId: roomId
             });
             ws.send(data)
         }
@@ -81,5 +84,5 @@ export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape
     }
 
     return (
-    <Canvas Socket={socket} Existingshapes={shapes}/>)
+    <Canvas Socket={socket} Existingshapes={shapes} roomId={roomId}/>)
 }
