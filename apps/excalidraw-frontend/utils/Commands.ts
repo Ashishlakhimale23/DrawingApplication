@@ -1,5 +1,5 @@
 import { Game } from "@/draw/Game"
-import { Shape, ShapesFromServer } from "@/draw/shape/types"
+import { Shape, ShapesFromServer } from "@/utils/types"
 interface Command{
     execute : () => void
     undo : () => void

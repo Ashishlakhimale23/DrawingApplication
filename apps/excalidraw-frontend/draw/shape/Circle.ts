@@ -1,4 +1,4 @@
-import { Circle  } from "./types";
+import { Circle  } from "../../utils/types";
 
 export class circle {
 

@@ -126,7 +126,7 @@ export const CreateRoom = async (req:Request<{},{},roomID>,res:Response)=>{
 }
 
 
-export const GetChats = async (req:Request,res:Response) =>{
+export const GetRoomChats = async (req:Request,res:Response) =>{
     const roomId = req.query.roomId
     const userId = req.userId
     
@@ -139,9 +139,34 @@ export const GetChats = async (req:Request,res:Response) =>{
         
     })
 
+    console.log(chats)
+
     res.json({message:chats})
     return
 
+
+}
+
+export const GetUsersChats = async(req:Request,res:Response)=>{
+
+    const userid = req.userId
+
+    try{
+
+        const userChats = await prisma.chats.findMany({
+            where:{
+                userId : Number(userid)
+            }
+        })
+
+        res.json({chats : userChats}).status(200)
+        return
+
+    }catch(error){
+        console.log(error)
+        res.json({message:"internal server error"}).status(500)
+        return
+    }
 
 }
 
@@ -165,6 +190,96 @@ export const GetRoomDetails =async (req:Request,res:Response) =>{
         console.log(error)
         res.status(411).json({message:"internal server error"})
 
+    }
+
+
+}
+
+export const InsertChats =async(req:Request<{},{},{message:string}>,res:Response)=>{
+    const userid = req.userId
+    const message = req.body.message 
+    try {
+
+        const result = await prisma.chats.create({
+            data:{
+                message:message,
+                userId : Number(userid)
+            }
+        })
+
+        if(result) {
+            res.status(200).json({message:'done'})
+            return
+        }
+        res.status(500).json({message:"something went wrong"})
+        return
+
+        
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({message:"internal server error"})
+        return
+        
+    }
+
+}
+
+export const EditChats=async(req:Request<{},{},{message:string,id:number}>,res:Response)=>{
+    const userid = req.userId
+    const {message,id} = req.body
+    try{
+        const result =await prisma.chats.update({
+            where:{
+                userId : Number(userid),
+                id : id
+            },
+            data:{
+                message : message
+            }
+        })
+
+        if(result){
+            res.status(200).json({message:"edited"})
+            return
+        }
+
+        res.status(500).json({message:"something went wrong "})
+        return
+
+    }catch(error){
+        console.log(error)
+        res.status(500).json({message:"internal server error"})
+        return 
+    }
+
+}
+
+export const DeleteChat = async (req:Request<{},{},{id:number}>,res:Response)=>{
+    const userid = req.userId
+    const {id} = req.body
+
+    try {
+
+        const result = await prisma.chats.delete({
+            where:{
+                id:id,
+                userId:userid
+            }
+        })
+
+        if(result){
+            res.status(200).json({message:"deleted"})
+            return 
+        }
+        res.status(500).json({message:"something went wrong"})
+        return 
+
+        
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({message:"internal server error"})
+        return
+        
     }
 
 

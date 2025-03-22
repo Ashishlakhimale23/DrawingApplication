@@ -2,11 +2,11 @@
 import RoomCanvas from "@/components/chatRoom";
 import { api } from "@/utils/AxiosApiConfig";
 import { useEffect, useState } from "react";
-import {ShapesFromServer} from "../../../draw/shape/types"
+import {ShapesFromServer} from "../../../utils/types"
 import { useParams } from "next/navigation";
 
 
-const getShapes = async (roomId: string) => {
+const getRoomShapes = async (roomId: string) => {
   
   const shapes = await api.get("/user/getchats", {
     params: { roomId: roomId }
@@ -34,7 +34,7 @@ export default function CollabrationRoom() {
   useEffect( ()=>{
     async function getRoomId(){
 
-      const shapes = await getShapes(params.roomId);
+      const shapes = await getRoomShapes(params.roomId);
       setShapes(shapes)
       setLoading(false)
 

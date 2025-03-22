@@ -2,16 +2,16 @@
 import { useEffect, useRef, useState, SetStateAction, Dispatch } from "react";
 import { Game } from "@/draw/Game";
 import { invoker } from "@/utils/Invoker";
-import { ShapesFromServer, TypeOfShapes } from "@/draw/shape/types";
+import { ShapesFromServer, TypeOfShapes } from "@/utils/types";
 
 export default function Canvas({
   Socket,
   Existingshapes,
   roomId
 }: {
-  Socket: WebSocket;
+  Socket?: WebSocket;
   Existingshapes: ShapesFromServer[];
-  roomId:string
+  roomId?:string
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [game, setGame] = useState<Game>();
@@ -29,7 +29,7 @@ export default function Canvas({
   },[typeOfShapes,game])
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current ) {
       
       const g = new Game(canvasRef.current,roomId, Socket, Existingshapes,setTypeOfShapes);
       setGame(g);

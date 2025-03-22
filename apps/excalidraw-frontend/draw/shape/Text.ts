@@ -1,5 +1,5 @@
 
-import { Text,ShapesFromServer } from "./types";
+import { Text,ShapesFromServer } from "../../utils/types";
 
 export class texts {
 

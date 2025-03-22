@@ -5,9 +5,10 @@ import { Pencils } from "./shape/Pencil";
 import { texts } from "./shape/Text";
 import { invoker } from "@/utils/Invoker";
 import { DraggedCommand, DrawCommand, ResizedCommand, SelectedCommand } from "@/utils/Commands";
-import { ShapesFromServer, TypeOfShapes, Rectangle, Circle, Line, Pencil, Text, Shape } from "./shape/types";
+import { ShapesFromServer, TypeOfShapes, Rectangle, Circle, Line, Pencil, Text, Shape } from "../utils/types";
 import { UtlisFunction } from "@/utils/utilsFunctions";
 import React from "react";
+import { api } from "@/utils/AxiosApiConfig";
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -20,7 +21,7 @@ export class Game {
     private MovingPointX: number = 0;
     private MovingPointY: number = 0;
     static typeOfShapes: TypeOfShapes = 'default';
-    private roomId: string;
+    private roomId: string | null;
     private SelectedIndex: number = -1;
     private isDraging: boolean = false
     private isEditing: boolean = false
@@ -40,10 +41,10 @@ export class Game {
     private setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>
     
 
-    Socket: WebSocket;
+    Socket: WebSocket | null;
 
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, Socket: WebSocket, existingShapes: ShapesFromServer[],setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>) {
+    constructor(canvas: HTMLCanvasElement, roomId: string | null = '', Socket: WebSocket | null = null, existingShapes: ShapesFromServer[],setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>) {
         console.log(existingShapes)
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
@@ -99,15 +100,17 @@ export class Game {
 
 
 
+        if (this.roomId?.length && this.Socket) {
+            this.Socket.send(
+                JSON.stringify({
+                    type: "draged",
+                    roomId: this.roomId,
+                    id: shape.id,
+                    message: JSON.stringify(shape.messageData)
+                })
+            )
+        }
 
-        this.Socket.send(
-            JSON.stringify({
-                type: "draged",
-                roomId: this.roomId,
-                id: shape.id,
-                message: JSON.stringify(shape.messageData)
-            })
-        )
 
         this.reDrawShapes()
 
@@ -121,8 +124,6 @@ export class Game {
 
         this.ctx.fillStyle = 'black';
         this.ctx.fillRect(0, 0, this.canvas.width / this.viewPort.scale, this.canvas.height / this.viewPort.scale);
-
-
 
 
         this.existingShapes.forEach((element) => {
@@ -174,6 +175,9 @@ export class Game {
     }
 
     onMessageFromSocket() {
+        if(!this.Socket){
+            return
+        }
         this.Socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
             console.log(message)
@@ -293,25 +297,28 @@ export class Game {
                     const height = this.MovingPointY - this.InitialPointY
                     this.rectangle.draw(this.InitialPointX, this.InitialPointY, width, height, this.ctx)
 
-                    this.Socket.send(
-                        JSON.stringify({
-                            type: "drawing",
-                            roomId: this.roomId,
-                            message: JSON.stringify(
-                                {
-                                    x: this.InitialPointX,
-                                    y: this.InitialPointY,
-                                    width: width,
-                                    height: height,
-                                    type: "rectangle",
-                                    selected: false,
-                                    isResizing: false,
-                                    resizingEdge: "",
-                                    isDraging: false
-                                }
-                            )
-                        })
-                    )
+                    if(this.Socket && this.roomId?.length){
+                        this.Socket.send(
+                            JSON.stringify({
+                                type: "drawing",
+                                roomId: this.roomId,
+                                message: JSON.stringify(
+                                    {
+                                        x: this.InitialPointX,
+                                        y: this.InitialPointY,
+                                        width: width,
+                                        height: height,
+                                        type: "rectangle",
+                                        selected: false,
+                                        isResizing: false,
+                                        resizingEdge: "",
+                                        isDraging: false
+                                    }
+                                )
+                            })
+                        )
+                    }
+
                     break
                 case "circle":
                     const radiusX = Math.abs(this.MovingPointX - this.InitialPointX)
@@ -324,25 +331,29 @@ export class Game {
                     }
                     this.circle.draw(shapeCircle as Circle, this.ctx)
 
-                    this.Socket.send(
-                        JSON.stringify({
-                            type: "drawing",
-                            roomId: this.roomId,
-                            message: JSON.stringify(
-                                {
-                                    x: this.InitialPointX,
-                                    y: this.InitialPointY,
-                                    radiusX: radiusX,
-                                    radiusY: radiusY,
-                                    type: "circle",
-                                    selected: false,
-                                    isResizing: false,
-                                    resizingEdge: "",
-                                    isDraging:false 
-                                }
-                            )
-                        })
-                    )
+                    if (this.Socket && this.roomId?.length) {
+
+                        this.Socket.send(
+                            JSON.stringify({
+                                type: "drawing",
+                                roomId: this.roomId,
+                                message: JSON.stringify(
+                                    {
+                                        x: this.InitialPointX,
+                                        y: this.InitialPointY,
+                                        radiusX: radiusX,
+                                        radiusY: radiusY,
+                                        type: "circle",
+                                        selected: false,
+                                        isResizing: false,
+                                        resizingEdge: "",
+                                        isDraging: false
+                                    }
+                                )
+                            })
+                        )
+
+                    }
                     break
                 case "line":
                     const midX = (this.InitialPointX + this.MovingPointX) / 2
@@ -359,27 +370,31 @@ export class Game {
                     }
                     this.line.draw(shape as Line, this.ctx)
 
-                    this.Socket.send(
-                        JSON.stringify({
-                            type: "drawing",
-                            roomId: this.roomId,
-                            message: JSON.stringify(
-                                {
-                                    x: shape.x,
-                                    y: shape.y,
-                                    x1: shape.x1,
-                                    y1: shape.y1,
-                                    midX: shape.midX,
-                                    midY: shape.midY,
-                                    type: "line",
-                                    selected: false,
-                                    isResizing: false,
-                                    resizingEdge: "",
-                                    isDraging: false
-                                }
-                            )
-                        })
-                    )
+                    if (this.Socket && this.roomId?.length) {
+
+                        this.Socket.send(
+                            JSON.stringify({
+                                type: "drawing",
+                                roomId: this.roomId,
+                                message: JSON.stringify(
+                                    {
+                                        x: shape.x,
+                                        y: shape.y,
+                                        x1: shape.x1,
+                                        y1: shape.y1,
+                                        midX: shape.midX,
+                                        midY: shape.midY,
+                                        type: "line",
+                                        selected: false,
+                                        isResizing: false,
+                                        resizingEdge: "",
+                                        isDraging: false
+                                    }
+                                )
+                            })
+                        )
+
+                    }
                     break;
                 case "pencil":
                     const pencilShape = {
@@ -387,31 +402,30 @@ export class Game {
                     }
                     this.pencil.draw(pencilShape as Pencil, this.ctx)
 
-                    this.Socket.send(
-                        JSON.stringify({
-                            type: "drawing",
-                            roomId: this.roomId,
-                            message: JSON.stringify({
-                                x: this.InitialPointX,
-                                y: this.InitialPointY,
-                                points: pencilShape.points,
-                                type: "pencil",
-                                selected: false,
-                                isResizing: false,
-                                resizingEdge: "",
-                                isDraging: false,
+                    if(this.Socket && this.roomId){
+                        this.Socket.send(
+                            JSON.stringify({
+                                type: "drawing",
+                                roomId: this.roomId,
+                                message: JSON.stringify({
+                                    x: this.InitialPointX,
+                                    y: this.InitialPointY,
+                                    points: pencilShape.points,
+                                    type: "pencil",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false,
+                                })
                             })
-                        })
-                    );
-
+                        );
+                    }
                     break
                 default:
                     document.body.style.cursor = "default"
                     null
             }
         }
-
-
     }
 
 
@@ -430,124 +444,140 @@ export class Game {
 
             this.rectangle.resizingLogic(shape, this.MovingPointX, this.MovingPointY)
 
+            if (this.Socket && this.roomId?.length) {
 
-            this.Socket.send(
-                JSON.stringify({
-                    type: "moving",
-                    roomId: this.roomId,
-                    id: this.existingShapes[this.SelectedIndex].id,
-                    message: JSON.stringify(
-                        {
-                            x: shape.x,
-                            y: shape.y,
-                            width: shape.width,
-                            height: shape.height,
-                            type: "rectangle",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false
-                        }
-                    )
-                })
-            )
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: this.roomId,
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify(
+                            {
+                                x: shape.x,
+                                y: shape.y,
+                                width: shape.width,
+                                height: shape.height,
+                                type: "rectangle",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false
+                            }
+                        )
+                    })
+                )
+            }
+            
         } else if (shape.type == "circle") {
             this.circle.resizingLogic(shape, this.MovingPointX, this.MovingPointY)
-            this.Socket.send(
-                JSON.stringify({
-                    type: "moving",
-                    roomId: this.roomId,
-                    id: this.existingShapes[this.SelectedIndex].id,
-                    message: JSON.stringify(
-                        {
-                            x: shape.x,
-                            y: shape.y,
-                            radiusX: shape.radiusX,
-                            radiusY: shape.radiusY,
-                            type: "circle",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false
-                        }
-                    )
-                })
-            )
+            if (this.Socket && this.roomId?.length) {
+
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: this.roomId,
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify(
+                            {
+                                x: shape.x,
+                                y: shape.y,
+                                radiusX: shape.radiusX,
+                                radiusY: shape.radiusY,
+                                type: "circle",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false
+                            }
+                        )
+                    })
+                )
+            }
         } else if (shape.type == "line") {
 
             this.line.resizingLogic(shape, this.MovingPointX, this.MovingPointY)
-            this.Socket.send(
-                JSON.stringify({
-                    type: "moving",
-                    roomId: this.roomId,
-                    id: this.existingShapes[this.SelectedIndex].id,
-                    message: JSON.stringify(
-                        {
-                            x: shape.x,
-                            y: shape.y,
-                            x1: shape.x1,
-                            y1: shape.y1,
-                            midX: shape.midX,
-                            midY: shape.midY,
-                            type: "line",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false,
-                            Point: ""
-                        }
-                    )
-                })
-            )
+            if (this.Socket && this.roomId?.length) {
 
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: this.roomId,
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify(
+                            {
+                                x: shape.x,
+                                y: shape.y,
+                                x1: shape.x1,
+                                y1: shape.y1,
+                                midX: shape.midX,
+                                midY: shape.midY,
+                                type: "line",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false,
+                                Point: ""
+                            }
+                        )
+                    })
+                )
+
+            }
 
         } else if (shape.type === "text") {
             this.text.resizingLogic(shape, this.MovingPointX, this.MovingPointY, this.ctx)
-            this.Socket.send(
-                JSON.stringify({
-                    type: "moving",
-                    roomId: this.roomId,
-                    id: this.existingShapes[this.SelectedIndex].id,
-                    message: JSON.stringify(
-                        {
-                            x: shape.x,
-                            y: shape.y,
-                            fontSize: shape.fontSize,
-                            fontFamily: shape.fontFamily,
-                            content: shape.content,
-                            type: "text",
-                            selected: false,
-                            isResizing:false,
-                            resizingEdge: "",
-                            isDraging: false,
-                            Point: ""
-                        }
-                    )
-                })
-            )
+            if (this.Socket && this.roomId?.length) {
+
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: this.roomId,
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify(
+                            {
+                                x: shape.x,
+                                y: shape.y,
+                                fontSize: shape.fontSize,
+                                fontFamily: shape.fontFamily,
+                                content: shape.content,
+                                type: "text",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false,
+                                Point: ""
+                            }
+                        )
+                    })
+                )
+
+            }
         } else if (shape.type == "pencil") {
 
             this.pencil.resizingLogic(shape, this.MovingPointX, this.MovingPointY)
-            this.Socket.send(
-                JSON.stringify({
-                    type: "moving",
-                    roomId: this.roomId,
-                    id: this.existingShapes[this.SelectedIndex].id,
-                    message: JSON.stringify(
-                        {
-                            x: shape.x,
-                            y: shape.y,
-                            points: shape.points,
-                            type: "pencil",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false,
-                            Point: ""
-                        }
-                    )
-                })
-            )
+            if(this.Socket && this.roomId?.length){
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "moving",
+                        roomId: this.roomId,
+                        id: this.existingShapes[this.SelectedIndex].id,
+                        message: JSON.stringify(
+                            {
+                                x: shape.x,
+                                y: shape.y,
+                                points: shape.points,
+                                type: "pencil",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false,
+                                Point: ""
+                            }
+                        )
+                    })
+                )
+            }
+            
         }
 
         this.reDrawShapes()
@@ -628,53 +658,60 @@ export class Game {
                 shape.x += dx;
                 shape.y += dy;
 
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "moving",
-                        roomId: this.roomId,
-                        id: this.existingShapes[this.SelectedIndex].id,
-                        message: JSON.stringify(
-                            {
-                                x: shape.x,
-                                y: shape.y,
-                                width: shape.width,
-                                height: shape.height,
-                                type: "rectangle",
-                                selected: false,
-                                isResizing: false,
-                                resizingEdge: "",
-                                isDraging: false
-                            }
-                        )
-                    })
-                )
+                if (this.Socket && this.roomId?.length) {
 
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "moving",
+                            roomId: this.roomId,
+                            id: this.existingShapes[this.SelectedIndex].id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.x,
+                                    y: shape.y,
+                                    width: shape.width,
+                                    height: shape.height,
+                                    type: "rectangle",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false
+                                }
+                            )
+                        })
+                    )
+
+                }
                 break
             case "circle":
 
                 shape.x += dx
                 shape.y += dy
 
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "moving",
-                        roomId: this.roomId,
-                        id: this.existingShapes[this.SelectedIndex].id,
-                        message: JSON.stringify(
-                            {
-                                x: shape.x,
-                                y: shape.y,
-                                radiusX: shape.radiusX,
-                                radiusY: shape.radiusY,
-                                type: "circle",
-                                selected: false,
-                                isResizing: false,
-                                resizingEdge: "",
-                                isDraging: false
-                            }
-                        )
-                    })
-                )
+                if (this.Socket && this.roomId?.length) {
+
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "moving",
+                            roomId: this.roomId,
+                            id: this.existingShapes[this.SelectedIndex].id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.x,
+                                    y: shape.y,
+                                    radiusX: shape.radiusX,
+                                    radiusY: shape.radiusY,
+                                    type: "circle",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false
+                                }
+                            )
+                        })
+                    )
+
+                }
                 break
 
             case "line":
@@ -686,28 +723,32 @@ export class Game {
                 shape.midX += dx
                 shape.midY += dy
 
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "moving",
-                        roomId: this.roomId,
-                        id: this.existingShapes[this.SelectedIndex].id,
-                        message: JSON.stringify(
-                            {
-                                x: shape.x,
-                                y: shape.y,
-                                x1: shape.x1,
-                                y1: shape.y1,
-                                midX: shape.midX,
-                                midY: shape.midY,
-                                type: "line",
-                                selected: false,
-                                isResizing: false,
-                                resizingEdge: "",
-                                isDraging: false
-                            }
-                        )
-                    })
-                )
+                if (this.roomId?.length && this.Socket) {
+
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "moving",
+                            roomId: this.roomId,
+                            id: this.existingShapes[this.SelectedIndex].id,
+                            message: JSON.stringify(
+                                {
+                                    x: shape.x,
+                                    y: shape.y,
+                                    x1: shape.x1,
+                                    y1: shape.y1,
+                                    midX: shape.midX,
+                                    midY: shape.midY,
+                                    type: "line",
+                                    selected: false,
+                                    isResizing: false,
+                                    resizingEdge: "",
+                                    isDraging: false
+                                }
+                            )
+                        })
+                    )
+
+                }
                 break
 
             case "text":
@@ -715,25 +756,29 @@ export class Game {
                 shape.x += dx;
                 shape.y += dy;
 
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "moving",
-                        roomId: this.roomId,
-                        id: this.existingShapes[this.SelectedIndex].id,
-                        message: JSON.stringify({
-                            x: shape.x,
-                            y: shape.y,
-                            content: shape.content,
-                            type: "text",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: true,
-                            fontSize: shape.fontSize,
-                            fontFamily: shape.fontFamily
+                if (this.roomId?.length && this.Socket) {
+
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "moving",
+                            roomId: this.roomId,
+                            id: this.existingShapes[this.SelectedIndex].id,
+                            message: JSON.stringify({
+                                x: shape.x,
+                                y: shape.y,
+                                content: shape.content,
+                                type: "text",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: true,
+                                fontSize: shape.fontSize,
+                                fontFamily: shape.fontFamily
+                            })
                         })
-                    })
-                );
+                    );
+
+                }
                 break;
 
             case "pencil":
@@ -749,24 +794,27 @@ export class Game {
                 }
 
                 shape.points = transformedPoints
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "moving",
-                        roomId: this.roomId,
-                        id: this.existingShapes[this.SelectedIndex].id,
-                        message: JSON.stringify({
-                            x: shape.x,
-                            y: shape.y,
-                            points: shape.points,
-                            type: "pencil",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false,
-                        })
-                    })
-                );
+                if (this.Socket && this.roomId?.length) {
 
+                    this.Socket.send(
+                        JSON.stringify({
+                            type: "moving",
+                            roomId: this.roomId,
+                            id: this.existingShapes[this.SelectedIndex].id,
+                            message: JSON.stringify({
+                                x: shape.x,
+                                y: shape.y,
+                                points: shape.points,
+                                type: "pencil",
+                                selected: false,
+                                isResizing: false,
+                                resizingEdge: "",
+                                isDraging: false,
+                            })
+                        })
+                    );
+
+                }
                 break
 
         }
@@ -987,24 +1035,42 @@ export class Game {
                 }
             });
 
-            this.Socket.send(
-                JSON.stringify({
-                    type: "created",
-                    roomId: this.roomId,
-                    message: JSON.stringify({
-                        x: x,
-                        y: y,
-                        content: text,
-                        type: "text",
-                        selected: false,
-                        isResizing: false,
-                        resizingEdge: "",
-                        isDraging: false,
-                        fontSize: 30,
-                        fontFamily: 'san-serif  '
+            if(this.Socket && this.roomId?.length){
+
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "created",
+                        roomId: this.roomId,
+                        message: JSON.stringify({
+                            x: x,
+                            y: y,
+                            content: text,
+                            type: "text",
+                            selected: false,
+                            isResizing: false,
+                            resizingEdge: "",
+                            isDraging: false,
+                            fontSize: 30,
+                            fontFamily: 'san-serif  '
+                        })
                     })
-                })
-            );
+                );
+
+            }
+
+            this.insertShapeApi(JSON.stringify({
+                x: x,
+                y: y,
+                content: text,
+                type: "text",
+                selected: false,
+                isResizing: false,
+                resizingEdge: "",
+                isDraging: false,
+                fontSize: 30,
+                fontFamily: 'san-serif  '
+            }))
+
         }
 
     }
@@ -1017,26 +1083,42 @@ export class Game {
 
         this.existingShapes.splice(this.SelectedIndex, 0, shape)
 
-
-        this.Socket.send(
-            JSON.stringify({
-                type: "edited",
-                roomId: this.roomId,
-                id: shape.id,
-                message: JSON.stringify({
-                    x: shape.messageData.x,
-                    y: shape.messageData.y,
-                    content: shape.messageData.content,
-                    type: "text",
-                    selected: false,
-                    isResizing: false,
-                    resizingEdge: "",
-                    isDraging: false,
-                    fontSize: shape.messageData.fontSize,
-                    fontFamily: 'san-serif  '
+        if(this.Socket && this.roomId?.length){
+            this.Socket.send(
+                JSON.stringify({
+                    type: "edited",
+                    roomId: this.roomId,
+                    id: shape.id,
+                    message: JSON.stringify({
+                        x: shape.messageData.x,
+                        y: shape.messageData.y,
+                        content: shape.messageData.content,
+                        type: "text",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDraging: false,
+                        fontSize: shape.messageData.fontSize,
+                        fontFamily: 'san-serif  '
+                    })
                 })
-            })
-        )
+            )
+        }
+
+        this.EditShapeApi(JSON.stringify({
+                        x: shape.messageData.x,
+                        y: shape.messageData.y,
+                        content: shape.messageData.content,
+                        type: "text",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDraging: false,
+                        fontSize: shape.messageData.fontSize,
+                        fontFamily: 'san-serif  '
+                    }),shape.id!)
+
+
 
     }
 
@@ -1116,31 +1198,51 @@ export class Game {
     }
 
 
+    async insertShapeApi(messageData: string) {
+        await api.post("/user/insertchat", {
+            message: messageData
+        })
+
+    }
 
     // undo redo
-    addShape(shape: ShapesFromServer) {
+    async addShape(shape: ShapesFromServer) {
         this.existingShapes.push(shape)
-        alert("sent data")
-        this.Socket.send(
-            JSON.stringify({
-                type: "created",
-                roomId: this.roomId,
-                message: JSON.stringify(shape.messageData)
-            })
-        )
+        if(this.Socket && this.roomId?.length){
+            this.Socket.send(
+                JSON.stringify({
+                    type: "created",
+                    roomId: this.roomId,
+                    message: JSON.stringify(shape.messageData)
+                })
+            )
+        }
+
+        
+
+        this.insertShapeApi(JSON.stringify(shape.messageData))
+        
+
         this.reDrawShapes()
     }
 
     removeShape(shape: ShapesFromServer) {
         const findIndex = this.existingShapes.findIndex(element => element.id == shape.id)
         this.existingShapes.splice(findIndex, 1)
-        this.Socket.send(
-            JSON.stringify({
-                type: "delete",
-                roomId: this.roomId,
-                id: shape.id,
-            })
-        )
+        if(this.Socket && this.roomId?.length){
+            this.Socket.send(
+                JSON.stringify({
+                    type: "delete",
+                    roomId: this.roomId,
+                    id: shape.id,
+                })
+            )
+        }
+
+        this.DeleteShapeApi(shape.id!)
+
+
+
         this.reDrawShapes()
     }
 
@@ -1265,6 +1367,14 @@ export class Game {
     };
 
 
+    async EditShapeApi(messageData:string,id:number){
+        await api.post('/user/editchat',{message:messageData,id:id})
+    }
+
+    async DeleteShapeApi(id:number){
+        await api.post("/user/deletechat",{id:id})
+
+    }
 
     MouseUp = (e: MouseEvent) => {
 
@@ -1359,7 +1469,6 @@ export class Game {
 
 
             invoker.executeCommand(new DrawCommand(this, shape))
-            alert("addded shape")
             this.isDrawing = false
             this.setTool('default')
             document.body.style.cursor = 'default'
@@ -1382,14 +1491,18 @@ export class Game {
 
             invoker.setCommand(new ResizedCommand(this, shape, old, newshape))
 
-            this.Socket.send(
-                JSON.stringify({
-                    type: "resized",
-                    roomId: this.roomId,
-                    id: shape.id,
-                    message: JSON.stringify(shape.messageData)
-                })
-            )
+            if(this.Socket && this.roomId?.length){
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "resized",
+                        roomId: this.roomId,
+                        id: shape.id,
+                        message: JSON.stringify(shape.messageData)
+                    })
+                )
+            }
+
+            this.EditShapeApi(JSON.stringify(shape.messageData),shape.id!)
 
             shape.messageData.selected = true
 
@@ -1410,14 +1523,18 @@ export class Game {
 
             invoker.setCommand(new DraggedCommand(this, shape, dx, dy))
 
-            this.Socket.send(
-                JSON.stringify({
-                    type: "draged",
-                    roomId: this.roomId,
-                    id: shape.id,
-                    message: JSON.stringify(shape.messageData)
-                })
-            )
+            if (this.Socket && this.roomId?.length) {
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "draged",
+                        roomId: this.roomId,
+                        id: shape.id,
+                        message: JSON.stringify(shape.messageData)
+                    })
+                )
+            }
+
+            this.EditShapeApi(JSON.stringify(shape.messageData),shape.id!)
 
             shape.messageData.selected = true
             this.originalCordinates.x = 0
@@ -1443,13 +1560,21 @@ export class Game {
             const shape = this.existingShapes[this.SelectedIndex]
             this.existingShapes.splice(this.SelectedIndex, 1)
 
-            this.Socket.send(
-                JSON.stringify({
-                    type: "delete",
-                    roomId: this.roomId,
-                    id: shape.id,
-                })
-            )
+            if (this.Socket && this.roomId?.length) {
+                this.Socket.send(
+                    JSON.stringify({
+                        type: "delete",
+                        roomId: this.roomId,
+                        id: shape.id,
+                    })
+                )
+
+            }
+
+            this.DeleteShapeApi(shape.id!)
+
+
+
 
             shape.messageData.selected = false
             this.SelectedIndex = -1

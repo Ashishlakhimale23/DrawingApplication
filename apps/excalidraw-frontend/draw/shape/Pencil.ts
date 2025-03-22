@@ -1,5 +1,5 @@
 import { getStroke } from "perfect-freehand"
-import { Pencil } from "./types";
+import { Pencil } from "../../utils/types";
 
 
 export class Pencils{

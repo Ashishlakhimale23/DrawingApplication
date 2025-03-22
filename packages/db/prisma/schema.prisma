@@ -29,7 +29,7 @@ model Chats{
   id Int @default(autoincrement()) @id
   message String 
   userId Int
-  roomId Int
+  roomId Int?
   user User @relation(fields: [userId],references: [id])
-  room Room @relation(fields: [roomId],references: [id])
+  room Room? @relation(fields: [roomId],references: [id])
 }

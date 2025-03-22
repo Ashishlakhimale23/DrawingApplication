@@ -2,59 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Canvas from "./Canvas";
-interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
-
-interface Text extends BaseShape {
-    type: "text";
-    content: string;
-    fontSize: number;
-    fontFamily: string;
-}
-
-interface Rectangle extends BaseShape {
-    type: "rectangle";
-    width: number;
-    height: number;
-}
-
-interface Circle extends BaseShape {
-    type: "circle";
-    radiusX: number;
-    radiusY : number
-}
-
-interface Line extends BaseShape {
-    type: "line";
-    x1: number;
-    y1: number;
-    midX: number;
-    midY: number
-    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
-}
-
-interface Pencil extends BaseShape {
-    type: 'pencil';
-    points: number[][]
-
-}
-
-type Shape = Rectangle | Circle | Line | Pencil | Text;
-
-interface ShapesFromServer {
-    id?: number,
-    messageData: Shape
-}
-
-
+import { ShapesFromServer } from "@/utils/types";
 
 export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:ShapesFromServer[]}) {
   
@@ -65,7 +13,6 @@ export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape
         const token = localStorage.getItem("authtoken")
         const ws = new WebSocket(`ws://localhost:8081?token=${token}`)
         
-        console.log(roomId)
         ws.onopen = () => {
             setSocket(ws);
             const data = JSON.stringify({
@@ -84,5 +31,6 @@ export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape
     }
 
     return (
-    <Canvas Socket={socket} Existingshapes={shapes} roomId={roomId}/>)
+    <Canvas Socket={socket} Existingshapes={shapes} roomId={roomId}/>
+)
 }

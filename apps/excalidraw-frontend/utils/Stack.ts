@@ -1,4 +1,4 @@
-import { Command } from "@/draw/shape/types";
+import { Command } from "@/utils/types";
 
 export class Stack {
 

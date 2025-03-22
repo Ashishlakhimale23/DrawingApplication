@@ -1,4 +1,4 @@
-import { Rectangle } from "./types"
+import { Rectangle } from "../../utils/types"
 
 export class rectangle{
 

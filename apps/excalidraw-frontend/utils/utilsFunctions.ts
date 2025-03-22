@@ -1,4 +1,4 @@
-import { Shape } from "@/draw/shape/types";
+import { Shape } from "@/utils/types";
 import { rectangle } from "@/draw/shape/Rectangle";
 import { circle } from "@/draw/shape/Circle";
 import { line } from "@/draw/shape/Line";

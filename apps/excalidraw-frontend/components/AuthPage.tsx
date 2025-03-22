@@ -33,6 +33,9 @@ export default function AuthPage({signup}: {signup: boolean}) {
 
             if (response.status === 200) {
                 localStorage.setItem("authtoken", response.data.token);
+                setEmail("")
+                setPassword("")
+                setUsername("")
                 router.push("/canvas/2");
             }
         } catch (err:any) {
@@ -45,7 +48,7 @@ export default function AuthPage({signup}: {signup: boolean}) {
             <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mt-20 -mr-20 bg-gradient-to-r from-gray-100 to-gray-500"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full -mb-20 -ml-20"></div>
 
-            <div className="w-full max-w-md rounded-lg shadow-xl p-8 z-10 bg-gray-900">
+            <div className="w-full max-w-md rounded-lg shadow-xl p-8 z-10 ">
                 {!signup && (
                     <Link href="/signup" className="flex items-center text-gray-400 mb-8 hover:text-white transition-colors">
                         <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
