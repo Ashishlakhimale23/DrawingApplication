@@ -1056,22 +1056,24 @@ export class Game {
                     })
                 );
 
+            }else{
+                this.insertShapeApi(JSON.stringify({
+                    x: x,
+                    y: y,
+                    content: text,
+                    type: "text",
+                    selected: false,
+                    isResizing: false,
+                    resizingEdge: "",
+                    isDraging: false,
+                    fontSize: 30,
+                    fontFamily: 'san-serif  '
+                }))
+
+            }
             }
 
-            this.insertShapeApi(JSON.stringify({
-                x: x,
-                y: y,
-                content: text,
-                type: "text",
-                selected: false,
-                isResizing: false,
-                resizingEdge: "",
-                isDraging: false,
-                fontSize: 30,
-                fontFamily: 'san-serif  '
-            }))
 
-        }
 
     }
 
@@ -1103,20 +1105,22 @@ export class Game {
                     })
                 })
             )
-        }
+        }else{
+            this.EditShapeApi(JSON.stringify({
+                x: shape.messageData.x,
+                y: shape.messageData.y,
+                content: shape.messageData.content,
+                type: "text",
+                selected: false,
+                isResizing: false,
+                resizingEdge: "",
+                isDraging: false,
+                fontSize: shape.messageData.fontSize,
+                fontFamily: 'san-serif  '
+            }), shape.id!)
 
-        this.EditShapeApi(JSON.stringify({
-                        x: shape.messageData.x,
-                        y: shape.messageData.y,
-                        content: shape.messageData.content,
-                        type: "text",
-                        selected: false,
-                        isResizing: false,
-                        resizingEdge: "",
-                        isDraging: false,
-                        fontSize: shape.messageData.fontSize,
-                        fontFamily: 'san-serif  '
-                    }),shape.id!)
+
+        }
 
 
 
@@ -1216,12 +1220,10 @@ export class Game {
                     message: JSON.stringify(shape.messageData)
                 })
             )
+        }else{
+
+            this.insertShapeApi(JSON.stringify(shape.messageData))
         }
-
-        
-
-        this.insertShapeApi(JSON.stringify(shape.messageData))
-        
 
         this.reDrawShapes()
     }
@@ -1237,11 +1239,10 @@ export class Game {
                     id: shape.id,
                 })
             )
+        }else{
+
+            this.DeleteShapeApi(shape.id!)
         }
-
-        this.DeleteShapeApi(shape.id!)
-
-
 
         this.reDrawShapes()
     }
@@ -1500,9 +1501,10 @@ export class Game {
                         message: JSON.stringify(shape.messageData)
                     })
                 )
+            }else{
+                this.EditShapeApi(JSON.stringify(shape.messageData), shape.id!)
             }
 
-            this.EditShapeApi(JSON.stringify(shape.messageData),shape.id!)
 
             shape.messageData.selected = true
 
@@ -1532,9 +1534,10 @@ export class Game {
                         message: JSON.stringify(shape.messageData)
                     })
                 )
-            }
+            }else{
 
-            this.EditShapeApi(JSON.stringify(shape.messageData),shape.id!)
+                this.EditShapeApi(JSON.stringify(shape.messageData), shape.id!)
+            }
 
             shape.messageData.selected = true
             this.originalCordinates.x = 0
@@ -1569,11 +1572,10 @@ export class Game {
                     })
                 )
 
+            }else{
+
+                this.DeleteShapeApi(shape.id!)
             }
-
-            this.DeleteShapeApi(shape.id!)
-
-
 
 
             shape.messageData.selected = false

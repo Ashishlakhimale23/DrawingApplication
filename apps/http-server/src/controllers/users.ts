@@ -121,7 +121,7 @@ export const CreateRoom = async (req:Request<{},{},roomID>,res:Response)=>{
     if(!create){
         res.json({message:"something occured could'nt create the room"})
     }
-    res.json({message:"room created"})
+    res.json({message:create.id})
     return
 }
 
@@ -131,6 +131,18 @@ export const GetRoomChats = async (req:Request,res:Response) =>{
     const userId = req.userId
     
 
+    const roomDetails = await prisma.room.findFirst({
+        where:{
+            id:Number(roomId)
+        }
+    })
+
+    const adminChats = await prisma.chats.findMany({
+        where:{
+            userId:roomDetails?.adminId,
+            roomId : null
+        }
+    })
     const chats = await prisma.chats.findMany({
         take:50,
         where:{
@@ -139,9 +151,9 @@ export const GetRoomChats = async (req:Request,res:Response) =>{
         
     })
 
-    console.log(chats)
+    const allchats = [...adminChats,...chats]
 
-    res.json({message:chats})
+    res.json({message:allchats})
     return
 
 
@@ -153,12 +165,16 @@ export const GetUsersChats = async(req:Request,res:Response)=>{
 
     try{
 
-        const userChats = await prisma.chats.findMany({
+        let userChats = await prisma.chats.findMany({
             where:{
-                userId : Number(userid)
+                userId : Number(userid),
+                roomId: null
             }
         })
 
+        userChats = userChats.filter(chats => chats.roomId == null)
+
+        
         res.json({chats : userChats}).status(200)
         return
 
