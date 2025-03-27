@@ -60,33 +60,40 @@ export default function Canvas({
 
   },[])
 
-  function UnselectTheDeleteSpace(e:MouseEvent){
-      if(e && ModalRef.current && !ModalRef.current.contains(e.target as Node) ){
-        setShowModal(false)
-      }
+  function UnselectTheDeleteSpace(e: MouseEvent) {
+    if (e && ModalRef.current && !ModalRef.current.contains(e.target as Node)) {
+      setShowModal(false);
     }
-
+  }
 
   return (
-   
     <div className="h-lvh ">
       <ToolBar setTypeOFShapes={setTypeOfShapes} typeOfShapes={typeOfShapes} />
-      <CreateRoomButton setShowModal={setShowModal} link={link}/>
-      {showModal && <CreateRoomModal roomSlug={roomSlug} setRoomSlug={setRoomSlug} link={link} setLink={SetLink} ModalRef={ModalRef} router={router}/>}
-   <div className="fixed bottom-6 left-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-xl overflow-hidden border border-gray-200/20">
-  <button 
-    className="px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-all duration-200 border-r border-gray-200"
-    onClick={() => invoker.undo()}
-  >
-    Undo
-  </button>
-  <button 
-    className="px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-all duration-200"
-    onClick={() => invoker.redo()}
-  >
-    Redo
-  </button>
-</div>
+      <CreateRoomButton setShowModal={setShowModal} link={link} />
+      {showModal && (
+        <CreateRoomModal
+          roomSlug={roomSlug}
+          setRoomSlug={setRoomSlug}
+          link={link}
+          setLink={SetLink}
+          ModalRef={ModalRef}
+          router={router}
+        />
+      )}
+      <div className="fixed bottom-6 left-6 bg-white/10 backdrop-blur-sm shadow-lg rounded-xl overflow-hidden border border-gray-200/20">
+        <button
+          className="px-4 py-2 text-sm font-medium text-white hover:bg-black transition-all duration-200 border-r border-gray-200"
+          onClick={() => invoker.undo()}
+        >
+          Undo
+        </button>
+        <button
+          className="px-4 py-2 text-sm font-medium text-white hover:bg-black transition-all duration-200"
+          onClick={() => invoker.redo()}
+        >
+          Redo
+        </button>
+      </div>
       <canvas
         className="bg-black"
         width={window.innerWidth}
@@ -192,7 +199,7 @@ const CreateRoomButton = ({
   return (
     <div className="fixed top-6 right-6">
       <button 
-        className="bg-zinc-700 backdrop-blur-sm shadow-lg rounded-xl px-4 py-2 text-sm font-medium text-white  transition-all duration-200 flex items-center gap-2 border border-gray-200/20"
+        className="bg-white/10 hover:bg-black backdrop-blur-sm shadow-lg rounded-xl px-4 py-2 text-sm font-medium text-white  transition-all duration-200 flex items-center gap-2 border border-gray-200/20"
         onClick={() => setShowModal(true)}
       >
          
