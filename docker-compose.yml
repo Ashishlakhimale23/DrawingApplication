@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres:alpine
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+    
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  http-server :
+    build : 
+      context : .
+      dockerfile : ./Docker/Dockerfile.backend
+      args : 
+        DB_URL : postgresql://postgres:postgres@db:5432/postgres
+    container_name : httpserver
+    environment: 
+      DATABASE_URL : postgresql://postgres:postgres@db:5432/postgres 
+    ports : 
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "cd packages/db && npx prisma migrate dev && npx prisma generate "
+
+  web-socket :
+    build : 
+      context : .
+      dockerfile : ./Docker/Dockerfile.websocket
+      args : 
+        DB_URL : postgresql://postgres:postgres@db:5432/postgres
+    container_name : ws-server
+    environment: 
+      DATABASE_URL : postgresql://postgres:postgres@db:5432/postgres 
+    ports : 
+      - 8001:8001
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "cd packages/db && npx prisma migrate dev && npx prisma generate "
+    
+  frontend :
+    build : 
+      context : .
+      dockerfile : ./Docker/Dockerfile.frontend
+      args : 
+        DB_URL : postgresql://postgres:postgres@db:5432/postgres
+    container_name : frontend 
+    environment: 
+      DATABASE_URL : postgresql://postgres:postgres@db:5432/postgres 
+    ports : 
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "./scripts/wait-for-it.sh db 5432 &&
+      cd packages/db &&
+      npx prisma migrate dev &&
+      npx prisma generate &&
+      cd ../.. &&
+      npm run dev"
+    
