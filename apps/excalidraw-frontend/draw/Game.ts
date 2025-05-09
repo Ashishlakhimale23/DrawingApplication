@@ -13,7 +13,7 @@ import { api } from "@/utils/AxiosApiConfig";
 export class Game {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
-    private existingShapes: ShapesFromServer[];
+    private existingShapes: ShapesFromServer[] = [];
     private isDrawing: boolean = false;
     private isResizing: boolean = false
     private InitialPointX: number = 0;
@@ -50,7 +50,165 @@ export class Game {
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
         this.Socket = Socket;
-        this.existingShapes = existingShapes;
+        this.existingShapes = [{
+    id: 1,
+    messageData: {
+      type: "rectangle",
+      x: 100,
+      y: 100,
+      width: 150,
+      height: 60,
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+  {
+    id: 2,
+    messageData: {
+      type: "text",
+      x: 100 + 75 - 28,
+      y: 100 + 30 + 6,
+      content: "Client",
+      fontSize: 16,
+      fontFamily: "Arial",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+
+  // Server
+  {
+    id: 3,
+    messageData: {
+      type: "rectangle",
+      x: 400,
+      y: 100,
+      width: 170,
+      height: 60,
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+  {
+    id: 4,
+    messageData: {
+      type: "text",
+      x: 400 + 85 - 28,
+      y: 100 + 30 + 6,
+      content: "Server",
+      fontSize: 16,
+      fontFamily: "Arial",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+
+  // Database
+  {
+    id: 5,
+    messageData: {
+      type: "rectangle",
+      x: 750,
+      y: 100,
+      width: 180,
+      height: 60,
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+  {
+    id: 6,
+    messageData: {
+      type: "text",
+      x: 750 + 90 - 40,
+      y: 100 + 30 + 6,
+      content: "Database",
+      fontSize: 16,
+      fontFamily: "Arial",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+
+  // Line: Client → Server
+  {
+    id: 7,
+    messageData: {
+      type: "line",
+      x: 250,
+      y: 130,
+      x1: 400,
+      y1: 130,
+      midX: 325,
+      midY: 120,
+      Point: "midPoint",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+  {
+    id: 8,
+    messageData: {
+      type: "text",
+      x: 305,
+      y: 105,
+      content: "API Request",
+      fontSize: 12,
+      fontFamily: "Arial",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+
+  // Line: Server → Database
+  {
+    id: 9,
+    messageData: {
+      type: "line",
+      x: 570,
+      y: 130,
+      x1: 750,
+      y1: 130,
+      midX: 660,
+      midY: 120,
+      Point: "midPoint",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },
+  {
+    id: 10,
+    messageData: {
+      type: "text",
+      x: 630,
+      y: 105,
+      content: "DB Query",
+      fontSize: 12,
+      fontFamily: "Arial",
+      selected: false,
+      isResizing: false,
+      resizingEdge: "",
+      isDraging: false
+    }
+  },...existingShapes];
         this.rectangle = new rectangle()
         this.circle = new circle()
         this.line = new line()

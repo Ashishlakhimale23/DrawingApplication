@@ -12,43 +12,44 @@ import {RectangleHorizontal,Circle,Minus,Pencil,TypeOutline,Hand,MousePointer2} 
 export default function Canvas({
   Socket,
   Existingshapes,
-  roomId
+  roomId,
 }: {
   Socket?: WebSocket;
   Existingshapes: ShapesFromServer[];
-  roomId?:string
+  roomId?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [game, setGame] = useState<Game>();
   const [typeOfShapes, setTypeOfShapes] = useState<TypeOfShapes>("default");
-  const [roomSlug,setRoomSlug] = useState<string>("")
-  const [link,SetLink] = useState<string>("")
-  const [showModal,setShowModal] = useState<boolean>(false)
-  const ModalRef = useRef<HTMLDivElement | null>(null)
-  const router = useRouter()
-  
+  const [roomSlug, setRoomSlug] = useState<string>("");
+  const [link, SetLink] = useState<string>("");
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState<string>(""); // State for input box
+  const ModalRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
-
-  useEffect(()=>{
-
-    game?.setTool(typeOfShapes)
-    
-  },[typeOfShapes,game])
+  useEffect(() => {
+    game?.setTool(typeOfShapes);
+  }, [typeOfShapes, game]);
 
   useEffect(() => {
     if (canvasRef.current) {
-      
-      const g = new Game(canvasRef.current,roomId, Socket, Existingshapes,setTypeOfShapes);
+      const g = new Game(
+        canvasRef.current,
+        roomId,
+        Socket,
+        Existingshapes,
+        setTypeOfShapes
+      );
       setGame(g);
-      
+
       return () => {
         g.destroy();
       };
     }
   }, [canvasRef]);
 
-  useEffect(()=>{
-
+  useEffect(() => {
     document.body.addEventListener("mousedown", UnselectTheDeleteSpace);
 
     if (roomId) {
@@ -57,8 +58,7 @@ export default function Canvas({
     return () => {
       document.body.removeEventListener("mousedown", UnselectTheDeleteSpace);
     };
-
-  },[])
+  }, []);
 
   function UnselectTheDeleteSpace(e: MouseEvent) {
     if (e && ModalRef.current && !ModalRef.current.contains(e.target as Node)) {
@@ -67,7 +67,7 @@ export default function Canvas({
   }
 
   return (
-    <div className="h-lvh ">
+    <div className="h-lvh">
       <ToolBar setTypeOFShapes={setTypeOfShapes} typeOfShapes={typeOfShapes} />
       <CreateRoomButton setShowModal={setShowModal} link={link} />
       {showModal && (
@@ -100,6 +100,16 @@ export default function Canvas({
         height={window.innerHeight}
         ref={canvasRef}
       />
+      {/* Input Box */}
+      <div className="fixed bottom-6 right-6">
+        <input
+          type="text"
+          placeholder="Enter text here"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-black focus:outline-none"
+        />
+      </div>
     </div>
   );
 }

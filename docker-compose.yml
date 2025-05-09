@@ -67,7 +67,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "./scripts/wait-for-it.sh db 5432 &&
-      cd packages/db &&
+      cd packages/db &
       npx prisma migrate dev &&
       npx prisma generate &&
       cd ../.. &&

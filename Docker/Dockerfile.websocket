@@ -10,6 +10,7 @@ COPY apps/ws-server ./apps/ws-server
 
 RUN npm i 
 RUN npm run build:packages
+RUN npm run db:generate
 EXPOSE 8001
 
 CMD ["npm","run","start:ws-server"]
