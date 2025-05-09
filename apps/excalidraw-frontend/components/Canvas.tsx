@@ -7,6 +7,7 @@ import { api } from "@/utils/AxiosApiConfig";
 import { useRouter } from "next/navigation";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import {RectangleHorizontal,Circle,Minus,Pencil,TypeOutline,Hand,MousePointer2} from "lucide-react"
+import axios from "axios";
 
 
 export default function Canvas({
@@ -28,6 +29,31 @@ export default function Canvas({
   const ModalRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
+  const apiCall = async () => {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const prompt = process.env.NEXT_PUBLIC_PROMPT
+  console.log(prompt)
+  if (!apiKey || !prompt) {
+    console.error("Gemini API key is missing!");
+    return;
+  }
+
+  try {
+    const result = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [{ text: `${prompt} for ${inputValue} and consider this to be the only description` }],
+          },
+        ],
+      }
+    );
+    console.log(result.data);
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+  }
+};
   useEffect(() => {
     game?.setTool(typeOfShapes);
   }, [typeOfShapes, game]);
@@ -107,6 +133,12 @@ export default function Canvas({
           placeholder="Enter text here"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              apiCall()
+              setInputValue(""); // Clear the input after pressing Enter
+            }
+          }}
           className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-black focus:outline-none"
         />
       </div>
