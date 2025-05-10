@@ -9,6 +9,7 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 import {RectangleHorizontal,Circle,Minus,Pencil,TypeOutline,Hand,MousePointer2} from "lucide-react"
 import axios from "axios";
 
+import { GoogleGenAI } from "@google/genai";
 
 export default function Canvas({
   Socket,
@@ -19,41 +20,112 @@ export default function Canvas({
   Existingshapes: ShapesFromServer[];
   roomId?: string;
 }) {
+const ai = new GoogleGenAI({ apiKey:process.env.NEXT_PUBLIC_GEMINI_API_KEY });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [game, setGame] = useState<Game>();
   const [typeOfShapes, setTypeOfShapes] = useState<TypeOfShapes>("default");
   const [roomSlug, setRoomSlug] = useState<string>("");
   const [link, SetLink] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [inputValue, setInputValue] = useState<string>(""); // State for input box
+  const [inputValue, setInputValue] = useState<string>(""); 
   const ModalRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
-  const apiCall = async () => {
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  const prompt = process.env.NEXT_PUBLIC_PROMPT
-  console.log(prompt)
-  if (!apiKey || !prompt) {
-    console.error("Gemini API key is missing!");
-    return;
-  }
 
-  try {
-    const result = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            parts: [{ text: `${prompt} for ${inputValue} and consider this to be the only description` }],
-          },
-        ],
-      }
-    );
-    console.log(result.data);
-  } catch (error) {
-    console.error("Error calling Gemini API:", error);
-  }
+const apiCall = async (inputValue:string) => {
+  const prompt = `Create a structured diagram (flowchart or relationship chart) based on the description I will provide.
+Requirements:
+Box Structure:
+Use rectangles for entities (e.g., client, server, database, etc.).
+All boxes should be uniformly sized unless otherwise specified.
+Text must be centered horizontally and vertically inside each box.
+Choose a suitable font size and font family so that the text is legible but doesn't overflow.
+Spacing:
+Ensure adequate horizontal and vertical spacing between boxes so that the text associated with connecting lines/arrows (like “API Request”, “DB Query”) is clearly visible and does not overlap with other elements.
+Add enough margin/padding to keep the layout breathable and uncluttered.
+Lines/Connections:
+Use clear lines or arrows to connect relevant boxes.
+Label each connection line with a short description (like "sends data", "receives response").
+Place the label above the line or near the midpoint and ensure it doesn’t overlap with other boxes or labels.
+Layout:
+Use a layout style that makes sense for the data (horizontal for linear flows, vertical for stacks, grid for networked systems).
+If complex, group related boxes using subtle visual cues (like background shading or grouping containers).
+Advanced Enhancements (optional but encouraged):
+Use different shapes (e.g., circles, parallelograms) for different types of components (e.g., decision points, APIs).
+Allow multi-line text wrapping inside boxes if needed.
+Highlight key paths or components with color or line weight.
+
+Enhance layout clarity by following these rules:
+Always ensure text labels (for boxes and lines) do not overlap with shapes or other text. Maintain at least 20px margin between any label and surrounding elements.
+Labels for connection lines must be:
+Horizontally centered on the line.
+Placed slightly above horizontal lines or to the right of vertical lines.
+Never inside boxes or overlapping arrows.
+Use arrows (not just lines) to indicate flow direction clearly.
+Ensure a minimum spacing of 40px between adjacent shapes to avoid visual clutter.
+If necessary, auto-adjust line lengths or box spacing to preserve readability and avoid overlap.
+Make sure all text remains fully visible (no clipping), and wrap multi-line labels when too long.
+Maintain visual hierarchy: text on boxes > arrows > labels on lines.
+If space becomes tight, reflow layout vertically or diagonally to maintain these spacing rules.
+Output the chart as a set of structured objects that include: type, x, y, width, height, text, and any connecting lines (with coordinates and labels). You may follow a structure like this:
+export interface BaseShape {
+    id?: number
+    type: string;
+    x: number;
+    y: number;
+    selected: boolean;
+    isResizing: boolean;
+    resizingEdge: string;
+    isDraging: boolean
+}
+
+export interface Text extends BaseShape {
+    type: "text";
+    content: string;
+    fontSize: number;
+    fontFamily: string;
+}
+
+export interface Rectangle extends BaseShape {
+    type: "rectangle";
+    width: number;
+    height: number;
+}
+
+export interface Circle extends BaseShape {
+    type: "circle";
+    radiusX: number;
+    radiusY : number
+}
+
+export interface Line extends BaseShape {
+    type: "line";
+    x1: number;
+    y1: number;
+    midX: number;
+    midY: number
+    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
+}
+
+export interface Pencil extends BaseShape {
+    type: 'pencil';
+    points: number[][]
+
+}
+
+and the final format should be like this
+
+export interface ShapesFromServer {
+    id?: number,
+    messageData:  Rectangle | Circle | Line | Pencil | Text
+} just return coordinate in the data type give for a chat application architecture` 
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: prompt,
+  });
+  console.log(response.text);
 };
+
   useEffect(() => {
     game?.setTool(typeOfShapes);
   }, [typeOfShapes, game]);
@@ -135,7 +207,7 @@ export default function Canvas({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              apiCall()
+              apiCall(inputValue)
               setInputValue(""); // Clear the input after pressing Enter
             }
           }}

@@ -9,7 +9,6 @@ import { ShapesFromServer, TypeOfShapes, Rectangle, Circle, Line, Pencil, Text, 
 import { UtlisFunction } from "@/utils/utilsFunctions";
 import React from "react";
 import { api } from "@/utils/AxiosApiConfig";
-
 export class Game {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
@@ -50,7 +49,222 @@ export class Game {
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
         this.Socket = Socket;
-        this.existingShapes = [...existingShapes];
+        this.existingShapes = [{
+    "messageData": {
+      "id": 1,
+      "type": "rectangle",
+      "x": 100,
+      "y": 200,
+      "width": 150,
+      "height": 80,
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 2,
+      "type": "text",
+      "x": 175,
+      "y": 240,
+      "content": "Client",
+      "fontSize": 16,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 3,
+      "type": "rectangle",
+      "x": 400,
+      "y": 200,
+      "width": 150,
+      "height": 80,
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 4,
+      "type": "text",
+      "x": 475,
+      "y": 240,
+      "content": "Chat Server",
+      "fontSize": 16,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 5,
+      "type": "rectangle",
+      "x": 700,
+      "y": 200,
+      "width": 150,
+      "height": 80,
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 6,
+      "type": "text",
+      "x": 775,
+      "y": 240,
+      "content": "Database",
+      "fontSize": 16,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 7,
+      "type": "line",
+      "x": 250,
+      "y": 240,
+      "midX": 325,
+      "midY": 240,
+      "x1": 400,
+      "y1": 240,
+      "Point": "",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+    {
+    "messageData": {
+      "id": 8,
+      "type": "text",
+      "x": 325,
+      "y": 220,
+      "content": "Sends Message",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 9,
+      "type": "line",
+      "x": 550,
+      "y": 240,
+      "midX": 625,
+      "midY": 240,
+      "x1": 700,
+      "y1": 240,
+      "Point": "",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+    {
+    "messageData": {
+      "id": 10,
+      "type": "text",
+      "x": 625,
+      "y": 220,
+      "content": "Saves Message",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 11,
+      "type": "line",
+      "x": 700,
+      "y": 260,
+      "midX": 625,
+      "midY": 260,
+      "x1": 550,
+      "y1": 260,
+      "Point": "",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+    {
+    "messageData": {
+      "id": 12,
+      "type": "text",
+      "x": 625,
+      "y": 265,
+      "content": "Retrieves Messages",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+  {
+    "messageData": {
+      "id": 13,
+      "type": "line",
+      "x": 400,
+      "y": 260,
+      "midX": 325,
+      "midY": 260,
+      "x1": 250,
+      "y1": 260,
+      "Point": "",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },
+    {
+    "messageData": {
+      "id": 14,
+      "type": "text",
+      "x": 325,
+      "y": 265,
+      "content": "Delivers Message",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "selected": false,
+      "isResizing": false,
+      "resizingEdge": "",
+      "isDraging": false
+    }
+  },...existingShapes];
+    
         this.rectangle = new rectangle()
         this.circle = new circle()
         this.line = new line()

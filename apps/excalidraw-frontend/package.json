@@ -9,6 +9,7 @@
     "lint": "next lint --no warnings"
   },
   "dependencies": {
+    "@google/genai": "^0.13.0",
     "axios": "^1.7.9",
     "framer-motion": "^12.6.1",
     "lucide-react": "^0.484.0",
