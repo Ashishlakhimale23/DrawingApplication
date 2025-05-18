@@ -1,6 +1,7 @@
 import axios,{InternalAxiosRequestConfig,AxiosError} from 'axios'
+const baseUrl = process.env.NEXT_PUBLIC_HTTP_SERVER
 export const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: baseUrl,
 });
 
 api.interceptors.request.use(function(config:InternalAxiosRequestConfig){

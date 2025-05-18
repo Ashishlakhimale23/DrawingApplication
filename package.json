@@ -10,7 +10,7 @@
     "build:packages":"cd packages/db && npm run build && cd .. && cd common && npm run build && cd ../..",
     "start:web": "cd apps/excalidraw-frontend && npm run dev",
     "start:backend": "cd apps/http-server && npm run dev",
-    "start:ws-server": "cd apps/ws-server && npm run dev"
+    "start:websocket": "cd apps/ws-server && npm run dev"
   },
   "devDependencies": {
     "@types/node": "^22.15.12",

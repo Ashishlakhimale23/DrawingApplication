@@ -9,11 +9,9 @@ COPY turbo.json ./
 COPY packages ./packages
 COPY apps/excalidraw-frontend ./apps/excalidraw-frontend
 COPY scripts ./scripts 
+
 RUN npm i 
-
 RUN npm run build:packages
-RUN npm run db:generate
-
 
 EXPOSE 3000
 

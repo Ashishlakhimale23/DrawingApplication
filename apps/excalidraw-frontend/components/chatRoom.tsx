@@ -10,8 +10,9 @@ export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape
   
 
     useEffect(() => {
+        const ws_url = process.env.NEXT_PUBLIC_WS_SERVER
         const token = localStorage.getItem("authtoken")
-        const ws = new WebSocket(`ws://localhost:8081?token=${token}`)
+        const ws = new WebSocket(`${ws_url}?token=${token}`)
         
         ws.onopen = () => {
             setSocket(ws);

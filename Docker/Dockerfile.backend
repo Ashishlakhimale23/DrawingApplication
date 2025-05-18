@@ -8,12 +8,11 @@ COPY package*.json ./
 COPY turbo.json ./
 COPY packages ./packages
 COPY apps/http-server ./apps/http-server
+COPY scripts ./scripts 
 
 RUN npm i 
+RUN npm run build:packages 
 
-RUN npm run build:packages
-
-RUN npm run db:generate
 EXPOSE 8000
 
 CMD ["npm","run","start:backend"]

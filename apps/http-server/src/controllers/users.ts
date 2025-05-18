@@ -27,6 +27,7 @@ export const SignUpHandler = async (req:Request<{},{},User>,res:Response) =>{
         res.json({message:validationCheck.errormessage})
         return
     }
+    console.log(validationCheck)
    
     const exists = await prisma.user.findFirst({where:{
         username:username,

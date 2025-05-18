@@ -20,6 +20,7 @@ services:
       retries: 5
 
   http-server :
+
     build : 
       context : .
       dockerfile : ./Docker/Dockerfile.backend
@@ -31,9 +32,14 @@ services:
     ports : 
       - 8000:8000
     depends_on:
-      db:
-        condition: service_healthy
-    command: sh -c "cd packages/db && npx prisma migrate dev && npx prisma generate "
+      - db
+    command: 
+      sh -c './scripts/wait-for-it.sh db 5432 &&
+      cd packages/db &&
+      npx prisma migrate dev &&
+      npx prisma generate &&
+      cd ../.. && npm run start:backend'
+    
 
   web-socket :
     build : 
@@ -46,10 +52,15 @@ services:
       DATABASE_URL : postgresql://postgres:postgres@db:5432/postgres 
     ports : 
       - 8001:8001
-    depends_on:
-      db:
-        condition: service_healthy
-    command: sh -c "cd packages/db && npx prisma migrate dev && npx prisma generate "
+    depends_on: 
+      - db
+    command: 
+      sh -c "./scripts/wait-for-it.sh db 5432 &&
+      cd packages/db &&
+      npx prisma migrate dev &&
+      npx prisma generate &&
+      cd ../..  && npm run start:websocket"
+    
     
   frontend :
     build : 
@@ -60,6 +71,9 @@ services:
     container_name : frontend 
     environment: 
       DATABASE_URL : postgresql://postgres:postgres@db:5432/postgres 
+      NEXT_PUBLIC_HTTP_SERVER : http://localhost:8000
+      NEXT_PUBLIC_WS_SERVER : ws://localhost:8001
+
     ports : 
       - 3000:3000
     depends_on:
@@ -67,9 +81,8 @@ services:
         condition: service_healthy
     command: >
       sh -c "./scripts/wait-for-it.sh db 5432 &&
-      cd packages/db &
+      cd packages/db &&
       npx prisma migrate dev &&
       npx prisma generate &&
-      cd ../.. &&
-      npm run dev"
+      cd ../.. && npm run start:web"
     

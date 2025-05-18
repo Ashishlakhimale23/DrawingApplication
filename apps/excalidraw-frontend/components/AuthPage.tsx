@@ -13,6 +13,7 @@ export default function AuthPage({signup}: {signup: boolean}) {
     const router = useRouter();
 
     const handleSubmit = async (e: FormEvent) => {
+      const base_url = process.env.NEXT_PUBLIC_HTTP_SERVER
         e.preventDefault();
         setError("");
 
@@ -25,7 +26,7 @@ export default function AuthPage({signup}: {signup: boolean}) {
 
         try {
             const phrase = signup ? "signup" : "signin";
-            const response = await axios.post(`http://localhost:8000/user/${phrase}`, {
+            const response = await axios.post(`${base_url}/user/${phrase}`, {
                 username,
                 email,
                 password
