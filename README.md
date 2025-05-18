@@ -8,7 +8,6 @@ Excalidraw is a collaborative whiteboard application designed for real-time draw
 
 - **Real-Time Collaboration**: Multiple users can draw and interact on the same canvas simultaneously using WebSockets.
 - **Drawing Tools**: Includes tools for creating rectangles, circles, lines, freehand drawings, and adding text.
-- **AI-Powered Diagram Generation**: Generate structured diagrams from text descriptions using the Gemini AI model.
 - **Room Management**: Users can create and join rooms to collaborate with specific groups.
 - **Authentication**: Secure user authentication for managing access and permissions.
 - **Database Integration**: Persistent storage of user data, rooms, and chat messages using PostgreSQL.
@@ -29,9 +28,6 @@ Excalidraw is a collaborative whiteboard application designed for real-time draw
 - **Express.js**: A Node.js framework for building RESTful APIs.
 - **Prisma**: An ORM for managing PostgreSQL database interactions.
 - **PostgreSQL**: A relational database for storing user, room, and chat data.
-
-### AI Integration
-- **Gemini AI Model**: Used for generating diagrams from user-provided text descriptions.
 
 ### DevOps
 - **Docker**: Containerized deployment for consistent development and production environments.
@@ -54,20 +50,13 @@ Follow these steps to set up and run the project locally.
    cd excalidraw
    ```
 
-2. **Set Up Environment Variables**:
-   Create a `.env.local` file in the root directory and add the following variables:
-   ```env
-   DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-   NEXT_PUBLIC_GEMINI_API_KEY=your-gemini-api-key
-   ```
-
-3. **Start the Application**:
+2. **Start the Application**:
    Use Docker Compose to build and start all services:
    ```bash
    docker-compose up --build
    ```
 
-4. **Access the Application**:
+3. **Access the Application**:
    - Frontend: Open [http://localhost:3000](http://localhost:3000) in your browser.
    - Backend API: Accessible at [http://localhost:8000](http://localhost:8000).
    - WebSocket Server: Runs on [http://localhost:8001](http://localhost:8001).
