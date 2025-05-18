@@ -33,7 +33,16 @@ const ai = new GoogleGenAI({ apiKey:process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
 
 const apiCall = async (inputValue:string) => {
-  const prompt = `Create a structured diagram (flowchart or relationship chart) based on the description I will provide.
+  const prompt = `
+You are an expert AI assistant responsible for generating structured diagrams (flowcharts, relationship charts, or any user-described diagrams) based on the provided description. 
+    Your task is to process the input description and return an array of structured objects representing the diagram elements. 
+    Ensure the output adheres to the following guidelines:
+    - Use appropriate shapes (e.g., rectangles, circles, lines, and text) based on the description.
+    - Maintain adequate spacing and avoid overlapping elements.
+    - Provide coordinates, dimensions, and labels for each shape.
+    - Ensure the output is clean, structured, and adheres to the spacing and clarity rules.
+  
+  Create a structured diagram (flowchart or relationship chart) based on the description I will provide.
 Requirements:
 Box Structure:
 Use rectangles for entities (e.g., client, server, database, etc.).
@@ -118,12 +127,14 @@ and the final format should be like this
 export interface ShapesFromServer {
     id?: number,
     messageData:  Rectangle | Circle | Line | Pencil | Text
-} just return coordinate in the data type give for a chat application architecture` 
+} just return coordinate in the data type give for a ${inputValue}` 
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
     contents: prompt,
+    
   });
-  console.log(response.text);
+  console.log(response.data)
+  console.log(response.text)
 };
 
   useEffect(() => {

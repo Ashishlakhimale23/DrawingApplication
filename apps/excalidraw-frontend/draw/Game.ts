@@ -9,6 +9,7 @@ import { ShapesFromServer, TypeOfShapes, Rectangle, Circle, Line, Pencil, Text, 
 import { UtlisFunction } from "@/utils/utilsFunctions";
 import React from "react";
 import { api } from "@/utils/AxiosApiConfig";
+
 export class Game {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
@@ -49,221 +50,410 @@ export class Game {
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
         this.Socket = Socket;
-        this.existingShapes = [{
-    "messageData": {
-      "id": 1,
-      "type": "rectangle",
-      "x": 100,
-      "y": 200,
-      "width": 150,
-      "height": 80,
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 2,
-      "type": "text",
-      "x": 175,
-      "y": 240,
-      "content": "Client",
-      "fontSize": 16,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 3,
-      "type": "rectangle",
-      "x": 400,
-      "y": 200,
-      "width": 150,
-      "height": 80,
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 4,
-      "type": "text",
-      "x": 475,
-      "y": 240,
-      "content": "Chat Server",
-      "fontSize": 16,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 5,
-      "type": "rectangle",
-      "x": 700,
-      "y": 200,
-      "width": 150,
-      "height": 80,
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 6,
-      "type": "text",
-      "x": 775,
-      "y": 240,
-      "content": "Database",
-      "fontSize": 16,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 7,
-      "type": "line",
-      "x": 250,
-      "y": 240,
-      "midX": 325,
-      "midY": 240,
-      "x1": 400,
-      "y1": 240,
-      "Point": "",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
+        this.existingShapes = [
     {
-    "messageData": {
-      "id": 8,
-      "type": "text",
-      "x": 325,
-      "y": 220,
-      "content": "Sends Message",
-      "fontSize": 12,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 9,
-      "type": "line",
-      "x": 550,
-      "y": 240,
-      "midX": 625,
-      "midY": 240,
-      "x1": 700,
-      "y1": 240,
-      "Point": "",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
+        id: 1,
+        messageData: {
+            type: "rectangle",
+            x: 100,
+            y: 50,
+            width: 150,
+            height: 75,
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
     {
-    "messageData": {
-      "id": 10,
-      "type": "text",
-      "x": 625,
-      "y": 220,
-      "content": "Saves Message",
-      "fontSize": 12,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 11,
-      "type": "line",
-      "x": 700,
-      "y": 260,
-      "midX": 625,
-      "midY": 260,
-      "x1": 550,
-      "y1": 260,
-      "Point": "",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
+        id: 2,
+        messageData: {
+            type: "text",
+            x: 175,
+            y: 87,
+            content: "Client",
+            fontSize: 14,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
     {
-    "messageData": {
-      "id": 12,
-      "type": "text",
-      "x": 625,
-      "y": 265,
-      "content": "Retrieves Messages",
-      "fontSize": 12,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
-  {
-    "messageData": {
-      "id": 13,
-      "type": "line",
-      "x": 400,
-      "y": 260,
-      "midX": 325,
-      "midY": 260,
-      "x1": 250,
-      "y1": 260,
-      "Point": "",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
-    }
-  },
+        id: 3,
+        messageData: {
+            type: "rectangle",
+            x: 400,
+            y: 50,
+            width: 150,
+            height: 75,
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
     {
-    "messageData": {
-      "id": 14,
-      "type": "text",
-      "x": 325,
-      "y": 265,
-      "content": "Delivers Message",
-      "fontSize": 12,
-      "fontFamily": "Arial",
-      "selected": false,
-      "isResizing": false,
-      "resizingEdge": "",
-      "isDraging": false
+        id: 4,
+        messageData: {
+            type: "text",
+            x: 475,
+            y: 87,
+            content: "Server",
+            fontSize: 14,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 5,
+        messageData: {
+            type: "line",
+            x: 250,
+            y: 87,
+            x1: 400,
+            y1: 87,
+            midX: 325,
+            midY: 70,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 6,
+        messageData: {
+            type: "text",
+            x: 325,
+            y: 60,
+            content: "Send Message",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+     {
+        id: 7,
+        messageData: {
+            type: "rectangle",
+            x: 400,
+            y: 200,
+            width: 150,
+            height: 75,
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 8,
+        messageData: {
+            type: "text",
+            x: 475,
+            y: 237,
+            content: "Database",
+            fontSize: 14,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 9,
+        messageData: {
+            type: "line",
+            x: 475,
+            y: 125,
+            x1: 475,
+            y1: 200,
+            midX: 490,
+            midY: 162.5,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 10,
+        messageData: {
+            type: "text",
+            x: 500,
+            y: 155,
+            content: "Store Message",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 11,
+        messageData: {
+            type: "line",
+            x: 400,
+            y: 87,
+            x1: 250,
+            y1: 87,
+            midX: 325,
+            midY: 105,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 12,
+        messageData: {
+            type: "text",
+            x: 325,
+            y: 95,
+            content: "Receive Message",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 13,
+        messageData: {
+            type: "line",
+            x: 475,
+            y: 275,
+            x1: 475,
+            y1: 350,
+            midX: 490,
+            midY: 312.5,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+     {
+        id: 14,
+        messageData: {
+            type: "text",
+            x: 500,
+            y: 305,
+            content: "Return Confirmation",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 15,
+        messageData: {
+            type: "line",
+            x: 550,
+            y: 87,
+            x1: 700,
+            y1: 87,
+            midX: 625,
+            midY: 70,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 16,
+        messageData: {
+            type: "text",
+            x: 625,
+            y: 60,
+            content: "Notify Client",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 17,
+        messageData: {
+            type: "rectangle",
+            x: 700,
+            y: 50,
+            width: 150,
+            height: 75,
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 18,
+        messageData: {
+            type: "text",
+            x: 775,
+            y: 87,
+            content: "Notification Service",
+            fontSize: 14,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 19,
+        messageData: {
+            type: "line",
+            x: 550,
+            y: 237,
+            x1: 700,
+            y1: 237,
+            midX: 625,
+            midY: 220,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 20,
+        messageData: {
+            type: "text",
+            x: 625,
+            y: 210,
+            content: "Update DB",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
     }
-  },...existingShapes];
+    ,
+    {
+        id: 21,
+        messageData: {
+            type: "line",
+            x: 775,
+            y: 125,
+            x1: 775,
+            y1: 200,
+            midX: 790,
+            midY: 162.5,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+     {
+        id: 22,
+        messageData: {
+            type: "text",
+            x: 800,
+            y: 155,
+            content: "Get Info",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 23,
+        messageData: {
+            type: "line",
+            x: 775,
+            y: 275,
+            x1: 775,
+            y1: 350,
+            midX: 790,
+            midY: 312.5,
+            Point: "",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+     {
+        id: 24,
+        messageData: {
+            type: "text",
+            x: 800,
+            y: 305,
+            content: "Send Notification",
+            fontSize: 12,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+      {
+        id: 25,
+        messageData: {
+            type: "rectangle",
+            x: 700,
+            y: 350,
+            width: 150,
+            height: 75,
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    },
+    {
+        id: 26,
+        messageData: {
+            type: "text",
+            x: 775,
+            y: 387,
+            content: "User Device",
+            fontSize: 14,
+            fontFamily: "Arial",
+            selected: false,
+            isResizing: false,
+            resizingEdge: "",
+            isDraging: false
+        }
+    }
+,...existingShapes];
     
         this.rectangle = new rectangle()
         this.circle = new circle()
@@ -311,7 +501,6 @@ export class Game {
             shape.messageData.x += dx
             shape.messageData.y += dy
         }
-
 
 
         if (this.roomId?.length && this.Socket) {
