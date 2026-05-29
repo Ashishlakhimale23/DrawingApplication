@@ -6,8 +6,7 @@ import { ShapesFromServer, TypeOfShapes } from "@/utils/types";
 import { api } from "@/utils/AxiosApiConfig";
 import { useRouter } from "next/navigation";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import {RectangleHorizontal,Circle,Minus,Pencil,TypeOutline,Hand,MousePointer2} from "lucide-react"
-import axios from "axios";
+import {RectangleHorizontal,Circle,Minus,Pencil,TypeOutline,Hand,MousePointer2,Redo, Redo2, Redo2Icon, Undo2} from "lucide-react"
 
 import { GoogleGenAI } from "@google/genai";
 
@@ -20,122 +19,15 @@ export default function Canvas({
   Existingshapes: ShapesFromServer[];
   roomId?: string;
 }) {
-const ai = new GoogleGenAI({ apiKey:process.env.NEXT_PUBLIC_GEMINI_API_KEY });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [game, setGame] = useState<Game>();
   const [typeOfShapes, setTypeOfShapes] = useState<TypeOfShapes>("default");
   const [roomSlug, setRoomSlug] = useState<string>("");
   const [link, SetLink] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [inputValue, setInputValue] = useState<string>(""); 
   const ModalRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
-
-const apiCall = async (inputValue:string) => {
-  const prompt = `
-You are an expert AI assistant responsible for generating structured diagrams (flowcharts, relationship charts, or any user-described diagrams) based on the provided description. 
-    Your task is to process the input description and return an array of structured objects representing the diagram elements. 
-    Ensure the output adheres to the following guidelines:
-    - Use appropriate shapes (e.g., rectangles, circles, lines, and text) based on the description.
-    - Maintain adequate spacing and avoid overlapping elements.
-    - Provide coordinates, dimensions, and labels for each shape.
-    - Ensure the output is clean, structured, and adheres to the spacing and clarity rules.
-  
-  Create a structured diagram (flowchart or relationship chart) based on the description I will provide.
-Requirements:
-Box Structure:
-Use rectangles for entities (e.g., client, server, database, etc.).
-All boxes should be uniformly sized unless otherwise specified.
-Text must be centered horizontally and vertically inside each box.
-Choose a suitable font size and font family so that the text is legible but doesn't overflow.
-Spacing:
-Ensure adequate horizontal and vertical spacing between boxes so that the text associated with connecting lines/arrows (like “API Request”, “DB Query”) is clearly visible and does not overlap with other elements.
-Add enough margin/padding to keep the layout breathable and uncluttered.
-Lines/Connections:
-Use clear lines or arrows to connect relevant boxes.
-Label each connection line with a short description (like "sends data", "receives response").
-Place the label above the line or near the midpoint and ensure it doesn’t overlap with other boxes or labels.
-Layout:
-Use a layout style that makes sense for the data (horizontal for linear flows, vertical for stacks, grid for networked systems).
-If complex, group related boxes using subtle visual cues (like background shading or grouping containers).
-Advanced Enhancements (optional but encouraged):
-Use different shapes (e.g., circles, parallelograms) for different types of components (e.g., decision points, APIs).
-Allow multi-line text wrapping inside boxes if needed.
-Highlight key paths or components with color or line weight.
-
-Enhance layout clarity by following these rules:
-Always ensure text labels (for boxes and lines) do not overlap with shapes or other text. Maintain at least 20px margin between any label and surrounding elements.
-Labels for connection lines must be:
-Horizontally centered on the line.
-Placed slightly above horizontal lines or to the right of vertical lines.
-Never inside boxes or overlapping arrows.
-Use arrows (not just lines) to indicate flow direction clearly.
-Ensure a minimum spacing of 40px between adjacent shapes to avoid visual clutter.
-If necessary, auto-adjust line lengths or box spacing to preserve readability and avoid overlap.
-Make sure all text remains fully visible (no clipping), and wrap multi-line labels when too long.
-Maintain visual hierarchy: text on boxes > arrows > labels on lines.
-If space becomes tight, reflow layout vertically or diagonally to maintain these spacing rules.
-Output the chart as a set of structured objects that include: type, x, y, width, height, text, and any connecting lines (with coordinates and labels). You may follow a structure like this:
-export interface BaseShape {
-    id?: number
-    type: string;
-    x: number;
-    y: number;
-    selected: boolean;
-    isResizing: boolean;
-    resizingEdge: string;
-    isDraging: boolean
-}
-
-export interface Text extends BaseShape {
-    type: "text";
-    content: string;
-    fontSize: number;
-    fontFamily: string;
-}
-
-export interface Rectangle extends BaseShape {
-    type: "rectangle";
-    width: number;
-    height: number;
-}
-
-export interface Circle extends BaseShape {
-    type: "circle";
-    radiusX: number;
-    radiusY : number
-}
-
-export interface Line extends BaseShape {
-    type: "line";
-    x1: number;
-    y1: number;
-    midX: number;
-    midY: number
-    Point: 'startingPoint' | "endingPoint" | "midPoint" | ""
-}
-
-export interface Pencil extends BaseShape {
-    type: 'pencil';
-    points: number[][]
-
-}
-
-and the final format should be like this
-
-export interface ShapesFromServer {
-    id?: number,
-    messageData:  Rectangle | Circle | Line | Pencil | Text
-} just return coordinate in the data type give for a ${inputValue}` 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
-    
-  });
-  console.log(response.data)
-  console.log(response.text)
-};
 
   useEffect(() => {
     game?.setTool(typeOfShapes);
@@ -175,6 +67,11 @@ export interface ShapesFromServer {
     }
   }
 
+  
+
+
+
+
   return (
     <div className="h-lvh">
       <ToolBar setTypeOFShapes={setTypeOfShapes} typeOfShapes={typeOfShapes} />
@@ -189,42 +86,26 @@ export interface ShapesFromServer {
           router={router}
         />
       )}
-      <div className="fixed bottom-6 left-6 bg-white/10 backdrop-blur-sm shadow-lg rounded-xl overflow-hidden border border-gray-200/20">
+      <div className="fixed bottom-6 left-6  backdrop-blur-sm shadow-lg rounded-xl overflow-hidden bg-white/10">
         <button
-          className="px-4 py-2 text-sm font-medium text-white hover:bg-black transition-all duration-200 border-r border-gray-200"
+          className="px-4 py-2 text-sm font-medium text-white hover:bg-white/5 transition-all duration-200 "
           onClick={() => invoker.undo()}
         >
-          Undo
+          <Undo2 size={18}/>
         </button>
         <button
-          className="px-4 py-2 text-sm font-medium text-white hover:bg-black transition-all duration-200"
+          className="px-4 py-2 text-sm font-medium text-white hover:bg-white/5 transition-all duration-200"
           onClick={() => invoker.redo()}
         >
-          Redo
+          <Redo2 size={18}/>
         </button>
       </div>
       <canvas
-        className="bg-black"
+        className=""
         width={window.innerWidth}
         height={window.innerHeight}
         ref={canvasRef}
       />
-      {/* Input Box */}
-      <div className="fixed bottom-6 right-6">
-        <input
-          type="text"
-          placeholder="Enter text here"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              apiCall(inputValue)
-              setInputValue(""); // Clear the input after pressing Enter
-            }
-          }}
-          className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-black focus:outline-none"
-        />
-      </div>
     </div>
   );
 }
@@ -237,13 +118,13 @@ function ToolBar({
   setTypeOFShapes: Dispatch<SetStateAction<TypeOfShapes>>;
 }) {
   return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2  backdrop-blur-sm shadow-lg rounded-xl px-3 py-2 flex gap-1 border border-gray-200/20">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2  backdrop-blur-sm shadow-lg rounded-xl px-3 py-2 flex gap-1 border border-gray-200/20">
       <ButtonComponent
         toolName="default"
         setTypeOFShapes={setTypeOFShapes}
         typeOfShapes={typeOfShapes}
       />
-      <div className="w-px h-6 bg-black mx-1" /> 
+      <div className="w-px h-6 mx-1" /> 
       <ButtonComponent
         toolName="rectangle"
         setTypeOFShapes={setTypeOFShapes}
@@ -269,7 +150,7 @@ function ToolBar({
         setTypeOFShapes={setTypeOFShapes}
         typeOfShapes={typeOfShapes}
       />
-      <div className="w-px h-6 bg-black mx-1" /> 
+      <div className="w-px h-6 mx-1" /> 
       <ButtonComponent
         toolName="panning"
         setTypeOFShapes={setTypeOFShapes}

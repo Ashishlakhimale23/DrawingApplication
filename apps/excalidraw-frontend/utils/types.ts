@@ -6,7 +6,7 @@ export interface BaseShape {
     selected: boolean;
     isResizing: boolean;
     resizingEdge: string;
-    isDraging: boolean
+    isDragging: boolean
 }
 
 export interface Text extends BaseShape {

@@ -50,7 +50,6 @@ class Invoker{
 
     }
 
-
 }
 
 export const invoker = Invoker.getInstance()

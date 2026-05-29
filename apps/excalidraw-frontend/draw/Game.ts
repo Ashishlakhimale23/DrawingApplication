@@ -23,7 +23,7 @@ export class Game {
     static typeOfShapes: TypeOfShapes = 'default';
     private roomId: string | null;
     private SelectedIndex: number = -1;
-    private isDraging: boolean = false
+    private isDragging: boolean = false
     private isEditing: boolean = false
     private Points: number[][] = []
     private rectangle: rectangle
@@ -38,423 +38,19 @@ export class Game {
     private previousX: number = 0
     private previousY: number = 0
     private isPanning: boolean = false
-    private setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>
-    
+    private setTypeOfShape: React.Dispatch<React.SetStateAction<TypeOfShapes>>
+
 
     Socket: WebSocket | null;
 
 
-    constructor(canvas: HTMLCanvasElement, roomId: string | null = '', Socket: WebSocket | null = null, existingShapes: ShapesFromServer[],setTypeOfShape : React.Dispatch<React.SetStateAction<TypeOfShapes>>) {
-        console.log(existingShapes)
+    constructor(canvas: HTMLCanvasElement, roomId: string | null = '', Socket: WebSocket | null = null, existingShapes: ShapesFromServer[], setTypeOfShape: React.Dispatch<React.SetStateAction<TypeOfShapes>>) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.roomId = roomId;
         this.Socket = Socket;
-        this.existingShapes = [
-    {
-        id: 1,
-        messageData: {
-            type: "rectangle",
-            x: 100,
-            y: 50,
-            width: 150,
-            height: 75,
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 2,
-        messageData: {
-            type: "text",
-            x: 175,
-            y: 87,
-            content: "Client",
-            fontSize: 14,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 3,
-        messageData: {
-            type: "rectangle",
-            x: 400,
-            y: 50,
-            width: 150,
-            height: 75,
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 4,
-        messageData: {
-            type: "text",
-            x: 475,
-            y: 87,
-            content: "Server",
-            fontSize: 14,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 5,
-        messageData: {
-            type: "line",
-            x: 250,
-            y: 87,
-            x1: 400,
-            y1: 87,
-            midX: 325,
-            midY: 70,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 6,
-        messageData: {
-            type: "text",
-            x: 325,
-            y: 60,
-            content: "Send Message",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-     {
-        id: 7,
-        messageData: {
-            type: "rectangle",
-            x: 400,
-            y: 200,
-            width: 150,
-            height: 75,
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 8,
-        messageData: {
-            type: "text",
-            x: 475,
-            y: 237,
-            content: "Database",
-            fontSize: 14,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 9,
-        messageData: {
-            type: "line",
-            x: 475,
-            y: 125,
-            x1: 475,
-            y1: 200,
-            midX: 490,
-            midY: 162.5,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 10,
-        messageData: {
-            type: "text",
-            x: 500,
-            y: 155,
-            content: "Store Message",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 11,
-        messageData: {
-            type: "line",
-            x: 400,
-            y: 87,
-            x1: 250,
-            y1: 87,
-            midX: 325,
-            midY: 105,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 12,
-        messageData: {
-            type: "text",
-            x: 325,
-            y: 95,
-            content: "Receive Message",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 13,
-        messageData: {
-            type: "line",
-            x: 475,
-            y: 275,
-            x1: 475,
-            y1: 350,
-            midX: 490,
-            midY: 312.5,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-     {
-        id: 14,
-        messageData: {
-            type: "text",
-            x: 500,
-            y: 305,
-            content: "Return Confirmation",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 15,
-        messageData: {
-            type: "line",
-            x: 550,
-            y: 87,
-            x1: 700,
-            y1: 87,
-            midX: 625,
-            midY: 70,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 16,
-        messageData: {
-            type: "text",
-            x: 625,
-            y: 60,
-            content: "Notify Client",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 17,
-        messageData: {
-            type: "rectangle",
-            x: 700,
-            y: 50,
-            width: 150,
-            height: 75,
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 18,
-        messageData: {
-            type: "text",
-            x: 775,
-            y: 87,
-            content: "Notification Service",
-            fontSize: 14,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 19,
-        messageData: {
-            type: "line",
-            x: 550,
-            y: 237,
-            x1: 700,
-            y1: 237,
-            midX: 625,
-            midY: 220,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 20,
-        messageData: {
-            type: "text",
-            x: 625,
-            y: 210,
-            content: "Update DB",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    }
-    ,
-    {
-        id: 21,
-        messageData: {
-            type: "line",
-            x: 775,
-            y: 125,
-            x1: 775,
-            y1: 200,
-            midX: 790,
-            midY: 162.5,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-     {
-        id: 22,
-        messageData: {
-            type: "text",
-            x: 800,
-            y: 155,
-            content: "Get Info",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 23,
-        messageData: {
-            type: "line",
-            x: 775,
-            y: 275,
-            x1: 775,
-            y1: 350,
-            midX: 790,
-            midY: 312.5,
-            Point: "",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-     {
-        id: 24,
-        messageData: {
-            type: "text",
-            x: 800,
-            y: 305,
-            content: "Send Notification",
-            fontSize: 12,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-      {
-        id: 25,
-        messageData: {
-            type: "rectangle",
-            x: 700,
-            y: 350,
-            width: 150,
-            height: 75,
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    },
-    {
-        id: 26,
-        messageData: {
-            type: "text",
-            x: 775,
-            y: 387,
-            content: "User Device",
-            fontSize: 14,
-            fontFamily: "Arial",
-            selected: false,
-            isResizing: false,
-            resizingEdge: "",
-            isDraging: false
-        }
-    }
-,...existingShapes];
-    
+        this.existingShapes = [...existingShapes];
+
         this.rectangle = new rectangle()
         this.circle = new circle()
         this.line = new line()
@@ -519,17 +115,23 @@ export class Game {
 
     }
     reDrawShapes() {
+    const left = -this.viewPort.x/ this.viewPort.scale;
+    const right = left + this.canvas.width / this.viewPort.scale;
+    const top = -this.viewPort.y/ this.viewPort.scale;
+    const bottom = top + this.canvas.height / this.viewPort.scale;
+
+
 
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.setTransform(this.viewPort.scale, 0, 0, this.viewPort.scale, this.viewPort.x, this.viewPort.y);
 
-        this.ctx.fillStyle = 'black';
-        this.ctx.fillRect(0, 0, this.canvas.width / this.viewPort.scale, this.canvas.height / this.viewPort.scale);
-
-
+        this.ctx.fillStyle = 'rgb(18,18,18)';
+         
+        this.ctx.fillRect(left, top, right - left, bottom - top);
         this.existingShapes.forEach((element) => {
+
             switch (element.messageData.type) {
                 case "rectangle":
                     this.rectangle.draw(element.messageData.x, element.messageData.y, element.messageData.width, element.messageData.height, this.ctx);
@@ -551,6 +153,7 @@ export class Game {
 
         if (this.SelectedIndex !== -1) {
             this.existingShapes.forEach((element) => {
+                console.log(this.existingShapes)
                 if (element.messageData.selected) {
                     switch (element.messageData.type) {
                         case "rectangle":
@@ -578,7 +181,7 @@ export class Game {
     }
 
     onMessageFromSocket() {
-        if(!this.Socket){
+        if (!this.Socket) {
             return
         }
         this.Socket.onmessage = (event) => {
@@ -591,7 +194,7 @@ export class Game {
             }
 
 
-            if(message.type == "drawing"){
+            if (message.type == "drawing") {
                 const newShapeIndex = this.existingShapes.findIndex(
                     (element) => element.id === undefined
                 );
@@ -602,7 +205,7 @@ export class Game {
                     this.reDrawShapes();
                 } else {
                     this.existingShapes.push({
-                        id:undefined,
+                        id: undefined,
                         messageData,
                     });
 
@@ -611,7 +214,7 @@ export class Game {
 
             }
 
-            if(message.type === "moved"){
+            if (message.type === "moved") {
                 const index = this.existingShapes.findIndex(element => element.id == message.id)
                 this.existingShapes[index].messageData = messageData
 
@@ -665,7 +268,7 @@ export class Game {
             }
 
 
-            
+
 
         };
     }
@@ -673,21 +276,23 @@ export class Game {
     setTool(tool: TypeOfShapes) {
         Game.typeOfShapes = tool;
         this.setTypeOfShape(tool)
-        
+
     }
 
-    static getTypeOfShape(){
+    static getTypeOfShape() {
         return Game.typeOfShapes
     }
+    
     updatePanning(clientX: number, clientY: number) {
-        const localX = clientX;
-        const localY = clientY;
+     
+        const localX = clientX - this.previousX;
+        const localY = clientY - this.previousY;
 
-        this.viewPort.x += localX - this.previousX;
-        this.viewPort.y += localY - this.previousY;
+        this.viewPort.x += localX ;
+        this.viewPort.y += localY ;
 
-        this.previousX = localX;
-        this.previousY = localY;
+        this.previousX = clientX;
+        this.previousY = clientY;
     };
 
 
@@ -700,7 +305,7 @@ export class Game {
                     const height = this.MovingPointY - this.InitialPointY
                     this.rectangle.draw(this.InitialPointX, this.InitialPointY, width, height, this.ctx)
 
-                    if(this.Socket && this.roomId?.length){
+                    if (this.Socket && this.roomId?.length) {
                         this.Socket.send(
                             JSON.stringify({
                                 type: "drawing",
@@ -715,7 +320,7 @@ export class Game {
                                         selected: false,
                                         isResizing: false,
                                         resizingEdge: "",
-                                        isDraging: false
+                                        isDragging: false
                                     }
                                 )
                             })
@@ -750,7 +355,7 @@ export class Game {
                                         selected: false,
                                         isResizing: false,
                                         resizingEdge: "",
-                                        isDraging: false
+                                        isDragging: false
                                     }
                                 )
                             })
@@ -791,7 +396,7 @@ export class Game {
                                         selected: false,
                                         isResizing: false,
                                         resizingEdge: "",
-                                        isDraging: false
+                                        isDragging: false
                                     }
                                 )
                             })
@@ -805,7 +410,7 @@ export class Game {
                     }
                     this.pencil.draw(pencilShape as Pencil, this.ctx)
 
-                    if(this.Socket && this.roomId){
+                    if (this.Socket && this.roomId) {
                         this.Socket.send(
                             JSON.stringify({
                                 type: "drawing",
@@ -818,7 +423,7 @@ export class Game {
                                     selected: false,
                                     isResizing: false,
                                     resizingEdge: "",
-                                    isDraging: false,
+                                    isDragging: false,
                                 })
                             })
                         );
@@ -864,13 +469,13 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: false
+                                isDragging: false
                             }
                         )
                     })
                 )
             }
-            
+
         } else if (shape.type == "circle") {
             this.circle.resizingLogic(shape, this.MovingPointX, this.MovingPointY)
             if (this.Socket && this.roomId?.length) {
@@ -890,7 +495,7 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: false
+                                isDragging: false
                             }
                         )
                     })
@@ -918,7 +523,7 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: false,
+                                isDragging: false,
                                 Point: ""
                             }
                         )
@@ -947,7 +552,7 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: false,
+                                isDragging: false,
                                 Point: ""
                             }
                         )
@@ -958,7 +563,7 @@ export class Game {
         } else if (shape.type == "pencil") {
 
             this.pencil.resizingLogic(shape, this.MovingPointX, this.MovingPointY)
-            if(this.Socket && this.roomId?.length){
+            if (this.Socket && this.roomId?.length) {
                 this.Socket.send(
                     JSON.stringify({
                         type: "moving",
@@ -973,14 +578,14 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: false,
+                                isDragging: false,
                                 Point: ""
                             }
                         )
                     })
                 )
             }
-            
+
         }
 
         this.reDrawShapes()
@@ -1046,7 +651,7 @@ export class Game {
 
 
     Drag() {
-        if (this.SelectedIndex === -1 || !this.isDraging || !this.existingShapes[this.SelectedIndex].messageData.isDraging) {
+        if (this.SelectedIndex === -1 || !this.isDragging || !this.existingShapes[this.SelectedIndex].messageData.isDragging) {
             return
         }
 
@@ -1078,7 +683,7 @@ export class Game {
                                     selected: false,
                                     isResizing: false,
                                     resizingEdge: "",
-                                    isDraging: false
+                                    isDragging: false
                                 }
                             )
                         })
@@ -1108,7 +713,7 @@ export class Game {
                                     selected: false,
                                     isResizing: false,
                                     resizingEdge: "",
-                                    isDraging: false
+                                    isDragging: false
                                 }
                             )
                         })
@@ -1145,7 +750,7 @@ export class Game {
                                     selected: false,
                                     isResizing: false,
                                     resizingEdge: "",
-                                    isDraging: false
+                                    isDragging: false
                                 }
                             )
                         })
@@ -1174,7 +779,7 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: true,
+                                isDragging: true,
                                 fontSize: shape.fontSize,
                                 fontFamily: shape.fontFamily
                             })
@@ -1212,7 +817,7 @@ export class Game {
                                 selected: false,
                                 isResizing: false,
                                 resizingEdge: "",
-                                isDraging: false,
+                                isDragging: false,
                             })
                         })
                     );
@@ -1264,8 +869,8 @@ export class Game {
 
 
 
-        if (!selectedShape.messageData) return;
-
+        console.log(selectedShape)
+        if(!selectedShape || !selectedShape.messageData || selectedShape.messageData == undefined) return;
         switch (selectedShape.messageData.type) {
             case "rectangle":
                 this.handleRectangle(selectedShape, draggingShapeIndex);
@@ -1282,12 +887,9 @@ export class Game {
             case "pencil":
                 this.handlePencil(selectedShape, draggingShapeIndex)
                 break
-
-
-
         }
 
-        if (!this.isDraging && !this.isResizing) this.deselectShape(this.SelectedIndex);
+        if (!this.isDragging && !this.isResizing) this.deselectShape(this.SelectedIndex);
     };
 
     handleText = (shape: ShapesFromServer, draggingShapeIndex: boolean) => {
@@ -1351,9 +953,9 @@ export class Game {
     setResizing = (shape: ShapesFromServer, resizingEdge: string = "") => {
         this.oldshape = JSON.parse(JSON.stringify(shape))
         shape.messageData.isResizing = true;
-        shape.messageData.isDraging = false;
+        shape.messageData.isDragging = false;
         this.isResizing = true
-        this.isDraging = false;
+        this.isDragging = false;
         shape.messageData.resizingEdge = resizingEdge;
 
     };
@@ -1361,8 +963,8 @@ export class Game {
     setDragging = (messageData: Shape) => {
         this.originalCordinates.x = messageData.x
         this.originalCordinates.y = messageData.y
-        messageData.isDraging = true;
-        this.isDraging = true;
+        messageData.isDragging = true;
+        this.isDragging = true;
         messageData.isResizing = false;
         messageData.resizingEdge = "";
     };
@@ -1373,7 +975,7 @@ export class Game {
         );
 
         if (selectedIndex !== -1) {
-            this.isDraging = false
+            this.isDragging = false
 
             this.SelectedIndex = selectedIndex;
             document.body.style.cursor = 'default'
@@ -1396,7 +998,7 @@ export class Game {
 
             this.existingShapes.forEach(shape => shape.messageData.selected = false);
             this.SelectedIndex = -1
-            this.isDraging = false
+            this.isDragging = false
             this.isResizing = false
             this.reDrawShapes();
         }
@@ -1406,7 +1008,7 @@ export class Game {
     handleDrawingMode = () => {
 
         this.isDrawing = true;
-        this.isDraging = false;
+        this.isDragging = false;
         if (this.SelectedIndex !== -1) {
             this.existingShapes[this.SelectedIndex].messageData.selected = false
             this.SelectedIndex = -1
@@ -1432,13 +1034,13 @@ export class Game {
                     selected: false,
                     isResizing: false,
                     resizingEdge: "",
-                    isDraging: false,
+                    isDragging: false,
                     fontSize: 30,
                     fontFamily: 'san'
                 }
             });
 
-            if(this.Socket && this.roomId?.length){
+            if (this.Socket && this.roomId?.length) {
 
                 this.Socket.send(
                     JSON.stringify({
@@ -1452,14 +1054,14 @@ export class Game {
                             selected: false,
                             isResizing: false,
                             resizingEdge: "",
-                            isDraging: false,
+                            isDragging: false,
                             fontSize: 30,
                             fontFamily: 'san-serif  '
                         })
                     })
                 );
 
-            }else{
+            } else {
                 this.insertShapeApi(JSON.stringify({
                     x: x,
                     y: y,
@@ -1468,13 +1070,13 @@ export class Game {
                     selected: false,
                     isResizing: false,
                     resizingEdge: "",
-                    isDraging: false,
+                    isDragging: false,
                     fontSize: 30,
                     fontFamily: 'san-serif  '
                 }))
 
             }
-            }
+        }
 
 
 
@@ -1488,7 +1090,7 @@ export class Game {
 
         this.existingShapes.splice(this.SelectedIndex, 0, shape)
 
-        if(this.Socket && this.roomId?.length){
+        if (this.Socket && this.roomId?.length) {
             this.Socket.send(
                 JSON.stringify({
                     type: "edited",
@@ -1502,13 +1104,13 @@ export class Game {
                         selected: false,
                         isResizing: false,
                         resizingEdge: "",
-                        isDraging: false,
+                        isDragging: false,
                         fontSize: shape.messageData.fontSize,
                         fontFamily: 'san-serif  '
                     })
                 })
             )
-        }else{
+        } else {
             this.EditShapeApi(JSON.stringify({
                 x: shape.messageData.x,
                 y: shape.messageData.y,
@@ -1517,7 +1119,7 @@ export class Game {
                 selected: false,
                 isResizing: false,
                 resizingEdge: "",
-                isDraging: false,
+                isDragging: false,
                 fontSize: shape.messageData.fontSize,
                 fontFamily: 'san-serif  '
             }), shape.id!)
@@ -1595,8 +1197,9 @@ export class Game {
                 break;
             case "panning":
                 this.isPanning = true
-                this.previousX = e.clientX
-                this.previousY = e.clientY
+                const rect = this.canvas.getBoundingClientRect();
+                this.previousX = e.clientX - rect.left
+                this.previousY = e.clientY - rect.top
                 break
             default:
                 null
@@ -1605,36 +1208,377 @@ export class Game {
     }
 
 
-    async insertShapeApi(messageData: string) {
-        await api.post("/user/insertchat", {
+async insertShapeApi(messageData: string): Promise<number> {
+    try {
+        const data = await api.post("/user/insertchat", {
             message: messageData
-        })
-
+        });
+        return data.data.message;
+    } catch (e) {
+        throw e;
     }
+}
 
     // undo redo
     async addShape(shape: ShapesFromServer) {
-        this.existingShapes.push(shape)
-        if(this.Socket && this.roomId?.length){
+    this.existingShapes.push(shape)
+    if (this.Socket && this.roomId?.length) {
+        this.Socket.send(
+            JSON.stringify({
+                type: "created",
+                roomId: this.roomId,
+                message: JSON.stringify(shape.messageData)
+            })
+        )
+    } else {
+
+        try {
+            const id = await this.insertShapeApi(JSON.stringify(shape.messageData));
+            this.existingShapes[this.existingShapes.length - 1].id = id;
+        } catch (e) {
+            // ignore
+        }
+
+    }
+
+    this.reDrawShapes()
+}
+
+removeShape(shape: ShapesFromServer) {
+    const findIndex = this.existingShapes.findIndex(element => element.id == shape.id)
+    this.existingShapes.splice(findIndex, 1)
+    if (this.Socket && this.roomId?.length) {
+        this.Socket.send(
+            JSON.stringify({
+                type: "delete",
+                roomId: this.roomId,
+                id: shape.id,
+            })
+        )
+    } else {
+
+        this.DeleteShapeApi(shape.id!)
+    }
+
+    this.reDrawShapes()
+}
+
+
+ResizedShape(shape: ShapesFromServer, dimensions: Shape) {
+    Object.assign(shape.messageData, dimensions)
+    this.reDrawShapes()
+}
+
+// cursor change
+getOnshape() {
+    let result = this.existingShapes.some(shape => {
+        const result = this.utilsFunctions.getIfOnAnyShapesEdge(shape.messageData, this.MovingPointX, this.MovingPointY)
+        return result
+
+    })
+    return result
+}
+
+updateZooming(clientX: number, clientY: number, deltaY: number) {
+    const previousScale = this.viewPort.scale;
+
+    const zoomSensitivity = 0.06;
+    const minScale = 0.1;
+    const maxScale = 10;
+
+    let newScale = previousScale - deltaY * zoomSensitivity;
+
+    newScale = Math.max(minScale, Math.min(maxScale, newScale));
+
+    if (newScale !== previousScale) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
+
+        const worldX = (mouseX - this.viewPort.x) / previousScale;
+        const worldY = (mouseY - this.viewPort.y) / previousScale;
+
+        this.viewPort.scale = newScale;
+
+        this.viewPort.x = mouseX - worldX * newScale;
+        this.viewPort.y = mouseY - worldY * newScale;
+
+        this.reDrawShapes();
+    }
+}
+
+MouseMove = (e: MouseEvent) => {
+    this.MovingPointX = (e.clientX - this.viewPort.x) / this.viewPort.scale;
+    this.MovingPointY = (e.clientY - this.viewPort.y) / this.viewPort.scale
+
+    if (Game.typeOfShapes !== "default" && Game.typeOfShapes !== "panning") {
+        document.body.style.cursor = "crosshair";
+        if (this.isDrawing && this.SelectedIndex == -1 && this.canvas && !this.isDragging) {
+            if (Game.typeOfShapes === "pencil") {
+                this.Points.push([this.MovingPointX, this.MovingPointY]);
+            }
+            this.reDrawShapes();
+            this.Draw();
+        }
+
+    } else if (Game.typeOfShapes === 'panning' && this.isPanning) {
+        document.body.style.cursor = "grabbing"
+        this.updatePanning(e.clientX, e.clientY)
+        this.reDrawShapes()
+
+    } else {
+        if (!this.isEditing && this.SelectedIndex !== -1) {
+            const shape = this.existingShapes[this.SelectedIndex].messageData;
+
+            if (shape.isResizing && this.isResizing) {
+                this.Resize();
+                this.reDrawShapes();
+            } else if (this.isDragging && shape.isDragging) {
+                this.Drag();
+                this.reDrawShapes();
+            } else {
+
+
+
+                let edge = this.utilsFunctions.getOnWhichEdge(shape, this.MovingPointX, this.MovingPointY)
+
+
+                if (edge) {
+                    switch (edge) {
+                        case 'top':
+                        case 'bottom':
+                            document.body.style.cursor = "ns-resize";
+                            break;
+                        case 'left':
+                        case 'right':
+                            document.body.style.cursor = "ew-resize";
+                            break;
+                        case 'top-left':
+                        case 'bottom-right':
+                            document.body.style.cursor = "nwse-resize";
+                            break;
+                        case 'top-right':
+                        case 'bottom-left':
+                            document.body.style.cursor = "nesw-resize";
+                            break;
+
+                        case "startingPoint":
+                        case "endingPoint":
+                        case "midPoint":
+                            document.body.style.cursor = 'pointer'
+                            break
+                        default:
+                            document.body.style.cursor = "default";
+                    }
+                } else if (this.getDraggingShape(this.MovingPointX, this.MovingPointY)) {
+                    document.body.style.cursor = "move";
+                } else {
+                    document.body.style.cursor = "default";
+                }
+            }
+        } else {
+            const isOnShape = this.getOnshape();
+            document.body.style.cursor = isOnShape ? "move" : "default";
+        }
+    }
+};
+
+
+    async EditShapeApi(messageData: string, id: number){
+    await api.post('/user/editchat', { message: messageData, id: id })
+}
+
+    async DeleteShapeApi(id: number){
+    await api.post("/user/deletechat", { id: id })
+
+}
+
+MouseUp = (e: MouseEvent) => {
+
+    if (this.isDrawing) {
+        let shape: ShapesFromServer
+
+        switch (Game.typeOfShapes) {
+            case "rectangle":
+                shape = {
+                    messageData: {
+                        x: this.InitialPointX,
+                        y: this.InitialPointY,
+                        width: this.MovingPointX - this.InitialPointX,
+                        height: this.MovingPointY - this.InitialPointY,
+                        type: "rectangle",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDragging: false
+                    }
+
+                }
+
+                break;
+            case "circle":
+                const radiusX = Math.abs(this.MovingPointX - this.InitialPointX)
+                const radiusY = Math.abs(this.MovingPointY - this.InitialPointY)
+                shape = {
+                    messageData: {
+                        x: this.InitialPointX,
+                        y: this.InitialPointY,
+                        radiusX: radiusX,
+                        radiusY: radiusY,
+                        type: "circle",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDragging: false
+                    }
+
+                }
+
+
+                break;
+            case "line":
+
+                const midX = (this.InitialPointX + this.MovingPointX) / 2
+                const midY = (this.InitialPointY + this.MovingPointY) / 2
+                shape = {
+                    messageData: {
+                        x: this.InitialPointX,
+                        y: this.InitialPointY,
+                        x1: this.MovingPointX,
+                        y1: this.MovingPointY,
+                        midX: midX,
+                        midY: midY,
+                        type: "line",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDragging: false,
+                        Point: ""
+                    }
+
+                }
+
+
+                break;
+            case "pencil":
+                shape = {
+                    messageData: {
+                        x: this.InitialPointX,
+                        y: this.InitialPointY,
+                        points: this.Points,
+                        type: "pencil",
+                        selected: false,
+                        isResizing: false,
+                        resizingEdge: "",
+                        isDragging: false,
+                    }
+
+                }
+
+                break
+            case 'text':
+                return
+            default:
+                return
+
+        }
+
+
+        invoker.executeCommand(new DrawCommand(this, shape))
+        this.isDrawing = false
+        this.setTool('default')
+        document.body.style.cursor = 'default'
+        this.Points = []
+
+    }
+
+    if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isResizing && !this.isDragging && this.oldshape !== null) {
+        let shape = this.existingShapes[this.SelectedIndex]
+        shape.messageData.isDragging = false
+        shape.messageData.isResizing = false
+        shape.messageData.resizingEdge = ''
+        shape.messageData.selected = false
+        if (shape.messageData.type == 'line') {
+            shape.messageData.Point = ''
+        }
+
+        let old = { ...this.oldshape.messageData }
+        let newshape = { ...shape.messageData }
+
+        invoker.setCommand(new ResizedCommand(this, shape, old, newshape))
+
+        if (this.Socket && this.roomId?.length) {
             this.Socket.send(
                 JSON.stringify({
-                    type: "created",
+                    type: "resized",
                     roomId: this.roomId,
+                    id: shape.id,
                     message: JSON.stringify(shape.messageData)
                 })
             )
-        }else{
-
-            this.insertShapeApi(JSON.stringify(shape.messageData))
+        } else {
+            this.EditShapeApi(JSON.stringify(shape.messageData), shape.id!)
         }
 
-        this.reDrawShapes()
+
+        shape.messageData.selected = true
+
+        shape.messageData.isResizing = false
+        shape.messageData.resizingEdge = ""
+        this.oldshape = null
+        this.isResizing = false
+
     }
 
-    removeShape(shape: ShapesFromServer) {
-        const findIndex = this.existingShapes.findIndex(element => element.id == shape.id)
-        this.existingShapes.splice(findIndex, 1)
-        if(this.Socket && this.roomId?.length){
+    if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isDragging && this.isDragging) {
+
+        let shape = this.existingShapes[this.SelectedIndex]
+        shape.messageData.isDragging = false
+        shape.messageData.selected = false
+        let dx = shape.messageData.x - this.originalCordinates.x
+        let dy = shape.messageData.y - this.originalCordinates.y
+
+        invoker.setCommand(new DraggedCommand(this, shape, dx, dy))
+
+        if (this.Socket && this.roomId?.length) {
+            this.Socket.send(
+                JSON.stringify({
+                    type: "draged",
+                    roomId: this.roomId,
+                    id: shape.id,
+                    message: JSON.stringify(shape.messageData)
+                })
+            )
+        } else {
+
+            this.EditShapeApi(JSON.stringify(shape.messageData), shape.id!)
+        }
+
+        shape.messageData.selected = true
+        this.originalCordinates.x = 0
+        this.originalCordinates.y = 0
+        this.isDragging = false
+    }
+
+    this.InitialPointX = 0
+    this.InitialPointY = 0
+    this.MovingPointX = 0
+    this.MovingPointY = 0
+    this.isPanning = false
+    this.setTool("default")
+
+}
+
+KeyDown = (e: KeyboardEvent) => {
+    if (this.SelectedIndex === -1 || this.isEditing) {
+        return
+    }
+    if (e.key == "Backspace" || e.key == 'Delete') {
+
+        const shape = this.existingShapes[this.SelectedIndex]
+        this.existingShapes.splice(this.SelectedIndex, 1)
+
+        if (this.Socket && this.roomId?.length) {
             this.Socket.send(
                 JSON.stringify({
                     type: "delete",
@@ -1642,410 +1586,78 @@ export class Game {
                     id: shape.id,
                 })
             )
-        }else{
+
+        } else {
 
             this.DeleteShapeApi(shape.id!)
         }
 
+
+        shape.messageData.selected = false
+        this.SelectedIndex = -1
         this.reDrawShapes()
+
     }
 
-
-    ResizedShape(shape: ShapesFromServer, dimensions: Shape) {
-        Object.assign(shape.messageData, dimensions)
-        this.reDrawShapes()
-    }
-
-    // cursor change
-    getOnshape() {
-        let result = this.existingShapes.some(shape => {
-            const result = this.utilsFunctions.getIfOnAnyShapesEdge(shape.messageData, this.MovingPointX, this.MovingPointY)
-            return result
-
-        })
-        return result
-    }
-
-    updateZooming(clientX:number, clientY:number, deltaY:number) {
-    const previousScale = this.viewPort.scale;
-    
-    const zoomSensitivity = 0.06;
-    const minScale = 0.1;  
-    const maxScale = 10;   
-    
-    let newScale = previousScale - deltaY * zoomSensitivity;
-    
-    newScale = Math.max(minScale, Math.min(maxScale, newScale));
-    
-    if (newScale !== previousScale) {
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = clientX - rect.left;
-        const mouseY = clientY - rect.top;
-        
-        const worldX = (mouseX - this.viewPort.x) / previousScale;
-        const worldY = (mouseY - this.viewPort.y) / previousScale;
-        
-        this.viewPort.scale = newScale;
-        
-        this.viewPort.x = mouseX - worldX * newScale;
-        this.viewPort.y = mouseY - worldY * newScale;
-        
-        this.reDrawShapes();
-    }
 }
 
-    MouseMove = (e: MouseEvent) => {
-        this.MovingPointX = (e.clientX - this.viewPort.x) / this.viewPort.scale;
-        this.MovingPointY = (e.clientY - this.viewPort.y) / this.viewPort.scale
+DoubleClick = (e: MouseEvent) => {
+    if (this.SelectedIndex == -1) {
+        return
+    }
+    const shape = this.existingShapes[this.SelectedIndex]
 
-        if (Game.typeOfShapes !== "default" && Game.typeOfShapes !== "panning") {
-            document.body.style.cursor = "crosshair";
-            if (this.isDrawing && this.SelectedIndex == -1 && this.canvas && !this.isDraging) {
-                if (Game.typeOfShapes === "pencil") {
-                    this.Points.push([this.MovingPointX, this.MovingPointY]);
-                }
-                this.reDrawShapes();
-                this.Draw();
-            }
-
-        } else if (Game.typeOfShapes === 'panning' && this.isPanning) {
-            document.body.style.cursor = "grabbing"
-            this.updatePanning(e.clientX, e.clientY)
-            this.reDrawShapes()
-
-        } else {
-            if (!this.isEditing && this.SelectedIndex !== -1) {
-                const shape = this.existingShapes[this.SelectedIndex].messageData;
-
-                if (shape.isResizing && this.isResizing) {
-                    this.Resize();
-                    this.reDrawShapes();
-                } else if (this.isDraging && shape.isDraging) {
-                    this.Drag();
-                    this.reDrawShapes();
-                } else {
-
-                   
-
-                    let edge = this.utilsFunctions.getOnWhichEdge(shape, this.MovingPointX, this.MovingPointY)
-                    
-
-                    if (edge) {
-                        switch (edge) {
-                            case 'top':
-                            case 'bottom':
-                                document.body.style.cursor = "ns-resize";
-                                break;
-                            case 'left':
-                            case 'right':
-                                document.body.style.cursor = "ew-resize";
-                                break;
-                            case 'top-left':
-                            case 'bottom-right':
-                                document.body.style.cursor = "nwse-resize";
-                                break;
-                            case 'top-right':
-                            case 'bottom-left':
-                                document.body.style.cursor = "nesw-resize";
-                                break;
-
-                            case "startingPoint":
-                            case "endingPoint":
-                            case "midPoint":
-                                document.body.style.cursor = 'pointer'
-                                break
-                            default:
-                                document.body.style.cursor = "default";
-                        }
-                    } else if (this.getDraggingShape(this.MovingPointX, this.MovingPointY)) {
-                        document.body.style.cursor = "move";
-                    } else {
-                        document.body.style.cursor = "default";
-                    }
-                }
-            } else {
-                const isOnShape = this.getOnshape();
-                document.body.style.cursor = isOnShape ? "move" : "default";
-            }
-        }
-    };
-
-
-    async EditShapeApi(messageData:string,id:number){
-        await api.post('/user/editchat',{message:messageData,id:id})
+    if (shape.messageData.type !== 'text') {
+        return
     }
 
-    async DeleteShapeApi(id:number){
-        await api.post("/user/deletechat",{id:id})
+    const result = this.text.insideShape(shape.messageData, e.clientX, e.clientY, this.ctx)
 
-    }
-
-    MouseUp = (e: MouseEvent) => {
-
-        if (this.isDrawing) {
-            let shape: ShapesFromServer
-
-            switch (Game.typeOfShapes) {
-                case "rectangle":
-                    shape = {
-                        messageData: {
-                            x: this.InitialPointX,
-                            y: this.InitialPointY,
-                            width: this.MovingPointX - this.InitialPointX,
-                            height: this.MovingPointY - this.InitialPointY,
-                            type: "rectangle",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false
-                        }
-
-                    }
-
-
-                    break;
-                case "circle":
-                    const radiusX = Math.abs(this.MovingPointX - this.InitialPointX)
-                    const radiusY = Math.abs(this.MovingPointY - this.InitialPointY)
-                    shape = {
-                        messageData: {
-                            x: this.InitialPointX,
-                            y: this.InitialPointY,
-                            radiusX: radiusX,
-                            radiusY: radiusY,
-                            type: "circle",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false
-                        }
-
-                    }
-
-
-                    break;
-                case "line":
-
-                    const midX = (this.InitialPointX + this.MovingPointX) / 2
-                    const midY = (this.InitialPointY + this.MovingPointY) / 2
-                    shape = {
-                        messageData: {
-                            x: this.InitialPointX,
-                            y: this.InitialPointY,
-                            x1: this.MovingPointX,
-                            y1: this.MovingPointY,
-                            midX: midX,
-                            midY: midY,
-                            type: "line",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false,
-                            Point: ""
-                        }
-
-                    }
-
-
-                    break;
-                case "pencil":
-                    shape = {
-                        messageData: {
-                            x: this.InitialPointX,
-                            y: this.InitialPointY,
-                            points: this.Points,
-                            type: "pencil",
-                            selected: false,
-                            isResizing: false,
-                            resizingEdge: "",
-                            isDraging: false,
-                        }
-
-                    }
-
-                    break
-                case 'text':
-                    return 
-                default:
-                    return
-
-            }
-
-
-            invoker.executeCommand(new DrawCommand(this, shape))
-            this.isDrawing = false
-            this.setTool('default')
-            document.body.style.cursor = 'default'
-            this.Points = []
-
-        }
-
-        if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isResizing && !this.isDraging && this.oldshape !== null) {
-            let shape = this.existingShapes[this.SelectedIndex]
-            shape.messageData.isDraging = false
-            shape.messageData.isResizing = false
-            shape.messageData.resizingEdge = ''
-            shape.messageData.selected = false
-            if (shape.messageData.type == 'line') {
-                shape.messageData.Point = ''
-            }
-
-            let old = { ...this.oldshape.messageData }
-            let newshape = { ...shape.messageData }
-
-            invoker.setCommand(new ResizedCommand(this, shape, old, newshape))
-
-            if(this.Socket && this.roomId?.length){
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "resized",
-                        roomId: this.roomId,
-                        id: shape.id,
-                        message: JSON.stringify(shape.messageData)
-                    })
-                )
-            }else{
-                this.EditShapeApi(JSON.stringify(shape.messageData), shape.id!)
-            }
-
-
-            shape.messageData.selected = true
-
-            shape.messageData.isResizing = false
-            shape.messageData.resizingEdge = ""
-            this.oldshape = null
-            this.isResizing = false
-
-        }
-
-        if (this.SelectedIndex !== -1 && this.existingShapes[this.SelectedIndex].messageData.isDraging && this.isDraging) {
-
-            let shape = this.existingShapes[this.SelectedIndex]
-            shape.messageData.isDraging = false
-            shape.messageData.selected = false
-            let dx = shape.messageData.x - this.originalCordinates.x
-            let dy = shape.messageData.y - this.originalCordinates.y
-
-            invoker.setCommand(new DraggedCommand(this, shape, dx, dy))
-
-            if (this.Socket && this.roomId?.length) {
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "draged",
-                        roomId: this.roomId,
-                        id: shape.id,
-                        message: JSON.stringify(shape.messageData)
-                    })
-                )
-            }else{
-
-                this.EditShapeApi(JSON.stringify(shape.messageData), shape.id!)
-            }
-
-            shape.messageData.selected = true
-            this.originalCordinates.x = 0
-            this.originalCordinates.y = 0
-            this.isDraging = false
-        }
-
-        this.InitialPointX = 0
-        this.InitialPointY = 0
-        this.MovingPointX = 0
-        this.MovingPointY = 0
-        this.isPanning = false
-        this.setTool("default")
-
-    }
-
-    KeyDown = (e: KeyboardEvent) => {
-        if (this.SelectedIndex === -1 || this.isEditing) {
-            return
-        }
-        if (e.key == "Backspace" || e.key == 'Delete') {
-
-            const shape = this.existingShapes[this.SelectedIndex]
-            this.existingShapes.splice(this.SelectedIndex, 1)
-
-            if (this.Socket && this.roomId?.length) {
-                this.Socket.send(
-                    JSON.stringify({
-                        type: "delete",
-                        roomId: this.roomId,
-                        id: shape.id,
-                    })
-                )
-
-            }else{
-
-                this.DeleteShapeApi(shape.id!)
-            }
-
-
-            shape.messageData.selected = false
-            this.SelectedIndex = -1
-            this.reDrawShapes()
-
-        }
-
-    }
-
-    DoubleClick = (e: MouseEvent) => {
-        if (this.SelectedIndex == -1) {
-            return
-        }
-        const shape = this.existingShapes[this.SelectedIndex]
-
-        if (shape.messageData.type !== 'text') {
-            return
-        }
-
-        const result = this.text.insideShape(shape.messageData, e.clientX, e.clientY, this.ctx)
-
-        if (result) {
-            this.isEditing = true
-            this.existingShapes.splice(this.SelectedIndex, 1)
-            this.reDrawShapes()
-            this.text.createTextArea(shape, shape.messageData.x, shape.messageData.y, this.SelectedIndex, this.handlekeydown)
-            this.SelectedIndex = -1
-
-        }
-
-
-    }
-
-    onMouseWheel = (e:WheelEvent) => {
-            e.preventDefault()
-            this.updateZooming(e.clientX,e.clientY,e.deltaY);
-            this.reDrawShapes();
-        };
-
-
-    initMouseHandlers() {
-
-        this.canvas.addEventListener("mousedown", this.MouseDown)
-        this.canvas.addEventListener("mousemove", this.MouseMove)
-        this.canvas.addEventListener("mouseup", this.MouseUp)
-        this.canvas.addEventListener("wheel",this.onMouseWheel)
-        window.addEventListener("resize", (e) => {
-            this.canvas.width = window.innerWidth
-            this.canvas.height = window.innerHeight
-
-        })
-        window.addEventListener("keydown", this.KeyDown)
-        window.addEventListener("dblclick", this.DoubleClick)
+    if (result) {
+        this.isEditing = true
+        this.existingShapes.splice(this.SelectedIndex, 1)
+        this.reDrawShapes()
+        this.text.createTextArea(shape, shape.messageData.x, shape.messageData.y, this.SelectedIndex, this.handlekeydown)
+        this.SelectedIndex = -1
 
     }
 
 
-    destroy() {
+}
+
+onMouseWheel = (e: WheelEvent) => {
+    e.preventDefault()
+    this.updateZooming(e.clientX, e.clientY, e.deltaY);
+    this.reDrawShapes();
+};
 
 
-        this.canvas.removeEventListener("mousedown", this.MouseDown)
-        this.canvas.removeEventListener("mouseup", this.MouseUp)
-        this.canvas.removeEventListener("mousemove", this.MouseMove)
+initMouseHandlers() {
+
+    this.canvas.addEventListener("mousedown", this.MouseDown)
+    this.canvas.addEventListener("mousemove", this.MouseMove)
+    this.canvas.addEventListener("mouseup", this.MouseUp)
+    this.canvas.addEventListener("wheel", this.onMouseWheel)
+    window.addEventListener("resize", (e) => {
+        this.canvas.width = window.innerWidth
+        this.canvas.height = window.innerHeight
+
+    })
+    window.addEventListener("keydown", this.KeyDown)
+    window.addEventListener("dblclick", this.DoubleClick)
+
+}
 
 
-    }
+destroy() {
+
+
+    this.canvas.removeEventListener("mousedown", this.MouseDown)
+    this.canvas.removeEventListener("mouseup", this.MouseUp)
+    this.canvas.removeEventListener("mousemove", this.MouseMove)
+
+
+}
 
 
 }

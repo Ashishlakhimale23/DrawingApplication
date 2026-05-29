@@ -12,7 +12,8 @@ services:
       POSTGRES_DB: postgres
     ports:
       - 5432:5432
-    
+    volumes:
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}' ]
       interval: 10s
@@ -62,6 +63,7 @@ services:
       cd ../..  && npm run start:websocket"
     
     
+    
   frontend :
     build : 
       context : .
@@ -73,7 +75,7 @@ services:
       DATABASE_URL : postgresql://postgres:postgres@db:5432/postgres 
       NEXT_PUBLIC_HTTP_SERVER : http://localhost:8000
       NEXT_PUBLIC_WS_SERVER : ws://localhost:8001
-
+    
     ports : 
       - 3000:3000
     depends_on:
@@ -85,4 +87,5 @@ services:
       npx prisma migrate dev &&
       npx prisma generate &&
       cd ../.. && npm run start:web"
-    
+volumes:
+  pgdata:

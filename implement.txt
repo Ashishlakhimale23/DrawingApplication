@@ -1,0 +1,4 @@
+
+1. the user directly lands on the home page so what can be done is we can send the user to "/canvas" and check if theres a auth token present if "yes" let the user continue to draw if "no" show the user a sign in page
+
+2. when the shape is drawn for the first time it doesnt have an id so when we perform any other actions on it the id isnt sent while performing the action like dragging or moving

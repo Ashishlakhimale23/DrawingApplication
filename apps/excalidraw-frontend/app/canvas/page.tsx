@@ -14,7 +14,7 @@ const getuserchats =async()=>{
         }
       );
       return shape;
-    }
+   }
 }
 export default function UserCanvas(){
 

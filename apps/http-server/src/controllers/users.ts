@@ -75,6 +75,8 @@ export const SignInHandler = async (req:Request<{},{},User>,res:Response) =>{
         email:email,
     }})
 
+    console.log(exists)
+
     if(!exists) {
         res.json({message:"user doenst exist"})
     }
@@ -173,6 +175,7 @@ export const GetUsersChats = async(req:Request,res:Response)=>{
             }
         })
 
+        //@ts-ignore
         userChats = userChats.filter(chats => chats.roomId == null)
 
         
@@ -225,18 +228,16 @@ export const InsertChats =async(req:Request<{},{},{message:string}>,res:Response
         })
 
         if(result) {
-            res.status(200).json({message:'done'})
+            res.status(200).json({message:result.id})
             return
         }
         res.status(500).json({message:"something went wrong"})
         return
 
-        
     } catch (error) {
         console.log(error)
         res.status(500).json({message:"internal server error"})
         return
-        
     }
 
 }

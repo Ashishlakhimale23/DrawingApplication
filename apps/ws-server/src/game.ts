@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@repo/db/client';
 import { singleton } from './SingletonInstance'; 
 import WebSocket from 'ws';
-const prisma = new PrismaClient();
+
 
 
 interface Users {

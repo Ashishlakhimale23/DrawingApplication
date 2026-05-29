@@ -10,11 +10,12 @@ export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape
   
 
     useEffect(() => {
-        const ws_url = process.env.NEXT_PUBLIC_WS_SERVER
+        const ws_url = "ws://localhost:8081"
         const token = localStorage.getItem("authtoken")
         const ws = new WebSocket(`${ws_url}?token=${token}`)
         
         ws.onopen = () => {
+        console.log("hellooooo")
             setSocket(ws);
             const data = JSON.stringify({
                 type: "join_room",
@@ -22,10 +23,10 @@ export default function RoomCanvas({roomId,shapes}: {roomId: string,shapes:Shape
             });
             ws.send(data)
         }
-        
+
     }, [])
    
-    if (!socket) {
+    if (socket == null) {
         return <div>
             Connecting to server....
         </div>

@@ -13,7 +13,7 @@ export default function AuthPage({signup}: {signup: boolean}) {
     const router = useRouter();
 
     const handleSubmit = async (e: FormEvent) => {
-      const base_url = process.env.NEXT_PUBLIC_HTTP_SERVER
+      const base_url = "http://localhost:8000"
         e.preventDefault();
         setError("");
 

@@ -1,5 +1,5 @@
 import axios,{InternalAxiosRequestConfig,AxiosError} from 'axios'
-const baseUrl = process.env.NEXT_PUBLIC_HTTP_SERVER
+const baseUrl = "http://localhost:8000"
 export const api = axios.create({
   baseURL: baseUrl,
 });
